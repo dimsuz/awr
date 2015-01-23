@@ -1,0 +1,37 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        applicationId "com.advaitaworld.app"
+        minSdkVersion 15
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // if changing version, consider upgrading it in kotlin-build plugin in toplevel build.gradle
+    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.10.4'
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile "com.android.support:recyclerview-v7:21.0.3"
+    compile "io.reactivex:rxjava:1.0.4"
+    compile "io.reactivex:rxandroid:0.24.0"
+    compile 'com.jakewharton.timber:timber:2.5.0'
+    compile 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+}
