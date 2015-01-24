@@ -9,6 +9,7 @@ import rx.android.app.AppObservable
 import rx.schedulers.Schedulers
 import android.support.v7.widget.LinearLayoutManager
 import com.advaitaworld.app.util.decorations.SpaceItemDecoration
+import timber.log.Timber
 
 
 public class MainActivity : ActionBarActivity() {
@@ -33,11 +34,14 @@ public class MainActivity : ActionBarActivity() {
     }
 
     private fun fetchPosts() {
+        MOCK_PAGE_HTML = getAssets().open("main_test.html")
         AppObservable.bindActivity(this, server.getPosts(Section.Popular))
                 .subscribeOn(Schedulers.io())
                 .subscribe({ list ->
                     adapter?.swapData(list)
-                }, { /* error */ })
+                }, {
+                    Timber.e("parsing failed with exception", it)
+                })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
