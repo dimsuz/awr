@@ -1,11 +1,14 @@
+package com.advaitaworld.app
+
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import PostsAdapter.ViewHolder
-import com.advaitaworld.app.Post
 import android.view.ViewGroup
+import android.view.LayoutInflater
+import com.advaitaworld.app.PostsAdapter.ViewHolder
+import android.widget.TextView
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
-    var data: List<Post>? = null
+    var data: List<Post> = listOf()
 
     public fun swapData(data: List<Post>) {
         this.data = data
@@ -13,18 +16,20 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        throw UnsupportedOperationException()
+        val inflater = LayoutInflater.from(parent.getContext())
+        val view = inflater.inflate(R.layout.post_item, parent, false)
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        throw UnsupportedOperationException()
+        holder.content.setText(data.get(position).content)
     }
 
     override fun getItemCount(): Int {
-        throw UnsupportedOperationException()
+        return data.size()
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
+        val content = itemView.findViewById(R.id.content) as TextView
     }
 }
