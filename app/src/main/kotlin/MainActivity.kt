@@ -40,7 +40,7 @@ public class MainActivity : ActionBarActivity() {
                 .subscribe({ list ->
                     adapter?.swapData(list)
                 }, {
-                    Timber.e("parsing failed with exception", it)
+                    Timber.e(it, "parsing failed with exception")
                 })
     }
 
