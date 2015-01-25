@@ -7,10 +7,9 @@ import com.squareup.okhttp.Request
 import java.io.IOException
 import java.io.InputStream
 import org.xml.sax.helpers.XMLReaderFactory
-import org.xml.sax.helpers.DefaultHandler
-import org.xml.sax.Attributes
 import org.xml.sax.InputSource
 import timber.log.Timber
+import com.advaitaworld.app.parse.AwHtmlHandler
 
 public enum class Section {
     Popular
