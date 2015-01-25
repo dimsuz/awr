@@ -43,55 +43,14 @@ public class Server {
 private fun parseHtml(inputStream: InputStream): Observable<List<Post>> {
     return Observable.create({ subscriber ->
         val reader = XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser")
-        val endAction: (List<Post>) -> Unit  = { list ->
-            if(!subscriber.isUnsubscribed()) {
-                subscriber.onNext(list)
-                subscriber.onCompleted()
-            }
-        }
-        reader.setContentHandler(HtmlHandler(endAction))
-        Timber.d("about to start parsing of posts html")
+        val handler = AwHtmlHandler()
+        reader.setContentHandler(handler)
         reader.parse(InputSource(inputStream))
-        Timber.d("parsing is done")
+        if(!subscriber.isUnsubscribed()) {
+            subscriber.onNext(handler.getParsedData())
+            subscriber.onCompleted()
+        }
     })
-}
-
-private class HtmlHandler(val endAction: (List<Post>) -> Unit) : DefaultHandler() {
-    val posts : MutableList<Post> = arrayListOf()
-    var contentBuilder : StringBuilder? = null
-
-    override fun startElement(uri: String, localName: String, qName: String, attributes: Attributes) {
-        val isAtPost = contentBuilder != null
-        if(!isAtPost && isPostElement(qName, attributes)) {
-            contentBuilder = StringBuilder()
-        }
-    }
-
-    override fun endElement(uri: String, localName: String, qName: String) {
-        if(contentBuilder != null && isPostElement(qName, null)) {
-            posts.add(Post(contentBuilder.toString().replaceAll("\\s+", " ").trim()))
-            contentBuilder = null
-        }
-    }
-
-    override fun endDocument() {
-        endAction(posts)
-    }
-
-    override fun characters(ch: CharArray, start: Int, length: Int) {
-        if(contentBuilder != null) {
-            // for some reason kotlin String wrapper class lacks this constructor, have to use
-            // a java.lang.String directly
-            contentBuilder!!.append(ch, start, length)
-        }
-    }
-
-    private fun isPostElement(qName: String, attributes: Attributes?) : Boolean {
-        return when(attributes) {
-            null -> qName == "article"
-            else ->  qName == "article" && attributes.getIndex("class") != -1 && attributes.getValue("class").contains("topic")
-        }
-    }
 }
 
 // FIXME put in some common place, this is a generic method
