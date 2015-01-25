@@ -9,7 +9,6 @@ import android.text.style.StyleSpan
 import android.text.Spanned
 import java.util.ArrayDeque
 import java.util.regex.Pattern
-import android.text.style.QuoteSpan
 import android.graphics.Color
 import android.text.style.BackgroundColorSpan
 
@@ -31,12 +30,49 @@ public class AwHtmlHandler() : DefaultHandler() {
     var inContentLevel = -1
     var contentBuilder : SpannableStringBuilder? = null
     var childContentTags : ArrayDeque<Int> = ArrayDeque()
+    var authorBuilder : StringBuilder? = null
+    var author : CharSequence? = null
+
+    public fun getParsedData() : List<Post> {
+        return posts
+    }
 
     override fun startElement(uri: String, localName: String, qName: String, attributes: Attributes?) {
         isInsidePost = isInsidePost || isPostElement(qName, attributes)
         if(!isInsidePost) {
             return
         }
+        handleContentStart(qName, attributes)
+        handleAuthorStart(qName, attributes)
+        //Timber.d("tag $qName start, ${attributes(attributes)}., contentLevel now: $inContentLevel")
+    }
+
+    override fun endElement(uri: String, localName: String, qName: String) {
+        if(!isInsidePost) {
+            return
+        }
+        if(isPostElement(qName, null)) {
+            // finished parsing this post element, sum up and save
+            posts.add(Post(author = author!!, content = contentBuilder!!))
+            contentBuilder = null
+            isInsidePost = false
+            return
+        }
+
+        handleContentEnd(qName)
+        handleAuthorEnd(qName)
+        //Timber.d("tag $qName end, contentLevel now: $inContentLevel")
+    }
+
+    val replacePattern = Pattern.compile("(\\s{2,}|\n)")
+
+
+    override fun characters(ch: CharArray, start: Int, length: Int) {
+        handleContentChars(ch, start, length)
+        handleAuthorChars(ch, start, length)
+    }
+
+    private fun handleContentStart(qName: String, attributes: Attributes?) {
         if(isPostContentStart(qName, attributes)) {
             inContentLevel = 0
             contentBuilder = SpannableStringBuilder()
@@ -47,32 +83,9 @@ public class AwHtmlHandler() : DefaultHandler() {
         if(inContentLevel >= 1) {
             childContentTags.addLast(contentBuilder!!.length())
         }
-        //Timber.d("tag $qName start, ${attributes(attributes)}., contentLevel now: $inContentLevel")
     }
 
-    // helper used for debugging only
-    private fun attributes(a: Attributes?) : Map<String, String> {
-        if(a == null) { return mapOf() }
-        val m : MutableMap<String, String> = hashMapOf()
-        for(i in (0..a.getLength()-1)) {
-            m.put(a.getQName(i), a.getValue(i))
-        }
-        return m
-    }
-
-
-    override fun endElement(uri: String, localName: String, qName: String) {
-        if(!isInsidePost) {
-            return
-        }
-        if(isPostElement(qName, null)) {
-            // finished parsing this post element, sum up and save
-            posts.add(Post(contentBuilder!!))
-            contentBuilder = null
-            isInsidePost = false
-            return
-        }
-
+    private fun handleContentEnd(qName: String) {
         if(inContentLevel >= 1) {
             // here the fact that most inner elements will end first is used
             // so that things like <b1><i><b2></b2></i></b1> should work - b2 will be added last
@@ -81,12 +94,9 @@ public class AwHtmlHandler() : DefaultHandler() {
             processPostContentTag(qName, start, contentBuilder!!.length(), contentBuilder!!)
         }
         if(inContentLevel >= 0) inContentLevel--
-        //Timber.d("tag $qName end, contentLevel now: $inContentLevel")
     }
 
-    val replacePattern = Pattern.compile("(\\s{2,}|\n)")
-
-    override fun characters(ch: CharArray, start: Int, length: Int) {
+    private fun handleContentChars(ch: CharArray, start: Int, length: Int) {
         if(inContentLevel >= 0) {
             var s = java.lang.String(ch, start, length) as String
             val matcher = replacePattern.matcher(s)
@@ -101,8 +111,21 @@ public class AwHtmlHandler() : DefaultHandler() {
         }
     }
 
-    public fun getParsedData() : List<Post> {
-        return posts
+    private fun handleAuthorStart(qName: String, attributes: Attributes?) {
+        if(isAuthorInfoStart(qName, attributes)) {
+            authorBuilder = StringBuilder()
+        }
+    }
+
+    private fun handleAuthorEnd(qName: String) {
+        if(authorBuilder != null && isAuthorInfoEnd(qName)) {
+            author = authorBuilder
+            authorBuilder = null
+        }
+    }
+
+    private fun handleAuthorChars(ch: CharArray, start: Int, length: Int) {
+        authorBuilder?.append(ch, start, length)
     }
 }
 
@@ -147,3 +170,22 @@ private fun isPostContentStart(qName: String, attributes: Attributes?) : Boolean
     val classAttr : String? = attributes?.getValue("class")
     return classAttr != null && classAttr.contains("topic-content")
 }
+
+private fun isAuthorInfoStart(qName: String, attributes: Attributes?) : Boolean {
+    return qName == "a" && attributes?.getIndex("class") != -1 && attributes!!.getValue("class").contains("user")
+}
+
+private fun isAuthorInfoEnd(qName: String) : Boolean {
+    return qName == "a"
+}
+
+// helper used for debugging only
+//private fun attributes(a: Attributes?) : Map<String, String> {
+//    if(a == null) { return mapOf() }
+//    val m : MutableMap<String, String> = hashMapOf()
+//    for(i in (0..a.getLength()-1)) {
+//        m.put(a.getQName(i), a.getValue(i))
+//    }
+//    return m
+//}
+

@@ -22,7 +22,9 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.content.setText(data.get(position).content)
+        val post = data.get(position)
+        holder.content.setText(post.content)
+        holder.author.setText(post.author)
     }
 
     override fun getItemCount(): Int {
@@ -31,5 +33,6 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val content = itemView.findViewById(R.id.content) as TextView
+        val author = itemView.findViewById(R.id.author_name) as TextView
     }
 }

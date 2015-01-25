@@ -17,7 +17,7 @@ public enum class Section {
     Personal
 }
 
-public data class Post(val content: CharSequence)
+public data class Post(val author: CharSequence, val content: CharSequence)
 
 public class Server {
     private val client = OkHttpClient()
