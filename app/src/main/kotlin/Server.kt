@@ -6,10 +6,11 @@ import com.advaitaworld.app.util.runOnce
 import com.squareup.okhttp.Request
 import java.io.IOException
 import java.io.InputStream
-import org.xml.sax.helpers.XMLReaderFactory
-import org.xml.sax.InputSource
 import timber.log.Timber
-import com.advaitaworld.app.parse.AwHtmlHandler
+import com.squareup.okhttp.ResponseBody
+import com.squareup.okhttp.MediaType
+import org.jsoup.Jsoup
+import android.text.Html
 
 public enum class Section {
     Popular
@@ -17,7 +18,7 @@ public enum class Section {
     Personal
 }
 
-public data class Post(val author: CharSequence, val content: CharSequence)
+public data class Post(val author: CharSequence, val content: CharSequence, val dateString: String)
 
 public class Server {
     private val client = OkHttpClient()
@@ -25,7 +26,7 @@ public class Server {
     public fun getPosts(section: Section) : Observable<List<Post>> {
         Timber.d("getting posts for $section")
         return runRequest(client, sectionUrl(section))
-                .flatMap({ parseHtml(it) })
+                .flatMap({ parseHtml(it.string()) })
     }
 
     // some other implementation of server could use different urls
@@ -39,24 +40,30 @@ public class Server {
     }
 }
 
-private fun parseHtml(inputStream: InputStream): Observable<List<Post>> {
+private fun parseHtml(content: String): Observable<List<Post>> {
     return Observable.create({ subscriber ->
-        val reader = XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser")
-        val handler = AwHtmlHandler()
-        reader.setContentHandler(handler)
-        reader.parse(InputSource(inputStream))
+        val document = Jsoup.parse(content)
+        val posts = document.select("article.topic")
+        val parsedPosts = posts.map({ postElem ->
+            val text = postElem.select(".topic-content").get(0).html()
+            val author = postElem.select("a.user").get(0).text()
+            val dateString = postElem.select(".topic-info-date > time").get(0).text()
+            Post(author, Html.fromHtml(text), dateString)
+        })
         if(!subscriber.isUnsubscribed()) {
-            subscriber.onNext(handler.getParsedData())
+            subscriber.onNext(parsedPosts)
             subscriber.onCompleted()
         }
     })
 }
 
 // FIXME put in some common place, this is a generic method
-private fun runRequest(client: OkHttpClient, url: String) : Observable<InputStream> {
+private fun runRequest(client: OkHttpClient, url: String) : Observable<ResponseBody> {
     if(MOCK_PAGE_HTML != null) {
         Timber.d("USING MOCK DATA")
-        return Observable.just(MOCK_PAGE_HTML)
+        val scanner = java.util.Scanner(MOCK_PAGE_HTML).useDelimiter("\\A")
+        val content = if(scanner.hasNext()) scanner.next() else ""
+        return Observable.just(ResponseBody.create(MediaType.parse("application/html"), content))
     }
     return runOnce {
         Timber.d("starting request for url $url")
@@ -66,7 +73,7 @@ private fun runRequest(client: OkHttpClient, url: String) : Observable<InputStre
             throw IOException("unexpected http code: ${response.code()}")
         }
         Timber.d("got successful response for $url")
-        response.body().byteStream()
+        response.body()
     }
 }
 
