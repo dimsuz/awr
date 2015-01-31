@@ -1,4 +1,4 @@
-package com.advaitaworld.app
+package advaitaworld
 
 import android.app.Application
 import timber.log.Timber

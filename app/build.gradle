@@ -35,4 +35,6 @@ dependencies {
     compile 'com.jakewharton.timber:timber:2.5.0'
     compile 'org.jsoup:jsoup:1.8.1'
     compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0' // needed by picasso
+    compile 'com.squareup.picasso:picasso:2.4.0'
 }

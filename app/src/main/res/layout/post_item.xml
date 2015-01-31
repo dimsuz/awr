@@ -19,6 +19,7 @@
             android:layout_height="48dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
+            android:scaleType="centerCrop"
             android:src="@color/secondary_text"/>
         <TextView
             android:id="@+id/author_name"

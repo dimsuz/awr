@@ -1,4 +1,4 @@
-package com.advaitaworld.app.util
+package advaitaworld.util
 
 import rx.Subscriber
 import rx.Observable

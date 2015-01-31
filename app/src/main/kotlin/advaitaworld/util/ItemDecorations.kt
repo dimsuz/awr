@@ -1,4 +1,4 @@
-package com.advaitaworld.app.util.decorations
+package advaitaworld.util
 
 import android.support.v7.widget.RecyclerView
 import android.graphics.Rect

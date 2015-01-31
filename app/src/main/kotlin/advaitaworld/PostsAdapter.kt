@@ -1,11 +1,14 @@
-package com.advaitaworld.app
+package advaitaworld
 
 import android.support.v7.widget.RecyclerView
-import android.view.View
 import android.view.ViewGroup
-import android.view.LayoutInflater
-import com.advaitaworld.app.PostsAdapter.ViewHolder
+import android.view.View
 import android.widget.TextView
+import android.widget.ImageView
+import android.view.LayoutInflater
+import android.net.Uri
+import com.squareup.picasso.Picasso
+import advaitaworld.PostsAdapter.ViewHolder
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<Post> = listOf()
@@ -23,6 +26,9 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val post = data.get(position)
+        Picasso.with(holder.avatar.getContext())
+                .load(Uri.parse("http://advaitaworld.com/uploads/images/00/42/29/2014/10/09/avatar_100x100.jpg?080703"))
+                .into(holder.avatar)
         holder.content.setText(post.content)
         holder.author.setText(post.author)
         holder.timestamp.setText(post.dateString)
@@ -41,5 +47,6 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView
         val comments = itemView.findViewById(R.id.comments) as TextView
         val rating = itemView.findViewById(R.id.rating) as TextView
+        val avatar = itemView.findViewById(R.id.avatar) as ImageView
     }
 }

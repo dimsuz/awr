@@ -1,16 +1,15 @@
-package com.advaitaworld.app
+package advaitaworld
 
 import android.support.v7.app.ActionBarActivity
 import android.os.Bundle
+import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
-import android.support.v7.widget.RecyclerView
-import rx.android.app.AppObservable
-import rx.schedulers.Schedulers
 import android.support.v7.widget.LinearLayoutManager
-import com.advaitaworld.app.util.decorations.SpaceItemDecoration
+import advaitaworld.util.SpaceItemDecoration
 import timber.log.Timber
-
+import rx.schedulers.Schedulers
+import rx.android.app.AppObservable
 
 public class MainActivity : ActionBarActivity() {
     var adapter: PostsAdapter? = null

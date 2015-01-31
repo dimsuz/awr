@@ -1,8 +1,8 @@
-package com.advaitaworld.app
+package advaitaworld
 
 import rx.Observable
 import com.squareup.okhttp.OkHttpClient
-import com.advaitaworld.app.util.runOnce
+import advaitaworld.util.runOnce
 import com.squareup.okhttp.Request
 import java.io.IOException
 import java.io.InputStream
