@@ -26,6 +26,8 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         holder.content.setText(post.content)
         holder.author.setText(post.author)
         holder.timestamp.setText(post.dateString)
+        holder.rating.setText(post.rating ?: "?")
+        holder.comments.setText(post.commentCount ?: "0")
     }
 
     override fun getItemCount(): Int {
@@ -36,5 +38,7 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         val content = itemView.findViewById(R.id.content) as TextView
         val author = itemView.findViewById(R.id.author_name) as TextView
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView
+        val comments = itemView.findViewById(R.id.comments) as TextView
+        val rating = itemView.findViewById(R.id.rating) as TextView
     }
 }

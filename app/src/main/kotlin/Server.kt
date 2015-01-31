@@ -11,6 +11,7 @@ import com.squareup.okhttp.ResponseBody
 import com.squareup.okhttp.MediaType
 import org.jsoup.Jsoup
 import android.text.Html
+import java.util.regex.Pattern
 
 public enum class Section {
     Popular
@@ -18,7 +19,11 @@ public enum class Section {
     Personal
 }
 
-public data class Post(val author: CharSequence, val content: CharSequence, val dateString: String)
+public data class Post(val author: CharSequence,
+                       val content: CharSequence,
+                       val dateString: String,
+                       val rating: String?,
+                       val commentCount: String?)
 
 public class Server {
     private val client = OkHttpClient()
@@ -48,13 +53,27 @@ private fun parseHtml(content: String): Observable<List<Post>> {
             val text = postElem.select(".topic-content").get(0).html()
             val author = postElem.select("a.user").get(0).text()
             val dateString = postElem.select(".topic-info-date > time").get(0).text()
-            Post(author, Html.fromHtml(text), dateString)
+            val commentElem = postElem.select(".topic-info-comments > a > span")
+            val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
+            val voteCountStr = postElem.select(".vote-count > span").get(0).text()
+            val voteCount = parseVoteCount(voteCountStr)
+            Post(author, Html.fromHtml(text), dateString, voteCount, commentCount)
         })
         if(!subscriber.isUnsubscribed()) {
             subscriber.onNext(parsedPosts)
             subscriber.onCompleted()
         }
     })
+}
+
+private val votePattern = Pattern.compile("^[+-]\\d+")
+private fun parseVoteCount(s: String): String? {
+    val m = votePattern.matcher(s)
+    if(m.matches()) {
+        return s
+    } else {
+        return null
+    }
 }
 
 // FIXME put in some common place, this is a generic method
