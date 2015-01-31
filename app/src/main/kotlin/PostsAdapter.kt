@@ -26,7 +26,8 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         holder.content.setText(post.content)
         holder.author.setText(post.author)
         holder.timestamp.setText(post.dateString)
-        holder.rating.setText(post.rating ?: "?")
+        holder.rating.setText(post.rating ?: "")
+        holder.rating.setVisibility(if(post.rating != null) View.VISIBLE else View.GONE)
         holder.comments.setText(post.commentCount ?: "")
     }
 
