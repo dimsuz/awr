@@ -27,7 +27,7 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         holder.author.setText(post.author)
         holder.timestamp.setText(post.dateString)
         holder.rating.setText(post.rating ?: "?")
-        holder.comments.setText(post.commentCount ?: "0")
+        holder.comments.setText(post.commentCount ?: "")
     }
 
     override fun getItemCount(): Int {

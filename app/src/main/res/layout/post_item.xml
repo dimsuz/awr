@@ -89,13 +89,18 @@
             />
 
         <TextView
+            android:background="?android:attr/selectableItemBackground"
             android:id="@+id/comments"
             android:layout_width="wrap_content"
             android:layout_height="44dp"
             android:layout_below="@id/content"
             android:layout_alignParentRight="true"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
             android:gravity="center_vertical"
-            android:textSize="18sp"
+            android:drawableLeft="@drawable/comment"
+            android:drawablePadding="4dp"
+            android:textSize="16sp"
             />
     </RelativeLayout>
 </android.support.v7.widget.CardView>
