@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.net.Uri
 import com.squareup.picasso.Picasso
 import advaitaworld.PostsAdapter.ViewHolder
+import advaitaworld.db.User
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<Post> = listOf()
@@ -16,6 +17,11 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     public fun swapData(data: List<Post>) {
         this.data = data
         notifyDataSetChanged()
+    }
+
+    public fun onUserInfoUpdated(user: User) {
+        // TODO see if data has posts by this user => notify update
+        throw UnsupportedOperationException("not implemented")
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

@@ -3,13 +3,14 @@ package advaitaworld
 import android.support.v7.app.ActionBarActivity
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
-import android.view.Menu
-import android.view.MenuItem
 import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.SpaceItemDecoration
 import timber.log.Timber
 import rx.schedulers.Schedulers
 import rx.android.app.AppObservable
+import advaitaworld.db.User
+import android.view.Menu
+import android.view.MenuItem
 
 public class MainActivity : ActionBarActivity() {
     var adapter: PostsAdapter? = null
@@ -34,6 +35,14 @@ public class MainActivity : ActionBarActivity() {
 
     private fun fetchPosts() {
         MOCK_PAGE_HTML = getAssets().open("main_test.html")
+        val postsData = server.getPosts(Section.Popular)
+        // at the same time start to fetch user profile data,
+        // save it to DB for future reuse and then adapter will also get use of it
+        val userData = postsData.flatMapIterable({it -> it}).map({ post ->
+            // todo: fetch avatar, create User instance,
+            // save it to DB (doOnNext/subscribe), call adapter.onUserInfoUpdated
+            User("Mint", "url")
+        })
         AppObservable.bindActivity(this, server.getPosts(Section.Popular))
                 .subscribeOn(Schedulers.io())
                 .subscribe({ list ->
