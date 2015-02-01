@@ -35,21 +35,22 @@ public class MainActivity : ActionBarActivity() {
 
     private fun fetchPosts() {
         MOCK_PAGE_HTML = getAssets().open("main_test.html")
-        val postsData = server.getPosts(Section.Popular)
+        val postsData = server.getPosts(Section.Popular).share()
         // at the same time start to fetch user profile data,
         // save it to DB for future reuse and then adapter will also get use of it
-        val userData = postsData.flatMapIterable({it -> it}).map({ post ->
-            // todo: fetch avatar, create User instance,
-            // save it to DB (doOnNext/subscribe), call adapter.onUserInfoUpdated
-            User("Mint", "url")
-        })
-        AppObservable.bindActivity(this, server.getPosts(Section.Popular))
+        val userData = postsData.flatMapIterable({it -> it})
+                .flatMap({ server.getUserInfo(it.author) })
+        AppObservable.bindActivity(this, postsData)
                 .subscribeOn(Schedulers.io())
-                .subscribe({ list ->
-                    adapter?.swapData(list)
-                }, {
-                    Timber.e(it, "parsing failed with exception")
-                })
+                .subscribe(
+                        { adapter?.swapData(it) },
+                        { Timber.e(it, "parsing failed with exception") })
+        AppObservable.bindActivity(this, userData)
+                .subscribeOn(Schedulers.io())
+                .doOnNext({ Timber.d("saving ${it.name} to database") })
+                .subscribe(
+                        { adapter?.onUserInfoUpdated(it) },
+                        { Timber.e(it, "failed to retrieve a user avatar") })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -10,9 +10,11 @@ import android.net.Uri
 import com.squareup.picasso.Picasso
 import advaitaworld.PostsAdapter.ViewHolder
 import advaitaworld.db.User
+import timber.log.Timber
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<Post> = listOf()
+    val userInfo: MutableMap<String, User> = hashMapOf()
 
     public fun swapData(data: List<Post>) {
         this.data = data
@@ -20,8 +22,18 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     }
 
     public fun onUserInfoUpdated(user: User) {
-        // TODO see if data has posts by this user => notify update
-        throw UnsupportedOperationException("not implemented")
+        // see if data has posts by this user => notify update
+        val positions = data
+                .mapIndexed { (i, post) -> if(post.author == user.name) i else -1 }
+                .filter { it >= 0 }
+        // update info to be used when rebinding view
+        if(!positions.isEmpty()) {
+            userInfo.put(user.name, user)
+        }
+        Timber.d("updating positions $positions")
+        for(pos in positions) {
+            notifyItemChanged(pos)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,9 +44,12 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val post = data.get(position)
-        Picasso.with(holder.avatar.getContext())
-                .load(Uri.parse("http://advaitaworld.com/uploads/images/00/42/29/2014/10/09/avatar_100x100.jpg?080703"))
-                .into(holder.avatar)
+        val userInfo = userInfo.get(post.author)
+        if(userInfo != null) {
+            Picasso.with(holder.avatar.getContext())
+                    .load(Uri.parse(userInfo.avatarUrl))
+                    .into(holder.avatar)
+        }
         holder.content.setText(post.content)
         holder.author.setText(post.author)
         holder.timestamp.setText(post.dateString)

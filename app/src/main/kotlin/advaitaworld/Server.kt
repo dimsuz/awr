@@ -12,6 +12,7 @@ import com.squareup.okhttp.MediaType
 import org.jsoup.Jsoup
 import android.text.Html
 import java.util.regex.Pattern
+import advaitaworld.db.User
 
 public enum class Section {
     Popular
@@ -19,7 +20,7 @@ public enum class Section {
     Personal
 }
 
-public data class Post(val author: CharSequence,
+public data class Post(val author: String,
                        val content: CharSequence,
                        val dateString: String,
                        val rating: String?,
@@ -34,7 +35,13 @@ public class Server {
                 .map({ parseHtml(it.string()) })
     }
 
-    // some other implementation of server could use different urls
+    public fun getUserInfo(name: String) : Observable<User> {
+        Timber.d("getting user info at: ${profileUrl(name)}")
+        return runRequest(client, profileUrl(name))
+                .map({ parseUserProfile(name, it.string()) })
+    }
+
+    // some other implementation of Server could use different urls
     private fun sectionUrl(section: Section) : String {
         return when(section) {
             Section.Popular -> "http://advaitaworld.com"
@@ -42,6 +49,11 @@ public class Server {
             Section.Personal -> "http://advaitaworld.com/personal_blog/new"
             else -> throw RuntimeException("unknown section")
         }
+    }
+
+    // some other implementation of Server could use different urls
+    private fun profileUrl(name: String) : String {
+        return "http://advaitaworld.com/profile/$name"
     }
 }
 
@@ -61,6 +73,14 @@ private fun parseHtml(content: String): List<Post> {
     return parsedPosts
 }
 
+private fun parseUserProfile(name: String, html: String): User {
+    Timber.d("parsing profile for $name")
+    val document = Jsoup.parse(html)
+    val imgElem = document.select("div.profile-top > .avatar > img")
+    val imgUrl = imgElem.get(0).attr("src")
+    return User(name, imgUrl)
+}
+
 private val votePattern = Pattern.compile("^[+-]\\d+")
 private fun parseVoteCount(s: String): String? {
     val m = votePattern.matcher(s)
@@ -73,8 +93,8 @@ private fun parseVoteCount(s: String): String? {
 
 // FIXME put in some common place, this is a generic method
 private fun runRequest(client: OkHttpClient, url: String) : Observable<ResponseBody> {
-    if(MOCK_PAGE_HTML != null) {
-        Timber.d("USING MOCK DATA")
+    if(MOCK_PAGE_HTML != null && !url.contains("profile")) {
+        Timber.d("USING MOCK DATA for url $url")
         val scanner = java.util.Scanner(MOCK_PAGE_HTML).useDelimiter("\\A")
         val content = if(scanner.hasNext()) scanner.next() else ""
         return Observable.just(ResponseBody.create(MediaType.parse("application/html"), content))
