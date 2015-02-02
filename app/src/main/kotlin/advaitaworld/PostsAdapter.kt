@@ -13,10 +13,10 @@ import advaitaworld.db.User
 import timber.log.Timber
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
-    var data: List<Post> = listOf()
+    var data: List<ShortPostInfo> = listOf()
     val userInfo: MutableMap<String, User> = hashMapOf()
 
-    public fun swapData(data: List<Post>, users: List<User>) {
+    public fun swapData(data: List<ShortPostInfo>, users: List<User>) {
         this.data = data
         for(u in users) {
             userInfo.put(u.name, u)

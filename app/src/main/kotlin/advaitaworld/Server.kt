@@ -22,14 +22,14 @@ public data class ContentInfo(val author: String,
                                val dateString: String,
                                val rating: String?)
 
-public data class Post(
+public data class ShortPostInfo(
         val content: ContentInfo,
         val commentCount: String?)
 
 public class Server {
     private val client = OkHttpClient()
 
-    public fun getPosts(section: Section) : Observable<List<Post>> {
+    public fun getPosts(section: Section) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
         return runMockableRequest(client, sectionUrl(section))
                 .map({ parseHtml(it.string()) })
@@ -57,7 +57,7 @@ public class Server {
     }
 }
 
-private fun parseHtml(content: String): List<Post> {
+private fun parseHtml(content: String): List<ShortPostInfo> {
     val document = Jsoup.parse(content)
     val posts = document.select("article.topic")
     val parsedPosts = posts.map({ postElem ->
@@ -69,7 +69,7 @@ private fun parseHtml(content: String): List<Post> {
         val voteCountStr = postElem.select(".vote-count > span").get(0).text()
         val voteCount = parseVoteCount(voteCountStr)
         val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
-        Post(contentInfo, commentCount)
+        ShortPostInfo(contentInfo, commentCount)
     })
     return parsedPosts
 }
