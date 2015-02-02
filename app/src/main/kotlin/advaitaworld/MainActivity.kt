@@ -46,7 +46,7 @@ public class MainActivity : ActionBarActivity() {
         AppObservable.bindActivity(this, postsData)
                 .subscribeOn(Schedulers.io())
                 .map({ posts ->
-                    val names = posts.map { it.author }
+                    val names = posts.map { it.content.author }
                     val users = db?.getUsersByName(names) ?: listOf()
                     val missingNames = names.filterNot { name -> users.any({ u -> u.name == name }) }
                     Timber.d("got ${users.size()} from db")

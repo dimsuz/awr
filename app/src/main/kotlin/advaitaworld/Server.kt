@@ -17,11 +17,14 @@ public enum class Section {
     Personal
 }
 
-public data class Post(val author: String,
-                       val content: CharSequence,
-                       val dateString: String,
-                       val rating: String?,
-                       val commentCount: String?)
+public data class ContentInfo(val author: String,
+                               val text: CharSequence,
+                               val dateString: String,
+                               val rating: String?)
+
+public data class Post(
+        val content: ContentInfo,
+        val commentCount: String?)
 
 public class Server {
     private val client = OkHttpClient()
@@ -65,7 +68,8 @@ private fun parseHtml(content: String): List<Post> {
         val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
         val voteCountStr = postElem.select(".vote-count > span").get(0).text()
         val voteCount = parseVoteCount(voteCountStr)
-        Post(author, Html.fromHtml(text), dateString, voteCount, commentCount)
+        val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
+        Post(contentInfo, commentCount)
     })
     return parsedPosts
 }

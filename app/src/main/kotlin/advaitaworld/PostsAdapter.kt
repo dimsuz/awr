@@ -27,7 +27,7 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     public fun onUserInfoUpdated(user: User) {
         // see if data has posts by this user => notify update
         val positions = data
-                .mapIndexed { (i, post) -> if(post.author == user.name) i else -1 }
+                .mapIndexed { (i, post) -> if(post.content.author == user.name) i else -1 }
                 .filter { it >= 0 }
         // update info to be used when rebinding view
         if(!positions.isEmpty()) {
@@ -47,7 +47,7 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val post = data.get(position)
-        val userInfo = userInfo.get(post.author)
+        val userInfo = userInfo.get(post.content.author)
         if(userInfo != null) {
             Picasso.with(holder.avatar.getContext())
                     .load(Uri.parse(userInfo.avatarUrl))
@@ -55,11 +55,11 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         } else {
             // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
         }
-        holder.content.setText(post.content)
-        holder.author.setText(post.author)
-        holder.timestamp.setText(post.dateString)
-        holder.rating.setText(post.rating ?: "")
-        holder.rating.setVisibility(if(post.rating != null) View.VISIBLE else View.GONE)
+        holder.content.setText(post.content.text)
+        holder.author.setText(post.content.author)
+        holder.timestamp.setText(post.content.dateString)
+        holder.rating.setText(post.content.rating ?: "")
+        holder.rating.setVisibility(if(post.content.rating != null) View.VISIBLE else View.GONE)
         holder.comments.setText(post.commentCount ?: "")
     }
 
