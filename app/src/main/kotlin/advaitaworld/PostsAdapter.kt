@@ -16,8 +16,11 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<Post> = listOf()
     val userInfo: MutableMap<String, User> = hashMapOf()
 
-    public fun swapData(data: List<Post>) {
+    public fun swapData(data: List<Post>, users: List<User>) {
         this.data = data
+        for(u in users) {
+            userInfo.put(u.name, u)
+        }
         notifyDataSetChanged()
     }
 
@@ -70,4 +73,5 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         val rating = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
     }
+
 }
