@@ -5,7 +5,6 @@ import com.squareup.okhttp.OkHttpClient
 import advaitaworld.util.runOnce
 import com.squareup.okhttp.Request
 import java.io.IOException
-import java.io.InputStream
 import timber.log.Timber
 import com.squareup.okhttp.ResponseBody
 import com.squareup.okhttp.MediaType
@@ -13,6 +12,8 @@ import org.jsoup.Jsoup
 import android.text.Html
 import java.util.regex.Pattern
 import advaitaworld.db.User
+import android.content.Context
+import java.io.InputStream
 
 public enum class Section {
     Popular
@@ -42,7 +43,7 @@ public class Server {
     }
 
     // some other implementation of Server could use different urls
-    private fun sectionUrl(section: Section) : String {
+    fun sectionUrl(section: Section) : String {
         return when(section) {
             Section.Popular -> "http://advaitaworld.com"
             Section.Community -> "http://advaitaworld.com/blog/new"
@@ -52,7 +53,7 @@ public class Server {
     }
 
     // some other implementation of Server could use different urls
-    private fun profileUrl(name: String) : String {
+    fun profileUrl(name: String) : String {
         return "http://advaitaworld.com/profile/$name"
     }
 }
@@ -93,11 +94,9 @@ private fun parseVoteCount(s: String): String? {
 
 // FIXME put in some common place, this is a generic method
 private fun runRequest(client: OkHttpClient, url: String) : Observable<ResponseBody> {
-    if(MOCK_PAGE_HTML != null && !url.contains("profile")) {
+    if(MOCK_URL_DATA.containsKey(url)) {
         Timber.d("USING MOCK DATA for url $url")
-        val scanner = java.util.Scanner(MOCK_PAGE_HTML).useDelimiter("\\A")
-        val content = if(scanner.hasNext()) scanner.next() else ""
-        return Observable.just(ResponseBody.create(MediaType.parse("application/html"), content))
+        return Observable.just(ResponseBody.create(MediaType.parse("application/html"), MOCK_URL_DATA.get(url)))
     }
     return runOnce {
         Timber.d("starting request for url $url")
@@ -112,4 +111,11 @@ private fun runRequest(client: OkHttpClient, url: String) : Observable<ResponseB
 }
 
 // FIXME remove
-public var MOCK_PAGE_HTML: InputStream? = null
+private val MOCK_URL_DATA: MutableMap<String, String> = hashMapOf()
+public fun initMockData(context: Context, server: Server) {
+    fun streamToString(stream: InputStream) : String{
+        return java.util.Scanner(stream).useDelimiter("\\A").next()
+    }
+    MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
+            streamToString(context.getAssets().open("main_test.html")))
+}

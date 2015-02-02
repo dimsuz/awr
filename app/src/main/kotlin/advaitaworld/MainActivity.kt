@@ -20,6 +20,8 @@ public class MainActivity : ActionBarActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // FIXME remove this
+        initMockData(this, server)
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setupPostsList()
@@ -37,7 +39,6 @@ public class MainActivity : ActionBarActivity() {
     }
 
     private fun fetchPosts() {
-        MOCK_PAGE_HTML = getAssets().open("main_test.html")
         // Get posts, then find out which authors already have user info record in
         // DB and which haven't. Pass the former to the adapter and fetch info for the latter from
         // server
