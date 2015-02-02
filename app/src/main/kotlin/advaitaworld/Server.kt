@@ -2,9 +2,6 @@ package advaitaworld
 
 import rx.Observable
 import com.squareup.okhttp.OkHttpClient
-import advaitaworld.util.runOnce
-import com.squareup.okhttp.Request
-import java.io.IOException
 import timber.log.Timber
 import com.squareup.okhttp.ResponseBody
 import com.squareup.okhttp.MediaType
@@ -92,22 +89,13 @@ private fun parseVoteCount(s: String): String? {
     }
 }
 
-// FIXME put in some common place, this is a generic method
-private fun runRequest(client: OkHttpClient, url: String) : Observable<ResponseBody> {
+// FIXME remove when mocking is not needed, use directly
+private fun runMockableRequest(client: OkHttpClient, url: String) : Observable<ResponseBody> {
     if(MOCK_URL_DATA.containsKey(url)) {
         Timber.d("USING MOCK DATA for url $url")
         return Observable.just(ResponseBody.create(MediaType.parse("application/html"), MOCK_URL_DATA.get(url)))
     }
-    return runOnce {
-        Timber.d("starting request for url $url")
-        val request = Request.Builder().url(url).build()
-        val response = client.newCall(request).execute()
-        if(!response.isSuccessful()) {
-            throw IOException("unexpected http code: ${response.code()}")
-        }
-        Timber.d("got successful response for $url")
-        response.body()
-    }
+    return runRequest(client, url)
 }
 
 // FIXME remove
