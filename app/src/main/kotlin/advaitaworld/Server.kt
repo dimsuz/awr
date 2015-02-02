@@ -10,7 +10,6 @@ import android.text.Html
 import java.util.regex.Pattern
 import advaitaworld.db.User
 import android.content.Context
-import java.io.InputStream
 
 public enum class Section {
     Popular
@@ -29,7 +28,7 @@ public class Server {
 
     public fun getPosts(section: Section) : Observable<List<Post>> {
         Timber.d("getting posts for $section")
-        return runRequest(client, sectionUrl(section))
+        return runMockableRequest(client, sectionUrl(section))
                 .map({ parseHtml(it.string()) })
     }
 
@@ -101,9 +100,10 @@ private fun runMockableRequest(client: OkHttpClient, url: String) : Observable<R
 // FIXME remove
 private val MOCK_URL_DATA: MutableMap<String, String> = hashMapOf()
 public fun initMockData(context: Context, server: Server) {
-    fun streamToString(stream: InputStream) : String{
+    fun assetToString(fileName: String) : String{
+        val stream = context.getAssets().open(fileName)
         return java.util.Scanner(stream).useDelimiter("\\A").next()
     }
     MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
-            streamToString(context.getAssets().open("main_test.html")))
+            assetToString("main_test.html"))
 }
