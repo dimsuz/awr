@@ -64,6 +64,7 @@ public class MainActivity : ActionBarActivity() {
                 .flatMap({ server.getUserInfo(it) })
         AppObservable.bindActivity(this, userData)
                 .subscribeOn(Schedulers.io())
+                // FIXME remove these test cases
                 .doOnNext({ if(it.name != "Amin" && it.name != "veter") db?.saveUser(it) })
                 .subscribe(
                         { adapter?.onUserInfoUpdated(it) },

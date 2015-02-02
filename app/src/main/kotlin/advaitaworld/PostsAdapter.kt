@@ -52,6 +52,8 @@ public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
             Picasso.with(holder.avatar.getContext())
                     .load(Uri.parse(userInfo.avatarUrl))
                     .into(holder.avatar)
+        } else {
+            // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
         }
         holder.content.setText(post.content)
         holder.author.setText(post.author)
