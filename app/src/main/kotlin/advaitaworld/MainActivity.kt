@@ -15,7 +15,7 @@ import android.view.MenuItem
 
 public class MainActivity : ActionBarActivity() {
     var adapter: PostsAdapter? = null
-    val server = Server()
+    val server: Server by ServerProvider()
     var db: Database? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

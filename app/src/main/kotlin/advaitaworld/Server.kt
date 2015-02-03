@@ -11,6 +11,18 @@ import java.util.regex.Pattern
 import advaitaworld.db.User
 import android.content.Context
 
+// FIXME move to some particular place which contains common app dependency providers?
+private var server: Server? = null
+class ServerProvider {
+    fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
+        if(server == null) {
+            server = Server()
+        }
+        return server!!
+    }
+
+}
+
 public enum class Section {
     Popular
     Community
