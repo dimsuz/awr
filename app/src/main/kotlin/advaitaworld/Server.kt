@@ -38,6 +38,13 @@ public data class ShortPostInfo(
         val content: ContentInfo,
         val commentCount: String?)
 
+public data class CommentNode(val author: String,
+                              val content: ContentInfo,
+                              val children: List<CommentNode>?)
+
+public data class PostData(val content: ContentInfo,
+                           val comments: Observable<CommentNode>)
+
 public class Server {
     private val client = OkHttpClient()
 
@@ -45,6 +52,10 @@ public class Server {
         Timber.d("getting posts for $section")
         return runMockableRequest(client, sectionUrl(section))
                 .map({ parseHtml(it.string()) })
+    }
+
+    public fun getFullPost(postId: String) : Observable<PostData> {
+        return Observable.empty()
     }
 
     public fun getUserInfo(name: String) : Observable<User> {
@@ -115,6 +126,8 @@ private fun runMockableRequest(client: OkHttpClient, url: String) : Observable<R
 
 // FIXME remove
 private val MOCK_URL_DATA: MutableMap<String, String> = hashMapOf()
+public val FULL_POST_TEST_URL: String = "http://advaitaworld.com/blog/free-away/40409.html"
+
 public fun initMockData(context: Context, server: Server) {
     fun assetToString(fileName: String) : String{
         val stream = context.getAssets().open(fileName)
@@ -122,4 +135,5 @@ public fun initMockData(context: Context, server: Server) {
     }
     MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
             assetToString("main_test.html"))
+    MOCK_URL_DATA.put(FULL_POST_TEST_URL, assetToString("full_post_test.html"))
 }
