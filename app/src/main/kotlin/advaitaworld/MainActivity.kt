@@ -20,8 +20,6 @@ public class MainActivity : ActionBarActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // FIXME remove this
-        initMockData(this, server)
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setupPostsList()

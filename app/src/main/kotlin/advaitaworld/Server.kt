@@ -4,7 +4,6 @@ import rx.Observable
 import com.squareup.okhttp.OkHttpClient
 import timber.log.Timber
 import com.squareup.okhttp.ResponseBody
-import com.squareup.okhttp.MediaType
 import org.jsoup.Jsoup
 import android.content.Context
 import advaitaworld.parsing.parseFullPost
@@ -12,6 +11,8 @@ import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.parsePostFeed
 import advaitaworld.parsing.User
+import advaitaworld.util.runOnce
+import com.squareup.okhttp.MediaType
 
 // FIXME move to some particular place which contains common app dependency providers?
 private var server: Server? = null
@@ -19,6 +20,8 @@ class ServerProvider {
     fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
         if(server == null) {
             server = Server()
+            // FIXME remove this
+            initMockData(context, server!!)
         }
         return server!!
     }
@@ -42,7 +45,7 @@ public class Server {
 
     public fun getFullPost(postId: String) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
-        return runRequest(client, postUrl(postId))
+        return runMockableRequest(client, postUrl(postId))
                 .map({ parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") })
     }
 
@@ -91,7 +94,7 @@ private fun runMockableRequest(client: OkHttpClient, url: String) : Observable<R
 
 // FIXME remove
 private val MOCK_URL_DATA: MutableMap<String, String> = hashMapOf()
-public val FULL_POST_TEST_URL: String = "http://advaitaworld.com/blog/free-away/40409.html"
+private val TEST_POST_ID: String = "40409"
 
 public fun initMockData(context: Context, server: Server) {
     fun assetToString(fileName: String) : String{
@@ -100,5 +103,5 @@ public fun initMockData(context: Context, server: Server) {
     }
     MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
             assetToString("main_test.html"))
-    MOCK_URL_DATA.put(FULL_POST_TEST_URL, assetToString("full_post_test.html"))
+    MOCK_URL_DATA.put(server.postUrl(TEST_POST_ID), assetToString("full_post_test.html"))
 }
