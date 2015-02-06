@@ -8,12 +8,12 @@ fun parsePostFeed(content: String): List<ShortPostInfo> {
     val document = Jsoup.parse(content)
     val posts = document.select("article.topic")
     val parsedPosts = posts.map({ postElem ->
-        val text = postElem.select(".topic-content").get(0).html()
-        val author = postElem.select("a.user").get(0).text()
-        val dateString = postElem.select(".topic-info-date > time").get(0).text()
+        val text = postElem.selectFirst(".topic-content").html()
+        val author = postElem.selectFirst("a.user").text()
+        val dateString = postElem.selectFirst(".topic-info-date > time").text()
         val commentElem = postElem.select(".topic-info-comments > a > span")
         val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
-        val voteCountStr = postElem.select(".vote-count > span").get(0).text()
+        val voteCountStr = postElem.selectFirst(".vote-count > span").text()
         val voteCount = parseVoteCount(voteCountStr)
         val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
         ShortPostInfo(contentInfo, commentCount)
