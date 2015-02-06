@@ -12,6 +12,7 @@ import advaitaworld.db.Database
 import rx.Observable
 import android.view.Menu
 import android.view.MenuItem
+import android.support.v7.widget.Toolbar
 
 public class MainActivity : ActionBarActivity() {
     var adapter: PostsAdapter? = null
@@ -22,6 +23,7 @@ public class MainActivity : ActionBarActivity() {
         super.onCreate(savedInstanceState)
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         setupPostsList()
         fetchPosts()
     }
