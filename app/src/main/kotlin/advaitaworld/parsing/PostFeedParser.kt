@@ -14,20 +14,10 @@ fun parsePostFeed(content: String): List<ShortPostInfo> {
         val commentElem = postElem.select(".topic-info-comments > a > span")
         val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
         val voteCountStr = postElem.selectFirst(".vote-count > span").text()
-        val voteCount = parseVoteCount(voteCountStr)
+        val voteCount = parsePostVoteCount(voteCountStr)
         val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
         ShortPostInfo(contentInfo, commentCount)
     })
     return parsedPosts
-}
-
-private val votePattern = Pattern.compile("^[+-]\\d+")
-private fun parseVoteCount(s: String): String? {
-    val m = votePattern.matcher(s)
-    if(m.matches()) {
-        return s
-    } else {
-        return null
-    }
 }
 
