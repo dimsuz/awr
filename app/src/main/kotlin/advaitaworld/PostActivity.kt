@@ -1,10 +1,14 @@
 package advaitaworld
 
-import android.support.v7.app.ActionBarActivity
 import android.os.Bundle
+import advaitaworld.support.RxActionBarActivity
+import rx.schedulers.Schedulers
+import rx.android.schedulers.AndroidSchedulers
+import rx.android.lifecycle.LifecycleObservable
+import advaitaworld.util.printError
 import timber.log.Timber
 
-public class PostActivity : ActionBarActivity() {
+public class PostActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,5 +18,11 @@ public class PostActivity : ActionBarActivity() {
         if(postId == null) {
             throw RuntimeException("post id missing")
         }
+        LifecycleObservable.bindActivityLifecycle(lifecycle(), server.getFullPost(postId))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { Timber.d("got full post") },
+                        printError("failed to retrieve fullpost"))
     }
 }
