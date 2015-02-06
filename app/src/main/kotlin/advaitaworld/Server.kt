@@ -66,6 +66,10 @@ public class Server {
     fun profileUrl(name: String) : String {
         return "http://advaitaworld.com/profile/$name"
     }
+
+    fun postUrl(postId: String) : String {
+        return "http://advaitaworld.com/blog/$postId.html"
+    }
 }
 
 private fun parseUserProfile(name: String, html: String): User {
