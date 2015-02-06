@@ -6,10 +6,12 @@ import timber.log.Timber
 import com.squareup.okhttp.ResponseBody
 import com.squareup.okhttp.MediaType
 import org.jsoup.Jsoup
-import android.text.Html
-import java.util.regex.Pattern
-import advaitaworld.db.User
 import android.content.Context
+import advaitaworld.parsing.parseFullPost
+import advaitaworld.parsing.ShortPostInfo
+import advaitaworld.parsing.PostData
+import advaitaworld.parsing.parsePostFeed
+import advaitaworld.parsing.User
 
 // FIXME move to some particular place which contains common app dependency providers?
 private var server: Server? = null
@@ -29,33 +31,19 @@ public enum class Section {
     Personal
 }
 
-public data class ContentInfo(val author: String,
-                               val text: CharSequence,
-                               val dateString: String,
-                               val rating: String?)
-
-public data class ShortPostInfo(
-        val content: ContentInfo,
-        val commentCount: String?)
-
-public data class CommentNode(val author: String,
-                              val content: ContentInfo,
-                              val children: List<CommentNode>?)
-
-public data class PostData(val content: ContentInfo,
-                           val comments: Observable<CommentNode>)
-
 public class Server {
     private val client = OkHttpClient()
 
     public fun getPosts(section: Section) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
         return runMockableRequest(client, sectionUrl(section))
-                .map({ parseHtml(it.string()) })
+                .map({ parsePostFeed(it.string()) })
     }
 
     public fun getFullPost(postId: String) : Observable<PostData> {
-        return Observable.empty()
+        Timber.d("getting full post: ${postUrl(postId)}")
+        return runRequest(client, postUrl(postId))
+                .map({ parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") })
     }
 
     public fun getUserInfo(name: String) : Observable<User> {
@@ -80,39 +68,12 @@ public class Server {
     }
 }
 
-private fun parseHtml(content: String): List<ShortPostInfo> {
-    val document = Jsoup.parse(content)
-    val posts = document.select("article.topic")
-    val parsedPosts = posts.map({ postElem ->
-        val text = postElem.select(".topic-content").get(0).html()
-        val author = postElem.select("a.user").get(0).text()
-        val dateString = postElem.select(".topic-info-date > time").get(0).text()
-        val commentElem = postElem.select(".topic-info-comments > a > span")
-        val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
-        val voteCountStr = postElem.select(".vote-count > span").get(0).text()
-        val voteCount = parseVoteCount(voteCountStr)
-        val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
-        ShortPostInfo(contentInfo, commentCount)
-    })
-    return parsedPosts
-}
-
 private fun parseUserProfile(name: String, html: String): User {
     Timber.d("parsing profile for $name")
     val document = Jsoup.parse(html)
     val imgElem = document.select("div.profile-top > .avatar > img")
     val imgUrl = imgElem.get(0).attr("src")
     return User(name, imgUrl)
-}
-
-private val votePattern = Pattern.compile("^[+-]\\d+")
-private fun parseVoteCount(s: String): String? {
-    val m = votePattern.matcher(s)
-    if(m.matches()) {
-        return s
-    } else {
-        return null
-    }
 }
 
 // FIXME remove when mocking is not needed, use directly

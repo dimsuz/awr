@@ -2,6 +2,8 @@ package advaitaworld.util
 
 import rx.Subscriber
 import rx.Observable
+import rx.functions.Action1
+import timber.log.Timber
 
 public fun <T> runOnce(body: () -> T) : Observable<T> {
     return Observable.create({ subscriber ->
@@ -27,3 +29,6 @@ private fun <T> runBodyOnce(body: () -> T, subscriber: Subscriber<T>?) {
     }
 }
 
+public fun printError(message: String) : (Throwable) -> Unit {
+    return { e -> Timber.e(message, e) }
+}

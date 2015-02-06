@@ -19,5 +19,3 @@ public val USERS_TABLE: String = "users"
 public val USERS_COLUMN_ID: String = BaseColumns._ID
 public val USERS_COLUMN_NAME: String = "name"
 public val USERS_COLUMN_AVATAR_URL: String = "ava_url"
-
-public data class User(val name: String, val avatarUrl: String)

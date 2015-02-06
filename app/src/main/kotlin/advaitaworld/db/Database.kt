@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import timber.log.Timber
 import android.content.ContentValues
+import advaitaworld.parsing.User
 
 private val DATABASE_NAME = "main.db"
 private val DATABASE_VERSION = 1

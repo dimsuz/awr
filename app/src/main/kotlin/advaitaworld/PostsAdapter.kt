@@ -9,8 +9,9 @@ import android.view.LayoutInflater
 import android.net.Uri
 import com.squareup.picasso.Picasso
 import advaitaworld.PostsAdapter.ViewHolder
-import advaitaworld.db.User
 import timber.log.Timber
+import advaitaworld.parsing.ShortPostInfo
+import advaitaworld.parsing.User
 
 public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<ShortPostInfo> = listOf()
