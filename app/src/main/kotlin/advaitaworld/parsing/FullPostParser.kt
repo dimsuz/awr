@@ -1,6 +1,5 @@
 package advaitaworld.parsing
 
-import rx.Observable
 import org.jsoup.Jsoup
 import android.text.Html
 
@@ -18,6 +17,9 @@ public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostDat
     val voteCountStr = topicContainer.selectFirst(".vote-count > span").text()
     val voteCount = parsePostVoteCount(voteCountStr)
     val contentInfo = ContentInfo(author, Html.fromHtml(content), dateString, voteCount)
-    return PostData(contentInfo, Observable.empty())
+    return PostData(contentInfo, listOf(
+            CommentNode(ContentInfo("Dima", "hello", "date", null), null),
+            CommentNode(ContentInfo("Dima", "hello", "date", null), null),
+            CommentNode(ContentInfo("Dima", "hello", "date", null), null)))
 }
 

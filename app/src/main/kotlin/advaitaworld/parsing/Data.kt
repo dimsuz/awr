@@ -11,12 +11,11 @@ public data class ShortPostInfo(
         val content: ContentInfo,
         val commentCount: String?)
 
-public data class CommentNode(val author: String,
-                              val content: ContentInfo,
+public data class CommentNode(val content: ContentInfo,
                               val children: List<CommentNode>?)
 
 public data class PostData(val content: ContentInfo,
-                           val comments: Observable<CommentNode>)
+                           val comments: List<CommentNode>)
 
 public data class User(val name: String, val avatarUrl: String)
 
