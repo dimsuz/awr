@@ -8,12 +8,12 @@ import android.widget.ImageView
 import android.view.LayoutInflater
 import android.net.Uri
 import com.squareup.picasso.Picasso
-import advaitaworld.PostsAdapter.ViewHolder
+import advaitaworld.PostFeedAdapter.ViewHolder
 import timber.log.Timber
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
 
-public class PostsAdapter() : RecyclerView.Adapter<ViewHolder>() {
+public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<ShortPostInfo> = listOf()
     val userInfo: MutableMap<String, User> = hashMapOf()
 

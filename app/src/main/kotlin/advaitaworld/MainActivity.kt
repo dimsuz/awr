@@ -15,7 +15,7 @@ import android.view.MenuItem
 import android.support.v7.widget.Toolbar
 
 public class MainActivity : ActionBarActivity() {
-    var adapter: PostsAdapter? = null
+    var adapter: PostFeedAdapter? = null
     val server: Server by ServerProvider()
     var db: Database? = null
 
@@ -34,7 +34,7 @@ public class MainActivity : ActionBarActivity() {
         listView.setHasFixedSize(true)
         listView.addItemDecoration(SpaceItemDecoration(
                 getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
-        adapter = PostsAdapter()
+        adapter = PostFeedAdapter()
         listView.setAdapter(adapter)
     }
 
