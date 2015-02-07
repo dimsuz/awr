@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:baselineAligned="false"
-    android:elevation="4dp"
+    android:elevation="8dp"
     >
 
     <!-- Header -->

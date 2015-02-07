@@ -9,10 +9,9 @@ import advaitaworld.support.RxActionBarActivity
 import android.view.Menu
 import android.support.v7.widget.Toolbar
 import advaitaworld.parsing.PostData
-import android.widget.TextView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
-import advaitaworld.util.SpaceItemDecoration
+import advaitaworld.util.DividerItemDecoration
 
 public class PostActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
@@ -41,6 +40,9 @@ public class PostActivity : RxActionBarActivity() {
     private fun setupPostView() {
         val listView = findViewById(R.id.post_view) as RecyclerView
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
+        val dividerDecor = DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST)
+        dividerDecor.setStartItem(1) // first item is the post itself, doesn't need a divider
+        listView.addItemDecoration(dividerDecor)
         listView.setAdapter(adapter)
     }
 

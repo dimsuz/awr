@@ -2,6 +2,8 @@
     <dimen name="activity_horizontal_margin">8dp</dimen>
     <dimen name="activity_vertical_margin">8dp</dimen>
     <dimen name="card_vertical_margin">8dp</dimen>
+    <dimen name="margin">8dp</dimen>
+    <dimen name="margin_x2">16dp</dimen>
     <dimen name="extended_action_bar_height">112dp</dimen>
     <dimen name="post_action_view_height">44dp</dimen>
 </resources>

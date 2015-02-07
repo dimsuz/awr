@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:paddingLeft="16dp"
-              android:paddingRight="16dp"
-              android:paddingBottom="16dp"
-              android:text="Comment"
+          android:background="#fff"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:padding="8dp"
+          android:textSize="14sp"
+          android:textColor="@color/primary_text"
+          android:drawableLeft="@drawable/placeholder_32x32"
+          android:drawablePadding="8dp"
+          android:text="Comment"
     />
