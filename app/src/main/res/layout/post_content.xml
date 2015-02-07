@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:background="@drawable/white_rect_background"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:baselineAligned="false"
-              android:paddingBottom="8dp"
-              android:elevation="4dp"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@drawable/white_rect_background"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:baselineAligned="false"
+    android:elevation="4dp"
     >
-    <TextView
-        android:id="@+id/post_content"
+
+    <!-- Header -->
+    <include layout="@layout/post_content_header"/>
+
+    <!-- Content -->
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        />
-    <include layout="@layout/rating_actions"/>
+        android:baselineAligned="false"
+        android:paddingBottom="8dp"
+        >
+        <TextView
+            android:id="@+id/post_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            />
+        <include layout="@layout/rating_actions"/>
+    </LinearLayout>
 </LinearLayout>

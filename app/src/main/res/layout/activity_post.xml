@@ -18,7 +18,6 @@
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
-        <include layout="@layout/post_content_header"/>
         <include layout="@layout/post_content"/>
         <TextView
             android:layout_width="match_parent"
