@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:background="#b6b6b6"
+              android:background="@drawable/white_rect_background"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
+              android:baselineAligned="false"
+              android:paddingBottom="8dp"
+              android:elevation="4dp"
     >
     <TextView
         android:id="@+id/post_content"
-        android:background="@drawable/white_rect_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:elevation="4dp"
         />
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:gravity="center"
-        android:text="Commentses"/>
+    <include layout="@layout/rating_actions"/>
 </LinearLayout>

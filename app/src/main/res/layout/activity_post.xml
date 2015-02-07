@@ -6,6 +6,7 @@
               android:layout_height="match_parent"
               android:baselineAligned="false">
     <ScrollView
+        android:background="#b6b6b6"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <LinearLayout
@@ -23,6 +24,11 @@
 
             <include layout="@layout/post_content_header"/>
             <include layout="@layout/post_content"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:gravity="center"
+                android:text="Commentses"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
