@@ -39,5 +39,5 @@ private fun <T> runBodyOnce(body: () -> T, subscriber: Subscriber<T>?) {
 }
 
 public fun printError(message: String) : (Throwable) -> Unit {
-    return { e -> Timber.e(message, e) }
+    return { e -> Timber.e(e, message) }
 }
