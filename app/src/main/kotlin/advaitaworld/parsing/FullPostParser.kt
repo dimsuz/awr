@@ -4,7 +4,11 @@ import org.jsoup.Jsoup
 import android.text.Html
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.util.Stack
+import java.util.ArrayDeque
+import java.util.ArrayList
+import android.support.v4.util.Pools.SimplePool
+import timber.log.Timber
+import android.support.v4.util.Pools.Pool
 
 /**
  * Parses a full post
@@ -23,53 +27,94 @@ public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostDat
     return PostData(contentInfo, parseComments(document))
 }
 
+private val avgCommentPerThreadCount = 100
+
 private fun parseComments(document: Document): List<CommentNode> {
     // select all the top-level comment nodes
     val nodes = document.select("#comments > .comment-wrapper")
     if(nodes.isEmpty()) {
         return listOf()
     }
-    return nodes.map { parseCommentWrapper(it) }
+    val dequePool = SimplePool<ArrayDeque<TreeWalkNode>>(3)
+    val nodePool = SimplePool<TreeWalkNode>(avgCommentPerThreadCount)
+    // FIXME extract number of comments in post and use that info to warm up pools
+    // (instead of guessing with avgCommentPerThreadCount)
+    return nodes.map { parseCommentWrapperIterative(it, dequePool, nodePool) }
 }
 
-data class TreeWalkNode(val parent: TreeWalkNode?,
-                        val element: Element,
-                        var discovered: Boolean = false,
-                        var children: MutableList<ContentInfo> = arrayListOf())
+data class TreeWalkNode(var element: Element, var level: Int, var parsedChildren: MutableList<CommentNode>?)
 
-private fun parseCommentWrapperIterative(commentWrapper: Element) : CommentNode {
-    // this implements a tree traversal depth-first algorithm
-    // (with slight variation - adding children to parent nodes along the way)
-    val stack : Stack<TreeWalkNode> = Stack()
-    val rootNode = TreeWalkNode(null, commentWrapper)
-    stack.push(rootNode)
-    while(!stack.isEmpty()) {
-        val node = stack.pop()
-        if(!node.discovered) {
-            node.discovered = true
-            if(node.parent != null) {
-                node.parent.children.add(parseComment(node.element))
-            }
+// Parsing happens in two stages: first the whole comment tree is traversed in the depth-first order,
+// it builds the walking path of the form (P-parent, C-Child): P C C C P C C P
+// After path is built, it is used to reconstruct the tree, bottom up, by
+// accumulating the child nodes until the parent node of higher level will be met.
+// The walk path is constructed so that parent nodes will be immediately followed by their direct children
+// (when looking from left to right)
+private fun parseCommentWrapperIterative(commentWrapper: Element,
+                                         dequePool: SimplePool<ArrayDeque<TreeWalkNode>>,
+                                         nodePool: SimplePool<TreeWalkNode>) : CommentNode {
+    val queue : ArrayDeque<TreeWalkNode> = dequePool.acquire() ?: ArrayDeque(avgCommentPerThreadCount)
+    val walkPath: ArrayDeque<TreeWalkNode> = dequePool.acquire() ?: ArrayDeque(avgCommentPerThreadCount)
 
-            val childElems = node.element.select(".comment-wrapper")
-            for(i in childElems.size()-1 downTo 0) {
-                stack.push(TreeWalkNode(node, childElems.get(i), discovered = false))
+    val rootNode = nodePool.acquire() ?: TreeWalkNode(commentWrapper, 0, null)
+    // if acquired from pool, initialize
+    if(rootNode.level == -1) { rootNode.element = commentWrapper; rootNode.level = 0; rootNode.parsedChildren = null }
+
+    var maxLevel = 0
+    queue.addLast(rootNode)
+    while(!queue.isEmpty()) {
+        val node = queue.removeLast()
+        walkPath.add(node)
+        maxLevel = if(maxLevel < node.level) node.level else maxLevel
+
+        val childElems = node.element.children()
+        for(e in childElems) {
+            if(e.hasClass("comment-wrapper")) {
+                val l = node.level + 1
+                val newNode = nodePool.acquire() ?: TreeWalkNode(e, l, null)
+                // if acquired from pool, initialize
+                if(newNode.level == -1) { newNode.element = e; newNode.level = l; newNode.parsedChildren = null }
+                queue.addLast(newNode)
             }
         }
     }
-    return toCommentNode(rootNode)
+
+    val result = buildFromWalkPath(walkPath, maxLevel, nodePool)
+    // after building the nodes tree, release all we can to pools to avoid recreating a lot of objects while parsing
+    // next comment thread
+    walkPath.clear(); queue.clear()
+    dequePool.release(walkPath); dequePool.release(queue)
+    return result
 }
 
-private fun toCommentNode(rootNode: TreeWalkNode) : CommentNode {
-    // todo
-}
-
-fun parseCommentWrapper(commentWrapper: Element): CommentNode {
-    val commentInfo = parseComment(commentWrapper.selectFirst(".comment"))
-    val childCommentWrappers = commentWrapper.select(".comment-wrapper")
-    val childNodes = if(!childCommentWrappers.isEmpty())
-        childCommentWrappers.map { parseCommentWrapper(it) } else null
-    return CommentNode(commentInfo, childNodes)
+// See detailed description of the whole process above
+private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int, nodePool: Pool<TreeWalkNode>): CommentNode {
+    if(walkPath.isEmpty()) {
+        throw RuntimeException("no elements")
+    }
+    //Timber.d("max level is $maxLevel")
+    var currentLevel = maxLevel
+    val levelContent: MutableList<CommentNode> = arrayListOf()
+    while(!walkPath.isEmpty()) {
+        val iterator = walkPath.descendingIterator()
+        while (iterator.hasNext()) {
+            val node = iterator.next()
+            if (node.level < currentLevel && !levelContent.isEmpty()) {
+                // iterated to the parent element of accumulated ones
+                node.parsedChildren = ArrayList(levelContent)
+                levelContent.clear()
+            } else if(node.level == currentLevel) {
+                iterator.remove()
+                levelContent.add(CommentNode(parseComment(node.element), node.parsedChildren))
+                // release to pool by setting the level to special value
+                node.level = -1
+                nodePool.release(node)
+            } // else skip...
+        }
+        currentLevel = currentLevel - 1
+    }
+    // we should end up with exactly root node in the list
+    return levelContent.single()
 }
 
 fun parseComment(commentElem: Element): ContentInfo {
@@ -80,4 +125,3 @@ fun parseComment(commentElem: Element): ContentInfo {
     val voteCount = parsePostVoteCount(voteCountStr)
     return ContentInfo(author, content, dateString, voteCount)
 }
-
