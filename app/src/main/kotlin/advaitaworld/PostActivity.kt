@@ -12,6 +12,7 @@ import advaitaworld.parsing.PostData
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.DividerItemDecoration
+import timber.log.Timber
 
 public class PostActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
@@ -52,6 +53,7 @@ public class PostActivity : RxActionBarActivity() {
     }
 
     private fun showPostData(data: PostData) {
+        Timber.d("showing post with ${data.comments.size()} top level comments")
         adapter.swapData(data)
     }
 }
