@@ -40,7 +40,7 @@ private fun parseComments(document: Document): List<CommentNode> {
     val dequePool = SimplePool<ArrayDeque<TreeWalkNode>>(3)
     val nodePool = SimplePool<TreeWalkNode>(avgCommentPerThreadCount)
     warmUpPools(dequePool, nodePool, avgCommentPerThreadCount)
-    return nodes.map { parseCommentWrapperIterative(it, dequePool, nodePool) }
+    return nodes.map { parseCommentsThreadIterative(it, dequePool, nodePool) }
 }
 
 private fun warmUpPools(dequePool: Pool<ArrayDeque<TreeWalkNode>>, nodePool: Pool<TreeWalkNode>, avgCommentPerThreadCount: Int) {
@@ -60,7 +60,7 @@ data class TreeWalkNode(var element: Element?, var level: Int, var parsedChildre
 // accumulating the child nodes until the parent node of higher level will be met.
 // The walk path is constructed so that parent nodes will be immediately followed by their direct children
 // (when looking from left to right)
-private fun parseCommentWrapperIterative(commentWrapper: Element,
+private fun parseCommentsThreadIterative(commentWrapper: Element,
                                          dequePool: SimplePool<ArrayDeque<TreeWalkNode>>,
                                          nodePool: SimplePool<TreeWalkNode>) : CommentNode {
     // expecting pools to be warmed up
