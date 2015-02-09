@@ -27,22 +27,32 @@ public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostDat
     return PostData(contentInfo, parseComments(document))
 }
 
-private val avgCommentPerThreadCount = 100
-
 private fun parseComments(document: Document): List<CommentNode> {
     // select all the top-level comment nodes
     val nodes = document.select("#comments > .comment-wrapper")
     if(nodes.isEmpty()) {
         return listOf()
     }
+    val commentsCount = document.selectFirst("#count-comments").text().toInt()
+    val threadCount = nodes.size()
+    val avgCommentPerThreadCount = commentsCount/threadCount
+    Timber.d("$threadCount threads contain $commentsCount comments, average comments per thread is $avgCommentPerThreadCount")
     val dequePool = SimplePool<ArrayDeque<TreeWalkNode>>(3)
     val nodePool = SimplePool<TreeWalkNode>(avgCommentPerThreadCount)
-    // FIXME extract number of comments in post and use that info to warm up pools
-    // (instead of guessing with avgCommentPerThreadCount)
+    warmUpPools(dequePool, nodePool, avgCommentPerThreadCount)
     return nodes.map { parseCommentWrapperIterative(it, dequePool, nodePool) }
 }
 
-data class TreeWalkNode(var element: Element, var level: Int, var parsedChildren: MutableList<CommentNode>?)
+private fun warmUpPools(dequePool: Pool<ArrayDeque<TreeWalkNode>>, nodePool: Pool<TreeWalkNode>, avgCommentPerThreadCount: Int) {
+    // two deques - one for 'stack', one for walk path
+    dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
+    dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
+    for(i in (1..avgCommentPerThreadCount)) {
+        nodePool.release(TreeWalkNode(element = null, level = -1, parsedChildren = null))
+    }
+}
+
+data class TreeWalkNode(var element: Element?, var level: Int, var parsedChildren: MutableList<CommentNode>?)
 
 // Parsing happens in two stages: first the whole comment tree is traversed in the depth-first order,
 // it builds the walking path of the form (P-parent, C-Child): P C C C P C C P
@@ -53,8 +63,9 @@ data class TreeWalkNode(var element: Element, var level: Int, var parsedChildren
 private fun parseCommentWrapperIterative(commentWrapper: Element,
                                          dequePool: SimplePool<ArrayDeque<TreeWalkNode>>,
                                          nodePool: SimplePool<TreeWalkNode>) : CommentNode {
-    val queue : ArrayDeque<TreeWalkNode> = dequePool.acquire() ?: ArrayDeque(avgCommentPerThreadCount)
-    val walkPath: ArrayDeque<TreeWalkNode> = dequePool.acquire() ?: ArrayDeque(avgCommentPerThreadCount)
+    // expecting pools to be warmed up
+    val queue : ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
+    val walkPath: ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
 
     val rootNode = nodePool.acquire() ?: TreeWalkNode(commentWrapper, 0, null)
     // if acquired from pool, initialize
@@ -67,7 +78,7 @@ private fun parseCommentWrapperIterative(commentWrapper: Element,
         walkPath.add(node)
         maxLevel = if(maxLevel < node.level) node.level else maxLevel
 
-        val childElems = node.element.children()
+        val childElems = node.element!!.children()
         for(e in childElems) {
             if(e.hasClass("comment-wrapper")) {
                 val l = node.level + 1
@@ -105,7 +116,7 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
                 levelContent.clear()
             } else if(node.level == currentLevel) {
                 iterator.remove()
-                levelContent.add(CommentNode(parseComment(node.element), node.parsedChildren))
+                levelContent.add(CommentNode(parseComment(node.element!!), node.parsedChildren))
                 // release to pool by setting the level to special value
                 node.level = -1
                 nodePool.release(node)
@@ -117,7 +128,7 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
     return levelContent.single()
 }
 
-fun parseComment(commentElem: Element): ContentInfo {
+private fun parseComment(commentElem: Element): ContentInfo {
     val author = commentElem.selectFirst(".comment-author").text()
     val content = commentElem.selectFirst(".comment-content > .text").html()
     val dateString = commentElem.selectFirst(".comment-date > time").text()
