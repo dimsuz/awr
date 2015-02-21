@@ -10,6 +10,8 @@ import advaitaworld.PostAdapter.PostViewHolder
 import advaitaworld.parsing.CommentNode
 import advaitaworld.PostAdapter.CommentViewHolder
 import android.widget.TextView
+import advaitaworld.views.CommentTreeView
+import android.view.ViewGroup.LayoutParams
 
 private val ITEM_TYPE_CONTENT = 0
 private val ITEM_TYPE_COMMENT = 1
@@ -26,10 +28,13 @@ class PostAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.getContext())
         if(viewType == ITEM_TYPE_COMMENT) {
-            return CommentViewHolder(inflater.inflate(R.layout.comment, parent, false))
+            val view = CommentTreeView(parent.getContext())
+            parent.addView(view,
+                    ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT,  LayoutParams.WRAP_CONTENT))
+            return CommentViewHolder(view)
         } else {
+            val inflater = LayoutInflater.from(parent.getContext())
             return PostViewHolder(inflater.inflate(R.layout.post_content, parent, false))
         }
     }
@@ -50,8 +55,8 @@ class PostAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return if(data != null) data!!.comments.size() + 1 else 0
     }
 
-    class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textView = itemView as TextView
+    class CommentViewHolder(itemView: CommentTreeView) : RecyclerView.ViewHolder(itemView) {
+        val commentView = itemView
     }
 
     class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -68,5 +73,5 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
 }
 
 private  fun bindCommentHolder(holder: CommentViewHolder, comment: CommentNode) {
-    holder.textView.setText(comment.content.text)
+    holder.commentView.showCommentTree(comment)
 }
