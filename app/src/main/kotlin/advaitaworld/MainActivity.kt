@@ -13,6 +13,7 @@ import rx.Observable
 import android.view.Menu
 import android.view.MenuItem
 import android.support.v7.widget.Toolbar
+import android.content.Intent
 
 public class MainActivity : ActionBarActivity() {
     var adapter: PostFeedAdapter? = null
@@ -86,6 +87,7 @@ public class MainActivity : ActionBarActivity() {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            startActivity(Intent(this, javaClass<PostActivity>()))
             return true
         }
 
