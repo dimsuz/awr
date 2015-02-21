@@ -129,10 +129,16 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
 }
 
 private fun parseComment(commentElem: Element): ContentInfo {
-    val author = commentElem.selectFirst(".comment-author").text()
-    val content = commentElem.selectFirst(".comment-content > .text").html()
-    val dateString = commentElem.selectFirst(".comment-date > time").text()
-    val voteCountStr = commentElem.selectFirst(".vote-count").text()
+    // NOTE: not using select(css) or selectFirst(css) here, because it proved to be very slow,
+    // mainly because it uses String.split to match 'class' attributes which creates new instances
+    // of Pattern on each invocation!
+    val sectionElem = commentElem.getElementsByTag("section").first()
+    val author = sectionElem.getElementsByAttributeValue("class", "comment-author").first()
+            .child(0).text()
+    val content = sectionElem.getElementsByAttributeValue("class", "comment-content").first()
+            .child(0).html()
+    val dateString = sectionElem.getElementsByTag("time").first().text()
+    val voteCountStr = sectionElem.getElementsByAttributeValue("class", "vote-count").text()
     val voteCount = parsePostVoteCount(voteCountStr)
     return ContentInfo(author, content, dateString, voteCount)
 }
