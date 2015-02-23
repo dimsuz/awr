@@ -22,21 +22,25 @@ public class CommentTreeView(context: Context) : LinearLayout(context) {
         addView(rootView, createMatchWrapLayoutParams())
 
         rootView.showComment(node)
-        if(node.children != null) {
-            showChildren(node.children)
-        }
+        showChildren(node, level = 0)
     }
 
-    private fun showChildren(children: List<CommentNode>) {
-        for(child in children) {
+    private fun showChildren(node: CommentNode, level: Int) {
+        if(node.children == null || level > MAX_COMMENT_LEVEL) {
+            return
+        }
+        for(child in node.children) {
             val view = CommentView(getContext())
             view.showComment(child)
             val params = createMatchWrapLayoutParams()
-            params.leftMargin = 20
+            params.leftMargin = 20 * (level + 1)
             addView(view, params)
+            showChildren(child, level + 1)
         }
     }
 }
+
+private val MAX_COMMENT_LEVEL = 2
 
 private fun createMatchWrapLayoutParams(): MarginLayoutParams {
     return LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
