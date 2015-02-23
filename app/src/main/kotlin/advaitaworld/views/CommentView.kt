@@ -4,9 +4,9 @@ import android.widget.FrameLayout
 import android.content.Context
 import advaitaworld.R
 import android.view.LayoutInflater
-import advaitaworld.parsing.ContentInfo
 import android.widget.TextView
 import android.view.ViewGroup.LayoutParams
+import advaitaworld.parsing.CommentNode
 
 public class CommentView(context: Context) : FrameLayout(context) {
     val text: TextView
@@ -16,8 +16,9 @@ public class CommentView(context: Context) : FrameLayout(context) {
         text.setLayoutParams(FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
     }
 
-    public fun showComment(content: ContentInfo) {
-        text.setText(content.text)
+    public fun showComment(comment: CommentNode) {
+        val content = comment.content
+        text.setText("${content.author}, ${content.dateString}, ${content.rating}, ${comment.deepChildCount} => ${content.text}")
     }
 }
 

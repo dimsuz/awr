@@ -16,7 +16,8 @@ public data class ShortPostInfo(
         val commentCount: String?)
 
 public data class CommentNode(val content: ContentInfo,
-                              val children: List<CommentNode>?)
+                              val children: List<CommentNode>?,
+                              val deepChildCount: Int)
 
 public data class PostData(val content: ContentInfo,
                            val comments: List<CommentNode>)

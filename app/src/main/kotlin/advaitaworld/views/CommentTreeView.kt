@@ -21,7 +21,7 @@ public class CommentTreeView(context: Context) : LinearLayout(context) {
         removeAllViews()
         addView(rootView, createMatchWrapLayoutParams())
 
-        rootView.showComment(node.content)
+        rootView.showComment(node)
         if(node.children != null) {
             showChildren(node.children)
         }
@@ -30,7 +30,7 @@ public class CommentTreeView(context: Context) : LinearLayout(context) {
     private fun showChildren(children: List<CommentNode>) {
         for(child in children) {
             val view = CommentView(getContext())
-            view.showComment(child.content)
+            view.showComment(child)
             val params = createMatchWrapLayoutParams()
             params.leftMargin = 20
             addView(view, params)

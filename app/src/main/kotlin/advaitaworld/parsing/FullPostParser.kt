@@ -48,11 +48,15 @@ private fun warmUpPools(dequePool: Pool<ArrayDeque<TreeWalkNode>>, nodePool: Poo
     dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
     dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
     for(i in (1..avgCommentPerThreadCount)) {
-        nodePool.release(TreeWalkNode(element = null, level = -1, parsedChildren = null))
+        nodePool.release(TreeWalkNode(element = null, level = -1, parsedChildren = null, deepChildCount = 0))
     }
 }
 
-data class TreeWalkNode(var element: Element?, var level: Int, var parsedChildren: MutableList<CommentNode>?)
+data class TreeWalkNode(var element: Element?, var level: Int, var parsedChildren: MutableList<CommentNode>?, var deepChildCount: Int) {
+    fun init(element: Element?, level: Int, parsedChildren: MutableList<CommentNode>?, deepChildCount: Int)  {
+        this.element = element; this.level = level; this.parsedChildren = parsedChildren; this.deepChildCount = deepChildCount
+    }
+}
 
 // Parsing happens in two stages: first the whole comment tree is traversed in the depth-first order,
 // it builds the walking path of the form (P-parent, C-Child): P C C C P C C P
@@ -67,9 +71,9 @@ private fun parseCommentsThreadIterative(commentWrapper: Element,
     val queue : ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
     val walkPath: ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
 
-    val rootNode = nodePool.acquire() ?: TreeWalkNode(commentWrapper, 0, null)
+    val rootNode = nodePool.acquire() ?: TreeWalkNode(commentWrapper, 0, null, 0)
     // if acquired from pool, initialize
-    if(rootNode.level == -1) { rootNode.element = commentWrapper; rootNode.level = 0; rootNode.parsedChildren = null }
+    if(rootNode.level == -1) { rootNode.init(commentWrapper, 0, null, 0) }
 
     var maxLevel = 0
     queue.addLast(rootNode)
@@ -82,9 +86,9 @@ private fun parseCommentsThreadIterative(commentWrapper: Element,
         for(e in childElems) {
             if(e.hasClass("comment-wrapper")) {
                 val l = node.level + 1
-                val newNode = nodePool.acquire() ?: TreeWalkNode(e, l, null)
+                val newNode = nodePool.acquire() ?: TreeWalkNode(e, l, null, 0)
                 // if acquired from pool, initialize
-                if(newNode.level == -1) { newNode.element = e; newNode.level = l; newNode.parsedChildren = null }
+                if(newNode.level == -1) { newNode.init(e, l, null, 0) }
                 queue.addLast(newNode)
             }
         }
@@ -113,10 +117,11 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
             if (node.level < currentLevel && !levelContent.isEmpty()) {
                 // iterated to the parent element of accumulated ones
                 node.parsedChildren = ArrayList(levelContent)
+                node.deepChildCount = levelContent.fold(levelContent.size(), { (sum,node) -> sum + node.deepChildCount } )
                 levelContent.clear()
             } else if(node.level == currentLevel) {
                 iterator.remove()
-                levelContent.add(CommentNode(parseComment(node.element!!), node.parsedChildren))
+                levelContent.add(CommentNode(parseComment(node.element!!), node.parsedChildren, node.deepChildCount))
                 // release to pool by setting the level to special value
                 node.level = -1
                 nodePool.release(node)
