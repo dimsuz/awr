@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.DividerItemDecoration
 import timber.log.Timber
+import rx.android.lifecycle.LifecycleEvent
 
 public class PostActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
@@ -30,7 +31,7 @@ public class PostActivity : RxActionBarActivity() {
 
         setupPostView()
 
-        LifecycleObservable.bindActivityLifecycle(lifecycle(), server.getFullPost(postId))
+        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), server.getFullPost(postId), LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
