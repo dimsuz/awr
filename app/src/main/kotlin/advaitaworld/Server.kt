@@ -11,7 +11,6 @@ import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.parsePostFeed
 import advaitaworld.parsing.User
-import advaitaworld.util.runOnce
 import com.squareup.okhttp.MediaType
 
 // FIXME move to some particular place which contains common app dependency providers?
@@ -19,7 +18,7 @@ private var server: Server? = null
 class ServerProvider {
     fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
         if(server == null) {
-            server = Server()
+            server = Server(MemoryCache())
             // FIXME remove this
             initMockData(context, server!!)
         }
@@ -34,8 +33,9 @@ public enum class Section {
     Personal
 }
 
-public class Server {
+public class Server(cache: Cache) {
     private val client = OkHttpClient()
+    private val cache = cache
 
     public fun getPosts(section: Section) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
@@ -45,8 +45,14 @@ public class Server {
 
     public fun getFullPost(postId: String) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
-        return runMockableRequest(client, postUrl(postId))
-                .map({ parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") })
+        val logMsgCache = { (data: PostData) -> Timber.d("getting post $postId from cache") }
+        return cache.getFullPost(postId).doOnNext(logMsgCache).onErrorResumeNext {
+            Timber.d("getting post $postId from server")
+            runMockableRequest(client, postUrl(postId))
+                    .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") }
+                    .doOnNext { postData -> Timber.d("saving $postId to cache") }
+                    .doOnNext { postData -> cache.saveFullPost(postId, postData) }
+        }
     }
 
     public fun getUserInfo(name: String) : Observable<User> {
