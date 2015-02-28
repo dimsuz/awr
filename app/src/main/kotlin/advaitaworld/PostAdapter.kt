@@ -12,6 +12,7 @@ import advaitaworld.PostAdapter.CommentViewHolder
 import android.widget.TextView
 import advaitaworld.views.CommentTreeView
 import android.view.ViewGroup.LayoutParams
+import timber.log.Timber
 
 private val ITEM_TYPE_CONTENT = 0
 private val ITEM_TYPE_COMMENT = 1
@@ -57,6 +58,9 @@ class PostAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     class CommentViewHolder(itemView: CommentTreeView) : RecyclerView.ViewHolder(itemView) {
         val commentView = itemView
+        {
+            commentView.setExpandCommentAction({ node -> Timber.d("clicked $node")})
+        }
     }
 
     class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
