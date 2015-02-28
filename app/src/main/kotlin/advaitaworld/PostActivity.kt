@@ -14,10 +14,12 @@ import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.DividerItemDecoration
 import timber.log.Timber
 import rx.android.lifecycle.LifecycleEvent
+import android.content.Intent
 
 public class PostActivity : RxActionBarActivity() {
-    val server: Server by ServerProvider()
-    val adapter: PostAdapter = PostAdapter()
+    private val server: Server by ServerProvider()
+    private val adapter: PostAdapter = PostAdapter(showPost = true)
+    private var postId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +48,12 @@ public class PostActivity : RxActionBarActivity() {
         dividerDecor.setStartItem(1) // first item is the post itself, doesn't need a divider
         listView.addItemDecoration(dividerDecor)
         listView.setAdapter(adapter)
+
+        adapter.setExpandCommentAction { node ->
+            val intent = Intent(this, javaClass<CommentsActivity>())
+            intent.putExtra(EXTRA_POST_ID, postId)
+            startActivity(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

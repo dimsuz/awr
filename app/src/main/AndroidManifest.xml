@@ -20,8 +20,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PostActivity"
-            android:exported="true" />
+            android:name=".PostActivity" />
+        <activity
+            android:name=".CommentsActivity" />
     </application>
 
 </manifest>
