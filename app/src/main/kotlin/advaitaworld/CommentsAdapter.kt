@@ -12,8 +12,8 @@ import android.view.ViewGroup
 import advaitaworld.views.CommentTreeView
 import android.view.ViewGroup.LayoutParams
 import android.view.LayoutInflater
-import advaitaworld.PostAdapter.PostViewHolder
-import advaitaworld.PostAdapter.CommentViewHolder
+import advaitaworld.CommentsAdapter.PostViewHolder
+import advaitaworld.CommentsAdapter.CommentViewHolder
 
 private val ITEM_TYPE_CONTENT = 0
 private val ITEM_TYPE_COMMENT = 1
@@ -21,7 +21,7 @@ private val ITEM_TYPE_COMMENT = 1
 /**
  * Adapter that represents a post and its comments
  */
-class PostAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var expandCommentAction: ((CommentNode) -> Unit)? = null
     private var data: PostData? = null
 

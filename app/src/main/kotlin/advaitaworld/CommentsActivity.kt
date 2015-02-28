@@ -14,7 +14,7 @@ import advaitaworld.util.DividerItemDecoration
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
-    private val adapter: PostAdapter = PostAdapter(showPost = false)
+    private val adapter: CommentsAdapter = CommentsAdapter(showPost = false)
     private var postId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -18,7 +18,7 @@ import android.content.Intent
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
-    private val adapter: PostAdapter = PostAdapter(showPost = true)
+    private val adapter: CommentsAdapter = CommentsAdapter(showPost = true)
     private var postId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
