@@ -109,5 +109,5 @@ public fun initMockData(context: Context, server: Server) {
     }
     MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
             assetToString("main_test.html"))
-    MOCK_URL_DATA.put(server.postUrl(TEST_POST_ID), assetToString("full_post_test.html"))
+    MOCK_URL_DATA.put(server.postUrl(TEST_POST_ID), assetToString("full_post_test_shorter.html"))
 }

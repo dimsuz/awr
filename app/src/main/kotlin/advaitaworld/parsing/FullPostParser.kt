@@ -10,6 +10,11 @@ import android.support.v4.util.Pools.SimplePool
 import timber.log.Timber
 import android.support.v4.util.Pools.Pool
 import java.util.Arrays
+import android.util.LongSparseArray
+import org.jsoup.select.NodeVisitor
+import org.jsoup.nodes.Node
+import org.jsoup.select.NodeTraversor
+import java.util.regex.Pattern
 
 private var nextCommentNodeId: Long = 0
 
@@ -43,6 +48,7 @@ private fun parseComments(document: Document): List<CommentNode> {
     val dequePool = SimplePool<ArrayDeque<TreeWalkNode>>(3)
     val nodePool = SimplePool<TreeWalkNode>(avgCommentPerThreadCount)
     warmUpPools(dequePool, nodePool, avgCommentPerThreadCount)
+    nodes.map { parseCommentsThreadIterative1(it) }
     return nodes.map { parseCommentsThreadIterative(it, dequePool, nodePool) }
 }
 
@@ -145,6 +151,39 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
     return levelContent.single()
 }
 
+private class WorkNode(
+        var id : Long,
+        var parentId : Long,
+        var contentInfo: ContentInfo,
+        var children : MutableList<WorkNode>
+)
+
+private fun parseCommentsThreadIterative1(commentWrapper: Element) {
+    val visitor = Visitor()
+    NodeTraversor(visitor).traverse(commentWrapper)
+    Timber.d("work tree contains ${visitor.workTree.size()} nodes")
+}
+
+private class Visitor : NodeVisitor {
+    // FIXME figure out if there is a way to hint about number of children?
+    val workTree : LongSparseArray<WorkNode> = LongSparseArray()
+    // reusable temporary var to avoid GC
+    val pair = longArray(-1, -1)
+
+    override fun head(node: Node, depth: Int) {
+        if(!node.nodeName().equals("div") || !node.attr("class").startsWith("comment-wrapper")) {
+            return
+        }
+        val content = parseComment(node as Element)
+        val (id, parentId) = parseCommentIds(node as Element, pair)
+        workTree.put(id, WorkNode(id, parentId, content, arrayListOf()))
+    }
+
+    override fun tail(node: Node, depth: Int) {
+    }
+
+}
+
 private fun parseComment(commentElem: Element): ContentInfo {
     // NOTE: not using select(css) or selectFirst(css) here, because it proved to be very slow,
     // mainly because it uses String.split to match 'class' attributes which creates new instances
@@ -158,4 +197,24 @@ private fun parseComment(commentElem: Element): ContentInfo {
     val voteCountStr = sectionElem.getElementsByAttributeValue("class", "vote-count").text()
     val voteCount = parsePostVoteCount(voteCountStr)
     return ContentInfo(author, content, dateString, voteCount)
+}
+
+private val commentIdPattern = Pattern.compile("\\((\\d+),(\\d+)\\)")
+
+private fun parseCommentIds(node: Element, outPair: LongArray): LongArray {
+    val sectionElem = node.getElementsByTag("section").first()
+    val liElem = sectionElem.getElementsByAttributeValueEnding("class", "comment-parent").first()
+    if(liElem == null) {
+        // no parent id data, just extract comment id, from id attribute it is of the form comment_wrapper_id_NNNN
+        outPair.set(0, node.id().substringAfterLast('_').toLong())
+        outPair.set(1, -1)
+    } else {
+        val onClickText = liElem.child(0).attr("onclick")
+        if (onClickText.isEmpty()) throw RuntimeException("failed to determine comment ids")
+        val m = commentIdPattern.matcher(onClickText)
+        if (!m.find()) throw RuntimeException("failed to determine comment ids, no pattern match")
+        outPair.set(0, m.group(1).toLong())
+        outPair.set(1, m.group(2).toLong())
+    }
+    return outPair
 }
