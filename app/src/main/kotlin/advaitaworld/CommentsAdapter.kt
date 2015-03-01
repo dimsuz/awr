@@ -30,6 +30,10 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
         notifyDataSetChanged()
     }
 
+    fun getData(): PostData? {
+        return data
+    }
+
     public fun setExpandCommentAction(action: (CommentNode) -> Unit) {
         expandCommentAction = action
     }

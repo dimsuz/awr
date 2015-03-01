@@ -18,6 +18,7 @@ public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
     private val adapter: CommentsAdapter = CommentsAdapter(showPost = false)
     private var postId = ""
+    private var rootPostData: PostData? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,14 +34,9 @@ public class CommentsActivity : RxActionBarActivity() {
 
         setupCommentsView()
 
-        val observable = server.getFullPost(postId).map { postData ->
-            val targetComment = postData.comments.stream()
-                    .map { it.findByPath(commentPath) }
-                    .filter { it != null }
-                    .take(1)
-                    .first()
-            PostData(postData.content, arrayListOf(targetComment!!))
-        }
+        val observable = server.getFullPost(postId)
+                .doOnNext { rootPostData = it }
+                .map { it.limitToNode(commentPath) }
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
@@ -56,5 +52,24 @@ public class CommentsActivity : RxActionBarActivity() {
         val dividerDecor = DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST)
         listView.addItemDecoration(dividerDecor)
         listView.setAdapter(adapter)
+
+        adapter.setExpandCommentAction { node ->
+            val data = rootPostData
+            if(data != null) {
+                adapter.swapData(data.limitToNode(node.path))
+            }
+        }
     }
+}
+
+/**
+ * Returns a copy of PostData which has only comments starting with the one pointed by path
+ */
+private fun PostData.limitToNode(path: LongArray): PostData {
+    val targetComment = this.comments.stream()
+            .map { it.findByPath(path) }
+            .filter { it != null }
+            .take(1)
+            .first()
+    return PostData(this.content, arrayListOf(targetComment!!))
 }
