@@ -52,6 +52,7 @@ public class PostActivity : RxActionBarActivity() {
         adapter.setExpandCommentAction { node ->
             val intent = Intent(this, javaClass<CommentsActivity>())
             intent.putExtra(EXTRA_POST_ID, postId)
+            intent.putExtra(EXTRA_COMMENT_PATH, node.path)
             startActivity(intent)
         }
     }

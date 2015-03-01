@@ -9,6 +9,9 @@ import java.util.ArrayList
 import android.support.v4.util.Pools.SimplePool
 import timber.log.Timber
 import android.support.v4.util.Pools.Pool
+import java.util.Arrays
+
+private var nextCommentNodeId: Long = 0
 
 /**
  * Parses a full post
@@ -48,14 +51,19 @@ private fun warmUpPools(dequePool: Pool<ArrayDeque<TreeWalkNode>>, nodePool: Poo
     dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
     dequePool.release(ArrayDeque<TreeWalkNode>(avgCommentPerThreadCount))
     for(i in (1..avgCommentPerThreadCount)) {
-        nodePool.release(TreeWalkNode(element = null, level = -1, parsedChildren = null, deepChildCount = 0))
+        nodePool.release(TreeWalkNode(path = longArray(), element = null, parsedChildren = null, deepChildCount = 0))
     }
 }
 
-data class TreeWalkNode(var element: Element?, var level: Int, var parsedChildren: MutableList<CommentNode>?, var deepChildCount: Int) {
-    fun init(element: Element?, level: Int, parsedChildren: MutableList<CommentNode>?, deepChildCount: Int)  {
-        this.element = element; this.level = level; this.parsedChildren = parsedChildren; this.deepChildCount = deepChildCount
+data class TreeWalkNode(var path: LongArray,
+                        var element: Element?,
+                        var parsedChildren: MutableList<CommentNode>?,
+                        var deepChildCount: Int) {
+    fun init(path: LongArray, element: Element?, parsedChildren: MutableList<CommentNode>?, deepChildCount: Int)  {
+        this.path = path
+        this.element = element; this.parsedChildren = parsedChildren; this.deepChildCount = deepChildCount
     }
+    fun level() : Int { return path.size() - 1 }
 }
 
 // Parsing happens in two stages: first the whole comment tree is traversed in the depth-first order,
@@ -71,24 +79,21 @@ private fun parseCommentsThreadIterative(commentWrapper: Element,
     val queue : ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
     val walkPath: ArrayDeque<TreeWalkNode> = dequePool.acquire()!!
 
-    val rootNode = nodePool.acquire() ?: TreeWalkNode(commentWrapper, 0, null, 0)
-    // if acquired from pool, initialize
-    if(rootNode.level == -1) { rootNode.init(commentWrapper, 0, null, 0) }
+    val rootNode = getNodeFromPool(nodePool, longArray(nextCommentNodeId++), commentWrapper)
 
     var maxLevel = 0
     queue.addLast(rootNode)
     while(!queue.isEmpty()) {
         val node = queue.removeLast()
         walkPath.add(node)
-        maxLevel = if(maxLevel < node.level) node.level else maxLevel
+        maxLevel = if(maxLevel < node.level()) node.level() else maxLevel
 
         val childElems = node.element!!.children()
         for(e in childElems) {
             if(e.hasClass("comment-wrapper")) {
-                val l = node.level + 1
-                val newNode = nodePool.acquire() ?: TreeWalkNode(e, l, null, 0)
-                // if acquired from pool, initialize
-                if(newNode.level == -1) { newNode.init(e, l, null, 0) }
+                val path = Arrays.copyOf(node.path, node.path.size() + 1)
+                path.set(path.lastIndex, nextCommentNodeId++)
+                val newNode = getNodeFromPool(nodePool, path, element = e)
                 queue.addLast(newNode)
             }
         }
@@ -100,6 +105,13 @@ private fun parseCommentsThreadIterative(commentWrapper: Element,
     walkPath.clear(); queue.clear()
     dequePool.release(walkPath); dequePool.release(queue)
     return result
+}
+
+private fun getNodeFromPool(nodePool: Pool<TreeWalkNode>, path: LongArray, element: Element?): TreeWalkNode {
+    val newNode = nodePool.acquire() ?: TreeWalkNode(path, element, null, 0)
+    // if acquired from pool, initialize
+    if(newNode.path.isEmpty()) { newNode.init(path, element, null, 0) }
+    return newNode
 }
 
 // See detailed description of the whole process above
@@ -114,16 +126,16 @@ private fun buildFromWalkPath(walkPath: ArrayDeque<TreeWalkNode>, maxLevel: Int,
         val iterator = walkPath.descendingIterator()
         while (iterator.hasNext()) {
             val node = iterator.next()
-            if (node.level < currentLevel && !levelContent.isEmpty()) {
+            if (node.level() < currentLevel && !levelContent.isEmpty()) {
                 // iterated to the parent element of accumulated ones
                 node.parsedChildren = ArrayList(levelContent)
                 node.deepChildCount = levelContent.fold(levelContent.size(), { (sum,node) -> sum + node.deepChildCount } )
                 levelContent.clear()
-            } else if(node.level == currentLevel) {
+            } else if(node.level() == currentLevel) {
                 iterator.remove()
-                levelContent.add(CommentNode(parseComment(node.element!!), node.parsedChildren, node.deepChildCount))
-                // release to pool by setting the level to special value
-                node.level = -1
+                levelContent.add(CommentNode(node.path, parseComment(node.element!!), node.parsedChildren, node.deepChildCount))
+                // release to pool by setting the path to special value which must not exists in real world
+                node.path = longArray()
                 nodePool.release(node)
             } // else skip...
         }
