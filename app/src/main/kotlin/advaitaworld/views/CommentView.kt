@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.widget.TextView
 import android.view.ViewGroup.LayoutParams
 import advaitaworld.parsing.CommentNode
+import android.graphics.Color
 
 public class CommentView(context: Context) : FrameLayout(context) {
     val text: TextView
@@ -16,9 +17,10 @@ public class CommentView(context: Context) : FrameLayout(context) {
         text.setLayoutParams(FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
     }
 
-    public fun showComment(comment: CommentNode) {
+    public fun showComment(comment: CommentNode, isSingleReply: Boolean) {
         val content = comment.content
         text.setText("${content.author}, ${content.dateString}, ${content.rating}, ${comment.deepChildCount} => ${content.text}")
+        text.setBackgroundColor(if(isSingleReply) Color.LTGRAY else Color.WHITE)
     }
 }
 

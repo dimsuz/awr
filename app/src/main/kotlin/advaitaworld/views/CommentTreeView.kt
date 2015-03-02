@@ -12,43 +12,45 @@ import android.widget.TextView
 import android.view.View
 
 public class CommentTreeView(context: Context) : LinearLayout(context) {
-    val rootView: CommentView
     val inflater: LayoutInflater
     var expandAction: ((CommentNode) -> Unit)? = null
 
     {
         setOrientation(LinearLayout.VERTICAL)
 
-        rootView = CommentView(context)
         inflater = LayoutInflater.from(context)
-        addView(rootView, createLayoutParams(leftMargin = 0))
     }
 
     public fun showCommentTree(node: CommentNode) {
         // FIXME optimize to remove only unused views
         removeAllViews()
-        addView(rootView, createLayoutParams(leftMargin = 0))
 
-        rootView.showComment(node)
-        showChildren(node, level = 0)
+        val layoutParamsLevel0 = createLayoutParams(leftMargin = 0)
+        val layoutParamsLevel1 = createLayoutParams(leftMargin = 20)
+        val view = CommentView(getContext())
+        view.showComment(node, false)
+        addView(view, layoutParamsLevel0)
+        var n = node
+        while(n.children.size() == 1) {
+            val child = n.children.first()
+            val view = CommentView(getContext())
+            view.showComment(child, true)
+            addView(view, layoutParamsLevel0)
+            n = child
+        }
+
+        for(child in n.children) {
+            val view = CommentView(getContext())
+            view.showComment(child, false)
+            addView(view, layoutParamsLevel1)
+            if(!child.children.isEmpty()) {
+                addView(createExpandView(child, 20))
+            }
+        }
     }
 
     public fun setExpandCommentAction(action: (CommentNode) -> Unit) {
         expandAction = action
-    }
-
-    private fun showChildren(node: CommentNode, level: Int) {
-        val layoutParams = createLayoutParams(leftMargin = 20 * (level + 1))
-        for(child in node.children) {
-            val view = CommentView(getContext())
-            view.showComment(child)
-            addView(view, layoutParams)
-            if(level < MAX_COMMENT_LEVEL) {
-                showChildren(child, level + 1)
-            } else if(!child.children.isEmpty()) {
-                addView(createExpandView(child, layoutParams.leftMargin))
-            }
-        }
     }
 
     private fun createExpandView(child: CommentNode, levelMargin: Int) : View {
