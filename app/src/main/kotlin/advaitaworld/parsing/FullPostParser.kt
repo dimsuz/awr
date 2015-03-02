@@ -48,8 +48,7 @@ private fun parseComments(document: Document): List<CommentNode> {
     val dequePool = SimplePool<ArrayDeque<TreeWalkNode>>(3)
     val nodePool = SimplePool<TreeWalkNode>(avgCommentPerThreadCount)
     warmUpPools(dequePool, nodePool, avgCommentPerThreadCount)
-    nodes.map { parseCommentsThreadIterative1(it) }
-    return nodes.map { parseCommentsThreadIterative(it, dequePool, nodePool) }
+    return nodes.map { parseCommentsThreadIterative1(it) }
 }
 
 private fun warmUpPools(dequePool: Pool<ArrayDeque<TreeWalkNode>>, nodePool: Pool<TreeWalkNode>, avgCommentPerThreadCount: Int) {
@@ -155,33 +154,76 @@ private class WorkNode(
         var id : Long,
         var parentId : Long,
         var contentInfo: ContentInfo,
-        var children : MutableList<WorkNode>
+        var path: LongArray,
+        var children : MutableList<WorkNode>,
+        // will be written when all children are parsed
+        var resultNode: CommentNode?
 )
 
-private fun parseCommentsThreadIterative1(commentWrapper: Element) {
+private fun parseCommentsThreadIterative1(commentWrapper: Element) : CommentNode {
     val visitor = Visitor()
     NodeTraversor(visitor).traverse(commentWrapper)
-    Timber.d("work tree contains ${visitor.workTree.size()} nodes")
+    return visitor.rootNode!!
 }
 
+/**
+ * Builds a tree of comments, by navigating through the DOM.
+ * Not only it extracts comment info, but also builds parent-child relationships
+ * between comments by analyzing data of "up-to-parent" actions which originally cause JS calls.
+ * Comments are also given same IDs as they have on website.
+ */
 private class Visitor : NodeVisitor {
     // FIXME figure out if there is a way to hint about number of children?
     val workTree : LongSparseArray<WorkNode> = LongSparseArray()
     // reusable temporary var to avoid GC
     val pair = longArray(-1, -1)
+    var rootNode : CommentNode? = null
 
-    override fun head(node: Node, depth: Int) {
-        if(!node.nodeName().equals("div") || !node.attr("class").startsWith("comment-wrapper")) {
+    override fun head(domNode: Node, depth: Int) {
+        if(!domNode.nodeName().equals("div") || !domNode.attr("class").startsWith("comment-wrapper")) {
             return
         }
-        val content = parseComment(node as Element)
-        val (id, parentId) = parseCommentIds(node as Element, pair)
-        workTree.put(id, WorkNode(id, parentId, content, arrayListOf()))
+        val content = parseComment(domNode as Element)
+        val (id, parentId) = parseCommentIds(domNode as Element, pair)
+
+        // top-level nodes can have id == -1
+        val parentNode = if(parentId != -1L) workTree.get(parentId) else null
+        val newNode = WorkNode(id, parentId, content, createPath(parentNode, id), arrayListOf(), null)
+        workTree.put(id, newNode)
+        if(parentNode != null) { parentNode.children.add(newNode) }
     }
 
-    override fun tail(node: Node, depth: Int) {
+    override fun tail(domNode: Node, depth: Int) {
+        if(!domNode.nodeName().equals("div") || !domNode.attr("class").startsWith("comment-wrapper")) {
+            return
+        }
+        // is called when all the node's children are visited => parsed, safe to create final values
+        // for this node and its children
+        val (id, parentId) = parseCommentIds(domNode as Element, pair)
+        val node = workTree.get(id)!!
+        val parsedChildren = node.children.map { it.resultNode!! }
+        val deepCount = parsedChildren.fold(parsedChildren.size(), { (count, child) -> count + child.deepChildCount })
+        val resultChildren = if(!parsedChildren.isEmpty()) parsedChildren else null
+        node.resultNode = CommentNode(node.path, node.contentInfo, resultChildren, deepCount)
+
+        if(parentId == -1L) {
+            // got root node
+            if(rootNode != null) { throw RuntimeException("root node is already assigned, expected a single root!") }
+            rootNode = node.resultNode
+        }
     }
 
+    private fun createPath(parentNode: WorkNode?, id: Long) : LongArray {
+        var path : LongArray?
+        if(parentNode != null) {
+            val sz = parentNode.path.size()
+            path = parentNode.path.copyOf(sz + 1)
+            path!!.set(sz, id)
+        } else {
+            path = longArray(id)
+        }
+        return path!!
+    }
 }
 
 private fun parseComment(commentElem: Element): ContentInfo {
