@@ -15,7 +15,7 @@ public data class ShortPostInfo(
 
 public data class CommentNode(val path: LongArray,
                               val content: ContentInfo,
-                              val children: List<CommentNode>?,
+                              val children: List<CommentNode>,
                               val deepChildCount: Int) {
     public fun id() : Long {
         return path.last()

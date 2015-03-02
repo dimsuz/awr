@@ -10,6 +10,7 @@ import org.jsoup.select.NodeVisitor
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeTraversor
 import java.util.regex.Pattern
+import java.util.Collections
 
 /**
  * Parses a full post
@@ -95,7 +96,7 @@ private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
         val node = workTree.get(id)!!
         val parsedChildren = node.children.map { it.resultNode!! }
         val deepCount = parsedChildren.fold(parsedChildren.size(), { (count, child) -> count + child.deepChildCount })
-        val resultChildren = if(!parsedChildren.isEmpty()) parsedChildren else null
+        val resultChildren = if(!parsedChildren.isEmpty()) parsedChildren else Collections.emptyList()
         node.resultNode = CommentNode(node.path, node.contentInfo, resultChildren, deepCount)
 
         if(parentId == -1L) {

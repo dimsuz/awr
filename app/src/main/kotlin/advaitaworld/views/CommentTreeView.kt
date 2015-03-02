@@ -38,7 +38,6 @@ public class CommentTreeView(context: Context) : LinearLayout(context) {
     }
 
     private fun showChildren(node: CommentNode, level: Int) {
-        if(node.children == null) return
         val layoutParams = createLayoutParams(leftMargin = 20 * (level + 1))
         for(child in node.children) {
             val view = CommentView(getContext())
@@ -46,7 +45,7 @@ public class CommentTreeView(context: Context) : LinearLayout(context) {
             addView(view, layoutParams)
             if(level < MAX_COMMENT_LEVEL) {
                 showChildren(child, level + 1)
-            } else if(child.children != null) {
+            } else if(!child.children.isEmpty()) {
                 addView(createExpandView(child, layoutParams.leftMargin))
             }
         }
