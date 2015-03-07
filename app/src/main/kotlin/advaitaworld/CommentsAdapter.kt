@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.view.LayoutInflater
 import advaitaworld.CommentsAdapter.PostViewHolder
 import advaitaworld.CommentsAdapter.CommentViewHolder
-import advaitaworld.views.CommentView
 import android.view.View.OnClickListener
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.CommentsAdapter.ExpandViewHolder
@@ -43,17 +42,15 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.getContext())
         return when(viewType) {
             ITEM_TYPE_CONTENT -> {
-                val inflater = LayoutInflater.from(parent.getContext())
                 PostViewHolder(inflater.inflate(R.layout.post_content, parent, false))
             }
             ITEM_TYPE_COMMENT -> {
-                val view = CommentView(parent.getContext())
-                CommentViewHolder(view)
+                CommentViewHolder(inflater.inflate(R.layout.comment, parent, false))
             }
             ITEM_TYPE_COMMENT_EXPAND -> {
-                val inflater = LayoutInflater.from(parent.getContext())
                 ExpandViewHolder(inflater.inflate(R.layout.comment_expand, parent, false), expandCommentAction)
             }
             else -> throw RuntimeException("unknown view type")
@@ -100,19 +97,20 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
         var itemInfo : ItemInfo?
     }
 
-    class CommentViewHolder(val commentView: CommentView) : RecyclerView.ViewHolder(commentView), ItemInfoHolder {
+    class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), ItemInfoHolder {
+        val textview = itemView.findViewById(R.id.text) as TextView
         override var itemInfo : ItemInfo? = null
     }
 
-    class ExpandViewHolder(val expandView: View,
-                           val expandAction: ((CommentNode) -> Unit)?) :
-            RecyclerView.ViewHolder(expandView),  OnClickListener, ItemInfoHolder {
-        val textView = expandView.findViewById(R.id.text_expand) as TextView
+    class ExpandViewHolder(itemView: View, expandAction: ((CommentNode) -> Unit)?) :
+            RecyclerView.ViewHolder(itemView),  OnClickListener, ItemInfoHolder {
+        val textView = itemView.findViewById(R.id.text_expand) as TextView
+        val expandAction: ((CommentNode) -> Unit)? = expandAction
         override var itemInfo : ItemInfo? = null
 
         {
             if(expandAction != null) {
-                expandView.setOnClickListener(this)
+                itemView.setOnClickListener(this)
             }
         }
 
@@ -141,7 +139,8 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
 }
 
 private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
-    holder.commentView.showComment(itemInfo.node)
+    val content = itemInfo.node.content
+    holder.textview.setText("${content.author}, ${content.dateString}, ${content.rating} => ${content.text}")
     holder.itemInfo = itemInfo
 }
 
