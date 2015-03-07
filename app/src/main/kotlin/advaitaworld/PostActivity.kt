@@ -15,6 +15,8 @@ import advaitaworld.util.DividerItemDecoration
 import timber.log.Timber
 import rx.android.lifecycle.LifecycleEvent
 import android.content.Intent
+import advaitaworld.parsing.CommentNode
+import advaitaworld.parsing.emptyContentInfo
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -34,10 +36,11 @@ public class PostActivity : RxActionBarActivity() {
         setupPostView()
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), server.getFullPost(postId), LifecycleEvent.DESTROY)
+                .map { prepareAdapterData(it, null) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { showPostData(it) },
+                        { data -> adapter.swapData(data.first.content, data.second) },
                         printError("failed to retrieve fullpost"))
     }
 
@@ -60,10 +63,5 @@ public class PostActivity : RxActionBarActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         getMenuInflater().inflate(R.menu.menu_main, menu)
         return true
-    }
-
-    private fun showPostData(data: PostData) {
-        Timber.d("showing post with ${data.comments.size()} top level comments")
-        adapter.swapData(data)
     }
 }

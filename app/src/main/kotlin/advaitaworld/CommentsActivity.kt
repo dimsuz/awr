@@ -13,6 +13,8 @@ import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.DividerItemDecoration
 import advaitaworld.parsing.findByPath
 import advaitaworld.parsing.PostData
+import advaitaworld.parsing.emptyContentInfo
+import advaitaworld.parsing.CommentNode
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -36,13 +38,13 @@ public class CommentsActivity : RxActionBarActivity() {
 
         val observable = server.getFullPost(postId)
                 .doOnNext { rootPostData = it }
-                .map { it.limitToNode(commentPath) }
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
+                .map { prepareAdapterData(it, commentPath) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { adapter.swapData(it) },
+                        { data -> adapter.swapData(data.first.content, data.second) },
                         { Timber.e(it, "failed to retrieve fullpost") })
     }
 
@@ -56,10 +58,31 @@ public class CommentsActivity : RxActionBarActivity() {
         adapter.setExpandCommentAction { node ->
             val data = rootPostData
             if(data != null) {
-                adapter.swapData(data.limitToNode(node.path))
+                val (postData, items) = prepareAdapterData(data, node.path)
+                adapter.swapData(postData.content, items)
             }
         }
     }
+}
+
+/**
+ * Takes a post data and an optional starting comment path and returns a plain list
+ * of item indent information suitable for passing to a CommentsAdapter
+ */
+fun prepareAdapterData(postData: PostData, startPath: LongArray?) : Pair<PostData, List<ItemInfo>> {
+    // build indented comment tree by adding a fake root on top, this will provide
+    // the right structure, then discard this extra root from results
+
+    // If comment path is provided, no need to add a fake root, because tree will already have a single root
+    var layout : List<ItemInfo>
+    if(startPath == null) {
+        val fakeRoot = CommentNode(longArray(-1), emptyContentInfo(), postData.comments, 0)
+        layout = buildTreeLayout(fakeRoot, startIndent = -1).drop(1)
+    } else {
+        layout = buildTreeLayout(postData.limitToNode(startPath).comments.single())
+    }
+
+    return Pair(postData, layout)
 }
 
 /**

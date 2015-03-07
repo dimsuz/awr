@@ -9,6 +9,11 @@ public data class ContentInfo(val author: String,
     }
 }
 
+private val emptyContent = ContentInfo("", "", "", null)
+public fun emptyContentInfo() : ContentInfo {
+    return emptyContent
+}
+
 public data class ShortPostInfo(
         val content: ContentInfo,
         val commentCount: String?)
@@ -41,8 +46,7 @@ public fun CommentNode.findByPath(path: LongArray) : CommentNode? {
     }
     var node = this
     for(id in path.drop(1)) {
-        if(node.children == null) throw RuntimeException("expected node to have children")
-        node = node.children!!.first { it.id() == id }
+        node = node.children.first { it.id() == id }
     }
     return if(node.id() == path.last()) node else null
 }
