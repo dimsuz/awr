@@ -8,15 +8,12 @@ import advaitaworld.util.printError
 import advaitaworld.support.RxActionBarActivity
 import android.view.Menu
 import android.support.v7.widget.Toolbar
-import advaitaworld.parsing.PostData
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.DividerItemDecoration
-import timber.log.Timber
 import rx.android.lifecycle.LifecycleEvent
 import android.content.Intent
-import advaitaworld.parsing.CommentNode
-import advaitaworld.parsing.emptyContentInfo
+import advaitaworld.util.CommentItemDecoration
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -50,6 +47,7 @@ public class PostActivity : RxActionBarActivity() {
         val dividerDecor = DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST)
         dividerDecor.setStartItem(1) // first item is the post itself, doesn't need a divider
         listView.addItemDecoration(dividerDecor)
+        listView.addItemDecoration(CommentItemDecoration())
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->

@@ -15,6 +15,7 @@ import advaitaworld.parsing.findByPath
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.parsing.CommentNode
+import advaitaworld.util.CommentItemDecoration
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -53,6 +54,7 @@ public class CommentsActivity : RxActionBarActivity() {
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
         val dividerDecor = DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST)
         listView.addItemDecoration(dividerDecor)
+        listView.addItemDecoration(CommentItemDecoration())
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->

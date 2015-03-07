@@ -17,10 +17,9 @@ public class CommentView(context: Context) : FrameLayout(context) {
         text.setLayoutParams(FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
     }
 
-    public fun showComment(comment: CommentNode, isSingleReply: Boolean) {
+    public fun showComment(comment: CommentNode) {
         val content = comment.content
         text.setText("${content.author}, ${content.dateString}, ${content.rating}, ${comment.deepChildCount} => ${content.text}")
-        text.setBackgroundColor(if(isSingleReply) Color.LTGRAY else Color.WHITE)
     }
 }
 

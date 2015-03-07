@@ -8,6 +8,9 @@ import android.support.v7.widget.LinearLayoutManager
 import android.graphics.drawable.Drawable
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
+import advaitaworld.CommentsAdapter
+import advaitaworld.ItemType
+import advaitaworld.R
 
 public class SpaceItemDecoration(val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
@@ -104,3 +107,20 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
         }
     }
 }
+
+public class CommentItemDecoration : RecyclerView.ItemDecoration() {
+    var margin : Int = 0
+
+    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        if(margin == 0) { margin = view.getResources().getDimensionPixelSize(R.dimen.margin) }
+        val holder = parent.getChildViewHolder(view)
+        val childType = holder.getItemViewType()
+        if(childType == CommentsAdapter.ITEM_TYPE_COMMENT || childType == CommentsAdapter.ITEM_TYPE_COMMENT_EXPAND) {
+            val infoHolder = holder as CommentsAdapter.ItemInfoHolder
+            val info = infoHolder.itemInfo
+            val indent = if(info?.type == ItemType.Expand) margin else 0
+            outRect.set(indent, 0, 0, 0)
+        }
+    }
+}
+

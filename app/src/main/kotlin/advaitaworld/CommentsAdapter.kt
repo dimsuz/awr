@@ -18,9 +18,11 @@ import advaitaworld.CommentsAdapter.ExpandViewHolder
  * Adapter that represents a post and its comments
  */
 class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private val ITEM_TYPE_CONTENT = 0
-    private val ITEM_TYPE_COMMENT = 1
-    private val ITEM_TYPE_COMMENT_EXPAND = 2
+    class object {
+        val ITEM_TYPE_CONTENT = 0
+        val ITEM_TYPE_COMMENT = 1
+        val ITEM_TYPE_COMMENT_EXPAND = 2
+    }
 
     private var expandCommentAction: ((CommentNode) -> Unit)? = null
     private var data: List<ItemInfo> = listOf()
@@ -85,14 +87,28 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
         return data.size() + if(showPost) 1 else 0
     }
 
-    class CommentViewHolder(val commentView: CommentView) : RecyclerView.ViewHolder(commentView) {
+    /**
+     * Returns an item info at the position.
+     * Will throw if there's no item at this position or if item is of another type (a post content)
+     */
+    public fun getItemInfo(position: Int) : ItemInfo {
+        val pos = if (showPost) position - 1 else position
+        return data.get(pos)
+    }
 
+    trait ItemInfoHolder {
+        var itemInfo : ItemInfo?
+    }
+
+    class CommentViewHolder(val commentView: CommentView) : RecyclerView.ViewHolder(commentView), ItemInfoHolder {
+        override var itemInfo : ItemInfo? = null
     }
 
     class ExpandViewHolder(val expandView: View,
-                           val expandAction: ((CommentNode) -> Unit)?) : RecyclerView.ViewHolder(expandView), OnClickListener {
+                           val expandAction: ((CommentNode) -> Unit)?) :
+            RecyclerView.ViewHolder(expandView),  OnClickListener, ItemInfoHolder {
         val textView = expandView.findViewById(R.id.text_expand) as TextView
-        var node: CommentNode? = null
+        override var itemInfo : ItemInfo? = null
 
         {
             if(expandAction != null) {
@@ -101,7 +117,7 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
         }
 
         override fun onClick(view: View) {
-            val n = node
+            val n = itemInfo?.node
             val action = expandAction
             if(n != null && action != null) {
                 action(n)
@@ -125,11 +141,12 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
 }
 
 private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
-    holder.commentView.showComment(itemInfo.node, itemInfo.indentLevel > 0)
+    holder.commentView.showComment(itemInfo.node)
+    holder.itemInfo = itemInfo
 }
 
 private  fun bindCommentExpandHolder(holder: ExpandViewHolder, itemInfo: ItemInfo) {
     holder.textView.setText("+${itemInfo.node.deepChildCount} комментариев")
-    holder.node = itemInfo.node
+    holder.itemInfo = itemInfo
 }
 
