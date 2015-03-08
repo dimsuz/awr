@@ -118,8 +118,9 @@ public class CommentItemDecoration : RecyclerView.ItemDecoration() {
         if(childType == CommentsAdapter.ITEM_TYPE_COMMENT || childType == CommentsAdapter.ITEM_TYPE_COMMENT_EXPAND) {
             val infoHolder = holder as CommentsAdapter.ItemInfoHolder
             val info = infoHolder.itemInfo
-            val indent = if(info?.type == ItemType.Expand) margin else 0
-            outRect.set(indent, 0, 0, 0)
+            val hoffset = (info?.indentLevel ?: 0) * margin
+            val voffset = if(info?.type != ItemType.ReplyInStaircase && info?.type != ItemType.Expand) margin else 0
+            outRect.set(hoffset, voffset, hoffset, 0)
         }
     }
 }

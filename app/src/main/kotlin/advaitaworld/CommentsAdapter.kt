@@ -75,7 +75,7 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
         val commentPos = if(showPost) position - 1 else position
         return if(showPost && position == 0) ITEM_TYPE_CONTENT else
             (when(data.get(commentPos).type) {
-                ItemType.Top, ItemType.Reply -> ITEM_TYPE_COMMENT
+                ItemType.Top, ItemType.Reply, ItemType.ReplyInStaircase -> ITEM_TYPE_COMMENT
                 ItemType.Expand -> ITEM_TYPE_COMMENT_EXPAND
             })
     }
