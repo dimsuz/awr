@@ -126,8 +126,11 @@ private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
     val content = itemInfo.node.content
     holder.textView.setText("${content.author}, ${content.dateString}, ${content.rating} => ${content.text}")
     if(itemInfo.type == ItemType.Reply && itemInfo.node.deepChildCount != 0) {
-        holder.expandView.setVisible(true)
-        holder.expandView.setText("+${itemInfo.node.deepChildCount} комментариев")
+        with(holder.expandView, {
+            val count = itemInfo.node.deepChildCount
+            this.setVisible(true)
+            this.setText(this.getResources().getQuantityString(R.plurals.commentses, count, count))
+        })
     } else {
         holder.expandView.setVisible(false)
     }
