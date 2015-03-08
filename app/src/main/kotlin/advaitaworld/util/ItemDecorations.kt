@@ -115,11 +115,11 @@ public class CommentItemDecoration : RecyclerView.ItemDecoration() {
         if(margin == 0) { margin = view.getResources().getDimensionPixelSize(R.dimen.margin) }
         val holder = parent.getChildViewHolder(view)
         val childType = holder.getItemViewType()
-        if(childType == CommentsAdapter.ITEM_TYPE_COMMENT || childType == CommentsAdapter.ITEM_TYPE_COMMENT_EXPAND) {
+        if(childType == CommentsAdapter.ITEM_TYPE_COMMENT) {
             val infoHolder = holder as CommentsAdapter.ItemInfoHolder
             val info = infoHolder.itemInfo
             val hoffset = (info?.indentLevel ?: 0) * margin
-            val voffset = if(info?.type != ItemType.ReplyInStaircase && info?.type != ItemType.Expand) margin else 0
+            val voffset = if(info?.type != ItemType.ReplyInStaircase) margin else 0
             outRect.set(hoffset, voffset, hoffset, 0)
         }
     }
