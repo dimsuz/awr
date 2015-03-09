@@ -113,16 +113,24 @@ public class CommentItemDecoration : RecyclerView.ItemDecoration() {
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         if(margin == 0) { margin = view.getResources().getDimensionPixelSize(R.dimen.margin) }
+        val info = getItemInfo(view, parent)
+        if(info == null) { return }
         val holder = parent.getChildViewHolder(view)
-        val childType = holder.getItemViewType()
-        if(childType == CommentsAdapter.ITEM_TYPE_COMMENT) {
-            val infoHolder = holder as CommentsAdapter.ItemInfoHolder
-            val info = infoHolder.itemInfo
-            val hoffset = (info?.indentLevel ?: 0) * margin * 2
-            val voffsetTop = if(holder.getPosition() != 0 && info?.type != ItemType.ReplyInStaircase) margin else 0
-            val voffsetBottom = if(holder.getPosition() == state.getItemCount() - 1) margin else 0
-            outRect.set(hoffset, voffsetTop, 0, voffsetBottom)
-        }
+        val hoffset = info.indentLevel * margin * 2
+        val voffsetTop = if(!info.isInStaircase && holder.getPosition() != 0) margin else 0
+        val voffsetBottom = if(holder.getPosition() == state.getItemCount() - 1) margin else 0
+        outRect.set(hoffset, voffsetTop, 0, voffsetBottom)
+    }
+}
+
+private fun getItemInfo(view: View, parent: RecyclerView) : ItemInfo? {
+    val holder = parent.getChildViewHolder(view)
+    val childType = holder.getItemViewType()
+    if (childType == CommentsAdapter.ITEM_TYPE_COMMENT) {
+        val infoHolder = holder as CommentsAdapter.ItemInfoHolder
+        return infoHolder.itemInfo
+    } else {
+        return null
     }
 }
 

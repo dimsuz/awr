@@ -130,7 +130,7 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
 private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
     val content = itemInfo.node.content
     holder.textView.setText("${content.author}, ${content.dateString}, ${content.rating} => ${content.text}")
-    if(itemInfo.type == ItemType.Reply && itemInfo.node.deepChildCount != 0) {
+    if(!itemInfo.isInStaircase && itemInfo.node.deepChildCount != 0 && holder.getPosition() != 0) {
         val count = itemInfo.node.deepChildCount
         val s = holder.expandText.getResources().getQuantityString(R.plurals.commentses, count, count)
         holder.expandView.setVisible(true)
@@ -142,8 +142,7 @@ private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
 
     // 'staircase' of replies can appear only on top and all views in it must share the same
     // higher elevation - as they go first
-    val isTopContent = itemInfo.type == ItemType.ReplyInStaircase || holder.getPosition() == 0
-    setContentElevation(holder, isTopContent)
+    setContentElevation(holder, isTopContent = itemInfo.isInStaircase || holder.getPosition() == 0)
 }
 
 private fun setContentElevation(holder: RecyclerView.ViewHolder, isTopContent: Boolean) {
