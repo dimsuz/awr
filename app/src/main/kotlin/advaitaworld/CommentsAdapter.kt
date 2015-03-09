@@ -12,6 +12,7 @@ import advaitaworld.CommentsAdapter.CommentViewHolder
 import android.view.View.OnClickListener
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.util.setVisible
+import android.support.v4.view.ViewCompat
 
 /**
  * Adapter that represents a post and its comments
@@ -120,6 +121,8 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
     holder.titleView.setText("Вот те раз!")
     holder.subtitleView.setText(content.author)
     holder.contentView.setText(content.text)
+
+    setContentElevation(holder, isTopContent = true)
 }
 
 private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
@@ -135,5 +138,19 @@ private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
         holder.expandView.setVisible(false)
     }
     holder.itemInfo = itemInfo
+
+    // 'staircase' of replies can appear only on top and all views in it must share the same
+    // higher elevation - as they go first
+    val isTopContent = itemInfo.type == ItemType.ReplyInStaircase || holder.getPosition() == 0
+    setContentElevation(holder, isTopContent)
+}
+
+private fun setContentElevation(holder: RecyclerView.ViewHolder, isTopContent: Boolean) {
+    // FIXME think of something to emulate this nicely on pre 5.0
+    if(isTopContent) {
+        ViewCompat.setElevation(holder.itemView, holder.itemView.getResources().getDimension(R.dimen.elevation_high))
+    } else {
+        ViewCompat.setElevation(holder.itemView, holder.itemView.getResources().getDimension(R.dimen.elevation_low))
+    }
 }
 

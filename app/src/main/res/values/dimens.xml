@@ -6,4 +6,7 @@
     <dimen name="margin_x2">16dp</dimen>
     <dimen name="extended_action_bar_height">112dp</dimen>
     <dimen name="post_action_view_height">44dp</dimen>
+    <dimen name="elevation_low">2dp</dimen>
+    <dimen name="elevation_medium">4dp</dimen>
+    <dimen name="elevation_high">8dp</dimen>
 </resources>
