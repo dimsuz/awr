@@ -29,7 +29,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|right"
             android:padding="8dp"
-            android:visibility="gone"
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:textAllCaps="true"
