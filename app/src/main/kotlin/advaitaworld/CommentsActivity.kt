@@ -10,12 +10,12 @@ import rx.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
-import advaitaworld.util.DividerItemDecoration
 import advaitaworld.parsing.findByPath
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.parsing.CommentNode
 import advaitaworld.util.CommentItemDecoration
+import advaitaworld.util.StaircaseItemDecoration
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -52,8 +52,7 @@ public class CommentsActivity : RxActionBarActivity() {
     private fun setupCommentsView() {
         val listView = findViewById(R.id.post_view) as RecyclerView
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
-        val dividerDecor = DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST)
-        listView.addItemDecoration(dividerDecor)
+        listView.addItemDecoration(StaircaseItemDecoration(getResources()))
         listView.addItemDecoration(CommentItemDecoration())
         listView.setAdapter(adapter)
 

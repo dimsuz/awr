@@ -9,8 +9,11 @@ import android.graphics.drawable.Drawable
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
 import advaitaworld.CommentsAdapter
-import advaitaworld.ItemType
 import advaitaworld.R
+import android.content.res.Resources
+import advaitaworld.ItemInfo
+import android.graphics.Paint
+import android.graphics.Color
 
 public class SpaceItemDecoration(val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
@@ -134,3 +137,37 @@ private fun getItemInfo(view: View, parent: RecyclerView) : ItemInfo? {
     }
 }
 
+public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
+    private val DIVIDER_HEIGHT = resources.dpToPx(1)
+    private val DIVIDER_PADDING = resources.dpToPx(64).toFloat()
+    private val paint = Paint();
+
+    {
+        paint.setStrokeWidth(DIVIDER_HEIGHT.toFloat())
+        paint.setColor(Color.LTGRAY)
+    }
+
+    override fun onDrawOver(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        val childCount = parent.getChildCount()
+        for (i in 0..childCount - 1) {
+            val child = parent.getChildAt(i)
+            if (needsDivider(child, parent)) {
+                val y = child.getBottom().toFloat()
+                canvas.drawLine(DIVIDER_PADDING, y, canvas.getWidth() - DIVIDER_PADDING, y, paint)
+            }
+        }
+    }
+
+    private fun needsDivider(view: View, parent: RecyclerView): Boolean {
+        val itemInfo = getItemInfo(view, parent)
+        if (itemInfo == null || !itemInfo.isInStaircase) {
+            return false
+        }
+        // do not decorate last item in the staircase
+        // (which has either 0 or > 1 children)
+        if (itemInfo.node.children.size() != 1) {
+            return false
+        }
+        return true
+    }
+}
