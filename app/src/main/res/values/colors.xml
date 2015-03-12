@@ -11,4 +11,6 @@
     <color name="divider">#B6B6B6</color>
     <color name="rating_positive">#008000</color>
     <color name="rating_negative">#D40000</color>
+    <color name="rating_bg_positive">#844abc4e</color>
+    <color name="rating_bg_negative">#9eee5252</color>
 </resources>

@@ -13,6 +13,7 @@ import android.view.View.OnClickListener
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.util.setVisible
 import android.support.v4.view.ViewCompat
+import android.graphics.Color
 
 /**
  * Adapter that represents a post and its comments
@@ -88,12 +89,17 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
     class CommentViewHolder(itemView: View, expandAction: ((CommentNode) -> Unit)?) :
             RecyclerView.ViewHolder(itemView), OnClickListener, ItemInfoHolder {
 
+        val authorView = itemView.findViewById(R.id.author_name) as TextView
+        val dateView = itemView.findViewById(R.id.date) as TextView
+        val ratingView = itemView.findViewById(R.id.rating) as TextView
         val textView = itemView.findViewById(R.id.text) as TextView
         val expandText = itemView.findViewById(R.id.expand_comment) as TextView
         // NOTE temporarily using FrameLayout to use selectableItemBackground
         // (when this is no longer the case, just rename expandText to expandView and remove line below)
         val expandView = expandText.getParent() as View
         val expandAction: ((CommentNode) -> Unit)? = expandAction
+        val ratingNegColor = itemView.getResources().getColor(R.color.rating_bg_negative)
+        val ratingPosColor = itemView.getResources().getColor(R.color.rating_bg_positive)
         override var itemInfo : ItemInfo? = null
 
         {
@@ -129,7 +135,14 @@ private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
 
 private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
     val content = itemInfo.node.content
-    holder.textView.setText("${content.author}, ${content.dateString}, ${content.rating} => ${content.text}")
+    holder.authorView.setText(content.author)
+    holder.dateView.setText(content.dateString)
+    if(content.rating != null) {
+        holder.ratingView.setText(content.rating)
+        holder.ratingView.setBackgroundColor(if(content.rating.startsWith('-')) holder.ratingNegColor else holder.ratingPosColor)
+    }
+    holder.ratingView.setVisible(content.rating != null)
+    holder.textView.setText(content.text)
     if(!itemInfo.isInStaircase && itemInfo.node.deepChildCount != 0 && holder.getPosition() != 0) {
         val count = itemInfo.node.deepChildCount
         val s = holder.expandText.getResources().getQuantityString(R.plurals.commentses, count, count)
