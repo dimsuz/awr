@@ -16,6 +16,7 @@ import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.parsing.CommentNode
 import advaitaworld.util.CommentItemDecoration
 import advaitaworld.util.StaircaseItemDecoration
+import advaitaworld.util.CommentThreadsDecoration
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -54,6 +55,7 @@ public class CommentsActivity : RxActionBarActivity() {
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(StaircaseItemDecoration(getResources()))
         listView.addItemDecoration(CommentItemDecoration())
+        listView.addItemDecoration(CommentThreadsDecoration(getResources()))
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->

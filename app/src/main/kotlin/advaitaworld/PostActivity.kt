@@ -14,6 +14,7 @@ import rx.android.lifecycle.LifecycleEvent
 import android.content.Intent
 import advaitaworld.util.CommentItemDecoration
 import advaitaworld.util.StaircaseItemDecoration
+import advaitaworld.util.CommentThreadsDecoration
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -46,6 +47,7 @@ public class PostActivity : RxActionBarActivity() {
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(StaircaseItemDecoration(getResources()))
         listView.addItemDecoration(CommentItemDecoration())
+        listView.addItemDecoration(CommentThreadsDecoration(getResources()))
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->

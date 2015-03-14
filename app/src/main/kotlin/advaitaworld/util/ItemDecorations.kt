@@ -171,3 +171,33 @@ public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDe
         return true
     }
 }
+
+public class CommentThreadsDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
+    private val THREAD_WIDTH = resources.dpToPx(1)
+    private val paint = Paint();
+
+    {
+        paint.setStrokeWidth(THREAD_WIDTH.toFloat())
+        paint.setColor(resources.getColor(R.color.lightGray))
+    }
+
+    override fun onDraw(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        val childCount = parent.getChildCount()
+        val offset = 16f
+        var prevChildBottom = 0f
+        for (i in 0..childCount - 1) {
+            val child = parent.getChildAt(i)
+            val itemInfo = getItemInfo(child, parent)
+            val needsDecor= itemInfo != null && !itemInfo.isInStaircase && itemInfo.indentLevel > 0
+            if (needsDecor) {
+                val lastItem = parent.getChildPosition(child) == state.getItemCount() - 1
+                val left = child.getLeft().toFloat()
+                val ytip = child.getTop() + child.getHeight() / 2f
+                val ybot = if(!lastItem) child.getBottom().toFloat() else ytip
+                canvas.drawLine(left - offset, prevChildBottom, left - offset, ybot, paint) // vertical
+                canvas.drawLine(left - offset, ytip, left, ytip, paint) // horizontal
+            }
+            prevChildBottom = child.getBottom().toFloat()
+        }
+    }
+}

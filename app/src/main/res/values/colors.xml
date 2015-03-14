@@ -13,4 +13,6 @@
     <color name="rating_negative">#D40000</color>
     <color name="rating_bg_positive">#844abc4e</color>
     <color name="rating_bg_negative">#9eee5252</color>
+    <color name="lightestGray">#efefef</color>
+    <color name="lightGray">#cecece</color>
 </resources>
