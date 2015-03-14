@@ -77,7 +77,7 @@
         android:foreground="?android:attr/selectableItemBackground">
         <TextView
             android:id="@+id/expand_comment"
-            android:background="#efefef"
+            android:background="@color/lightestGray"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|right"
