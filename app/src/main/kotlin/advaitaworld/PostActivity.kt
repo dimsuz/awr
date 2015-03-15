@@ -38,7 +38,7 @@ public class PostActivity : RxActionBarActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { data -> adapter.swapData(data.first.content, data.second) },
+                        { data -> adapter.swapData(data.first, data.second) },
                         printError("failed to retrieve fullpost"))
     }
 

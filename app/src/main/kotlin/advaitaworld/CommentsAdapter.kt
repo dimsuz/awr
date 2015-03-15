@@ -2,17 +2,17 @@ package advaitaworld
 
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import advaitaworld.parsing.ContentInfo
 import advaitaworld.parsing.CommentNode
 import android.widget.TextView
 import android.view.ViewGroup
 import android.view.LayoutInflater
+import android.view.View.OnClickListener
+import android.support.v4.view.ViewCompat
+import advaitaworld.parsing.PostData
+import advaitaworld.parsing.emptyPostData
 import advaitaworld.CommentsAdapter.PostViewHolder
 import advaitaworld.CommentsAdapter.CommentViewHolder
-import android.view.View.OnClickListener
-import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.util.setVisible
-import android.support.v4.view.ViewCompat
 
 /**
  * Adapter that represents a post and its comments
@@ -29,10 +29,10 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
 
     private var expandCommentAction: ((CommentNode) -> Unit)? = null
     private var data: List<ItemInfo> = listOf()
-    private var postContent: ContentInfo = emptyContentInfo()
+    private var postData: PostData = emptyPostData()
 
-    public fun swapData(postContent: ContentInfo, data: List<ItemInfo>) {
-        this.postContent = postContent
+    public fun swapData(postData: PostData, data: List<ItemInfo>) {
+        this.postData = postData
         this.data = data
         notifyDataSetChanged()
     }
@@ -60,7 +60,7 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(getItemViewType(position)) {
-            ITEM_TYPE_CONTENT -> bindPostHolder(holder as PostViewHolder, postContent)
+            ITEM_TYPE_CONTENT -> bindPostHolder(holder as PostViewHolder, postData)
             ITEM_TYPE_COMMENT -> {
                 val pos = if (showPost) position - 1 else position
                 bindCommentHolder(holder as CommentViewHolder, data.get(pos))
@@ -134,11 +134,10 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
     }
 }
 
-private fun bindPostHolder(holder: PostViewHolder, content: ContentInfo) {
-    // FIXME extract post title
-    holder.titleView.setText("Вот те раз!")
-    holder.subtitleView.setText(content.author)
-    holder.contentView.setText(content.text)
+private fun bindPostHolder(holder: PostViewHolder, data: PostData) {
+    holder.titleView.setText(data.title)
+    holder.subtitleView.setText(data.content.author)
+    holder.contentView.setText(data.content.text)
 
     setContentElevation(holder, isTopContent = true)
 }

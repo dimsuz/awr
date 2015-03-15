@@ -20,13 +20,14 @@ import java.util.Collections
 public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostData {
     val document = Jsoup.parse(stream, "UTF-8", baseUri)
     val topicContainer = document.selectFirst(".topic-container")
+    val title = topicContainer.selectFirst(".topic-title").text()
     val author = topicContainer.selectFirst("a.user").text()
     val content = topicContainer.selectFirst(".topic-content").html()
     val dateString = topicContainer.selectFirst(".topic-info-date > time").text()
     val voteCountStr = topicContainer.selectFirst(".vote-count > span").text()
     val voteCount = parsePostVoteCount(voteCountStr)
     val contentInfo = ContentInfo(author, Html.fromHtml(content), dateString, voteCount)
-    return PostData(contentInfo, parseComments(document))
+    return PostData(title, contentInfo, parseComments(document))
 }
 
 private fun parseComments(document: Document): List<CommentNode> {

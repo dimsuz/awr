@@ -9,11 +9,6 @@ public data class ContentInfo(val author: String,
     }
 }
 
-private val emptyContent = ContentInfo("", "", "", null)
-public fun emptyContentInfo() : ContentInfo {
-    return emptyContent
-}
-
 public data class ShortPostInfo(
         val content: ContentInfo,
         val commentCount: String?)
@@ -30,10 +25,21 @@ public data class CommentNode(val path: LongArray,
     }
 }
 
-public data class PostData(val content: ContentInfo,
+public data class PostData(val title: String,
+                           val content: ContentInfo,
                            val comments: List<CommentNode>)
 
 public data class User(val name: String, val avatarUrl: String)
+
+private val emptyContent = ContentInfo("", "", "", null)
+public fun emptyContentInfo() : ContentInfo {
+    return emptyContent
+}
+
+private val emptyPostData = PostData("", emptyContent, emptyList())
+public fun emptyPostData() : PostData {
+    return emptyPostData
+}
 
 /**
  * Finds a child comment which corresponds to the passed path.

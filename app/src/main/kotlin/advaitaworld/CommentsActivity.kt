@@ -91,7 +91,7 @@ public class CommentsActivity : RxActionBarActivity() {
         if(data != null) {
             layoutManager!!.scrollToPosition(0)
             val (postData, items) = prepareAdapterData(data, path)
-            adapter.swapData(postData.content, items)
+            adapter.swapData(postData, items)
             currentPath = path
         }
     }
@@ -126,5 +126,5 @@ private fun PostData.limitToNode(path: LongArray): PostData {
             .filter { it != null }
             .take(1)
             .first()
-    return PostData(this.content, arrayListOf(targetComment!!))
+    return PostData(this.title, this.content, arrayListOf(targetComment!!))
 }
