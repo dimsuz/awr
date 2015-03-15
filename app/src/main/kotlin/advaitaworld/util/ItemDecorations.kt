@@ -144,7 +144,7 @@ public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDe
 
     {
         paint.setStrokeWidth(DIVIDER_HEIGHT.toFloat())
-        paint.setColor(Color.LTGRAY)
+        paint.setColor(resources.getColor(R.color.lightGray))
     }
 
     override fun onDrawOver(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
