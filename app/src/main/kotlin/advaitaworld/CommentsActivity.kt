@@ -18,14 +18,19 @@ import advaitaworld.util.CommentItemDecoration
 import advaitaworld.util.StaircaseItemDecoration
 import advaitaworld.util.CommentThreadsDecoration
 import android.support.v7.widget.DefaultItemAnimator
+import java.util.ArrayDeque
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
+
     private val adapter: CommentsAdapter = CommentsAdapter(showPost = false)
     private var postId = ""
     private var rootPostData: PostData? = null
     // instantiate item animator beforehand so setting it would be quicker
     private val itemAnimator = DefaultItemAnimator()
+    private val navHistory = ArrayDeque<LongArray>()
+    private var layoutManager: LinearLayoutManager? = null
+    private var currentPath: LongArray = longArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,17 +50,16 @@ public class CommentsActivity : RxActionBarActivity() {
                 .doOnNext { rootPostData = it }
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
-                .map { prepareAdapterData(it, commentPath) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { data -> adapter.swapData(data.first.content, data.second) },
+                        { data -> navigateToPath(commentPath) },
                         { Timber.e(it, "failed to retrieve fullpost") })
     }
 
     private fun setupCommentsView() {
         val listView = findViewById(R.id.post_view) as RecyclerView
-        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         listView.setLayoutManager(layoutManager)
         listView.addItemDecoration(StaircaseItemDecoration(getResources()))
         listView.addItemDecoration(CommentItemDecoration())
@@ -65,16 +69,30 @@ public class CommentsActivity : RxActionBarActivity() {
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->
-            val data = rootPostData
-            if(data != null) {
-                if(listView.getItemAnimator() == null) {
-                    listView.setItemAnimator(itemAnimator)
-                }
-                layoutManager.scrollToPosition(0)
-                val (postData, items) = prepareAdapterData(data, node.path)
-                adapter.swapData(postData.content, items)
-
+            if(listView.getItemAnimator() == null) {
+                listView.setItemAnimator(itemAnimator)
             }
+            navHistory.addLast(currentPath)
+            navigateToPath(node.path)
+        }
+    }
+
+    override fun onBackPressed() {
+        if(navHistory.isNotEmpty()) {
+            navigateToPath(navHistory.removeLast())
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    private fun navigateToPath(path: LongArray) {
+        Timber.d("navigating to path ${path.toList()}")
+        val data = rootPostData
+        if(data != null) {
+            layoutManager!!.scrollToPosition(0)
+            val (postData, items) = prepareAdapterData(data, path)
+            adapter.swapData(postData.content, items)
+            currentPath = path
         }
     }
 }
