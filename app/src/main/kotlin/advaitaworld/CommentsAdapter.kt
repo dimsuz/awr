@@ -13,12 +13,15 @@ import android.view.View.OnClickListener
 import advaitaworld.parsing.emptyContentInfo
 import advaitaworld.util.setVisible
 import android.support.v4.view.ViewCompat
-import android.graphics.Color
 
 /**
  * Adapter that represents a post and its comments
  */
 class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    {
+        setHasStableIds(true)
+    }
+
     class object {
         val ITEM_TYPE_CONTENT = 0
         val ITEM_TYPE_COMMENT = 1
@@ -71,6 +74,13 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
 
     override fun getItemCount(): Int {
         return data.size() + if(showPost) 1 else 0
+    }
+
+    // required for hasStableIds()
+    override fun getItemId(position: Int): Long {
+        if(showPost && position == 0) return -2
+        val pos = if (showPost) position - 1 else position
+        return if(!data.isEmpty()) data.get(pos).node.id() else -1
     }
 
     /**
