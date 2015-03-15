@@ -17,12 +17,15 @@ import advaitaworld.parsing.CommentNode
 import advaitaworld.util.CommentItemDecoration
 import advaitaworld.util.StaircaseItemDecoration
 import advaitaworld.util.CommentThreadsDecoration
+import android.support.v7.widget.DefaultItemAnimator
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
     private val adapter: CommentsAdapter = CommentsAdapter(showPost = false)
     private var postId = ""
     private var rootPostData: PostData? = null
+    // instantiate item animator beforehand so setting it would be quicker
+    private val itemAnimator = DefaultItemAnimator()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,17 +55,25 @@ public class CommentsActivity : RxActionBarActivity() {
 
     private fun setupCommentsView() {
         val listView = findViewById(R.id.post_view) as RecyclerView
-        listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
+        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        listView.setLayoutManager(layoutManager)
         listView.addItemDecoration(StaircaseItemDecoration(getResources()))
         listView.addItemDecoration(CommentItemDecoration())
         listView.addItemDecoration(CommentThreadsDecoration(getResources()))
+        // disable animations until the first comment expand (so that first swap will be instant)
+        listView.setItemAnimator(null)
         listView.setAdapter(adapter)
 
         adapter.setExpandCommentAction { node ->
             val data = rootPostData
             if(data != null) {
+                if(listView.getItemAnimator() == null) {
+                    listView.setItemAnimator(itemAnimator)
+                }
+                layoutManager.scrollToPosition(0)
                 val (postData, items) = prepareAdapterData(data, node.path)
                 adapter.swapData(postData.content, items)
+
             }
         }
     }
