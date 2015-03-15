@@ -148,6 +148,10 @@ public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDe
     }
 
     override fun onDrawOver(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        if(parent.getItemAnimator() != null && parent.getItemAnimator().isRunning()) {
+            // FIXME after animation ends fade in nicely
+            return
+        }
         val childCount = parent.getChildCount()
         for (i in 0..childCount - 1) {
             val child = parent.getChildAt(i)
@@ -182,6 +186,10 @@ public class CommentThreadsDecoration(resources: Resources) : RecyclerView.ItemD
     }
 
     override fun onDraw(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        if(parent.getItemAnimator() != null && parent.getItemAnimator().isRunning()) {
+            // FIXME after animation ends fade in nicely
+            return
+        }
         val childCount = parent.getChildCount()
         val offset = 16f
         var prevChildBottom = 0f
