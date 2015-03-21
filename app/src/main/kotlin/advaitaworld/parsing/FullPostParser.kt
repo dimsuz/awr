@@ -132,7 +132,7 @@ private fun parseComment(commentElem: Element): ContentInfo {
     val dateString = sectionElem.getElementsByTag("time").first().text()
     val voteCountStr = sectionElem.getElementsByAttributeValue("class", "vote-count").text()
     val voteCount = parsePostVoteCount(voteCountStr)
-    return ContentInfo(author, content, dateString, voteCount)
+    return ContentInfo(author, Html.fromHtml(content), dateString, voteCount)
 }
 
 private val commentIdPattern = Pattern.compile("\\((\\d+),(\\d+)\\)")
