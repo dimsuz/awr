@@ -19,6 +19,7 @@ import advaitaworld.util.StaircaseItemDecoration
 import advaitaworld.util.CommentThreadsDecoration
 import android.support.v7.widget.DefaultItemAnimator
 import java.util.ArrayDeque
+import android.view.MenuItem
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -77,12 +78,18 @@ public class CommentsActivity : RxActionBarActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        if(navHistory.isNotEmpty()) {
-            navigateToPath(navHistory.removeLast())
-        } else {
-            super.onBackPressed()
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.getItemId()) {
+            R.id.home, android.R.id.home -> {
+                if(navHistory.isNotEmpty()) {
+                    navigateToPath(navHistory.removeLast())
+                } else {
+                    finish()
+                }
+                return true
+            }
         }
+        return false
     }
 
     private fun navigateToPath(path: LongArray) {
