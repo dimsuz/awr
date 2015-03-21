@@ -26,10 +26,11 @@ public class PostActivity : RxActionBarActivity() {
         setContentView(R.layout.activity_post)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         getSupportActionBar().setDisplayShowTitleEnabled(false)
-        val postId = getIntent().getStringExtra(EXTRA_POST_ID)
-        if(postId == null) {
+        val postIntentId = getIntent().getStringExtra(EXTRA_POST_ID)
+        if(postIntentId == null) {
             throw RuntimeException("post id missing")
         }
+        postId = postIntentId
 
         setupPostView()
 

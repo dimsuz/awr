@@ -15,8 +15,10 @@ fun parsePostFeed(content: String): List<ShortPostInfo> {
         val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
         val voteCountStr = postElem.selectFirst(".vote-count > span").text()
         val voteCount = parsePostVoteCount(voteCountStr)
+        val postLink = postElem.selectFirst("h2.topic-title > a").attr("href")
+        val postId = parsePostLink(postLink)!!
         val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
-        ShortPostInfo(contentInfo, commentCount)
+        ShortPostInfo(postId, contentInfo, commentCount)
     })
     return parsedPosts
 }

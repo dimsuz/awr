@@ -12,6 +12,7 @@ import advaitaworld.PostFeedAdapter.ViewHolder
 import timber.log.Timber
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
+import android.content.Intent
 
 public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<ShortPostInfo> = listOf()
@@ -65,13 +66,22 @@ public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
         return data.size()
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val content = itemView.findViewById(R.id.content) as TextView
         val author = itemView.findViewById(R.id.author_name) as TextView
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView
         val comments = itemView.findViewById(R.id.comments) as TextView
         val rating = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
+
+        {
+            comments.setOnClickListener {
+                val context = comments.getContext()
+                val intent = Intent(context, javaClass<PostActivity>())
+                intent.putExtra(EXTRA_POST_ID, data.get(getPosition()).postId)
+                context.startActivity(intent)
+            }
+        }
     }
 
 }

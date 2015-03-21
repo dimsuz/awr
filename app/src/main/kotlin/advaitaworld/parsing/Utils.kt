@@ -24,3 +24,19 @@ private fun parsePostVoteCount(s: String): String? {
         return null
     }
 }
+
+/**
+ * Parses a post link and returns a post id.
+ *
+ * Example:
+ * http://advaitaworld.com/blog/48581.html => "48581"
+ */
+private val postLinkPattern = Pattern.compile("^http://advaitaworld\\.com.+/(\\d+)\\.html")
+private fun parsePostLink(link: String) : String? {
+    val m = postLinkPattern.matcher(link)
+    if(m.matches()) {
+        return m.group(1)
+    } else {
+        return null
+    }
+}
