@@ -7,7 +7,6 @@ import advaitaworld.util.SpaceItemDecoration
 import timber.log.Timber
 import rx.schedulers.Schedulers
 import advaitaworld.db.Database
-import rx.Observable
 import android.view.Menu
 import android.view.MenuItem
 import android.support.v7.widget.Toolbar
@@ -42,35 +41,24 @@ public class MainActivity : RxActionBarActivity() {
     }
 
     private fun fetchPosts() {
-        // Get posts, then find out which authors already have user info record in
-        // DB and which haven't. Pass the former to the adapter and fetch info for the latter from
-        // server
         val postsData = server.getPosts(Section.Popular)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
-                .map({ posts ->
-                    val names = posts.map { it.content.author }
-                    val users = db?.getUsersByName(names) ?: listOf()
-                    val missingNames = names.filterNot { name -> users.any({ u -> u.name == name }) }
-                    Timber.d("got ${users.size()} from db")
-                    Timber.d("missing from db $missingNames")
-                    Triple(posts, users, missingNames)
-                })
-                .doOnNext({ data -> fetchUserInfo(data.third) })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { adapter?.swapData(it.first, it.second) },
+                        { postData ->
+                            adapter?.swapData(postData)
+                            // after saving main data in adapter, start fetching full user info
+                            // (avatars, etc)
+                            fetchUserInfo(postData.map({ it.content.author }))
+                        },
                         { Timber.e(it, "parsing failed with exception") })
     }
 
-    private fun fetchUserInfo(missingNames: List<String>) {
-        Timber.d("fetching info for users $missingNames")
-        val userData = Observable.from(missingNames)
-                .flatMap({ server.getUserInfo(it) })
+    private fun fetchUserInfo(userNames: List<String>) {
+        val userData = UserInfoProvider.getUsersByName(userNames)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), userData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
-                // FIXME remove these test cases
-                .doOnNext({ if(it.name != "Amin" && it.name != "veter") db?.saveUser(it) })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { adapter?.onUserInfoUpdated(it) },

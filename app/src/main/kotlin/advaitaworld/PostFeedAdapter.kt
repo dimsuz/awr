@@ -17,11 +17,8 @@ public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
     var data: List<ShortPostInfo> = listOf()
     val userInfo: MutableMap<String, User> = hashMapOf()
 
-    public fun swapData(data: List<ShortPostInfo>, users: List<User>) {
+    public fun swapData(data: List<ShortPostInfo>) {
         this.data = data
-        for(u in users) {
-            userInfo.put(u.name, u)
-        }
         notifyDataSetChanged()
     }
 

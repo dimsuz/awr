@@ -16,13 +16,17 @@ import com.squareup.okhttp.MediaType
 // FIXME move to some particular place which contains common app dependency providers?
 private var server: Server? = null
 class ServerProvider {
-    fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
+    fun get(context: Context): Server {
         if(server == null) {
             server = Server(MemoryCache())
             // FIXME remove this
             initMockData(context, server!!)
         }
         return server!!
+    }
+
+    fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
+        return get(context)
     }
 
 }
