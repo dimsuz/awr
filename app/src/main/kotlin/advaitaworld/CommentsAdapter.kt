@@ -42,7 +42,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
     private var data: List<ItemInfo> = listOf()
     private var postData: PostData = emptyPostData()
     private var userDataSubscription: Subscription? = null
-    private val userInfo: MutableMap<String, User> = hashMapOf()
+    private val userInfoMap: MutableMap<String, User> = hashMapOf()
 
     public fun swapData(postData: PostData, data: List<ItemInfo>) {
         this.postData = postData
@@ -55,28 +55,31 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         if(userDataSubscription != null) {
             userDataSubscription!!.unsubscribe()
         }
-        val userData = UserInfoProvider.getUsersByName(data.map { it.node.content.author })
+        val userNames = if(showPost) arrayListOf(postData.content.author) else arrayListOf()
+        val userData = UserInfoProvider.getUsersByName(data.mapTo(userNames) { it.node.content.author })
         userDataSubscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle, userData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { onUserInfoUpdated(it) },
                         { exception -> Timber.e(exception, "failed to fetch user info") },
-                        { Timber.i("user info fetched, info map contains ${userInfo.size()} items") })
+                        { Timber.i("user info fetched, info map contains ${userInfoMap.size()} items") })
     }
 
+    // see if data or postData has content by this user => notify update
     private fun onUserInfoUpdated(user: User) {
-        // see if data has posts by this user => notify update
-        val positions = data
-                .mapIndexed { (i, item) -> if(item.node.content.author == user.name) i else -1 }
+        // if showing post by this author, include its position right away at the top, adjust others
+        val posAdjust = if(showPost) 1 else 0
+        val positions = if(postData.content.author == user.name) arrayListOf(0) else arrayListOf()
+        data.mapIndexedTo(positions) { (i, item) -> if(item.node.content.author == user.name) i+posAdjust else -1 }
                 .filter { it >= 0 }
         // update info to be used when rebinding view
         if(!positions.isEmpty()) {
-            userInfo.put(user.name, user)
+            userInfoMap.put(user.name, user)
         }
         //Timber.d("updating positions $positions")
         for(pos in positions) {
-            notifyItemChanged(if(showPost) pos + 1 else pos)
+            notifyItemChanged(pos)
         }
     }
 
@@ -103,10 +106,10 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(getItemViewType(position)) {
-            ITEM_TYPE_CONTENT -> bindPostHolder(holder as PostViewHolder, postData)
+            ITEM_TYPE_CONTENT -> bindPostHolder(holder as PostViewHolder, postData, userInfoMap)
             ITEM_TYPE_COMMENT -> {
                 val pos = if (showPost) position - 1 else position
-                bindCommentHolder(holder as CommentViewHolder, data.get(pos), userInfo)
+                bindCommentHolder(holder as CommentViewHolder, data.get(pos), userInfoMap)
             }
         }
     }
@@ -172,13 +175,15 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
     }
 
     class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val avatarView = itemView.findViewById(R.id.avatar) as ImageView
         val titleView = itemView.findViewById(R.id.post_title) as TextView
         val subtitleView = itemView.findViewById(R.id.post_subtitle) as TextView
         val contentView = itemView.findViewById(R.id.post_content) as TextView
     }
 }
 
-private fun bindPostHolder(holder: PostViewHolder, data: PostData) {
+private fun bindPostHolder(holder: PostViewHolder, data: PostData, userInfoMap: Map<String, User>) {
+    updateAvatarView(holder.avatarView, data.content.author, userInfoMap)
     holder.titleView.setText(data.title)
     holder.subtitleView.setText(data.content.author)
     holder.contentView.setText(data.content.text)
@@ -186,16 +191,9 @@ private fun bindPostHolder(holder: PostViewHolder, data: PostData) {
     setContentElevation(holder, isTopContent = true)
 }
 
-private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, userInfo: Map<String, User>) {
+private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, userInfoMap: Map<String, User>) {
     val content = itemInfo.node.content
-    val user = userInfo.get(content.author)
-    if(user != null) {
-        Picasso.with(holder.avatarView.getContext())
-                .load(Uri.parse(user.avatarUrl))
-                .into(holder.avatarView)
-    } else {
-        // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
-    }
+    updateAvatarView(holder.avatarView, content.author, userInfoMap)
     holder.authorView.setText(content.author)
     holder.dateView.setText(content.dateString)
     if(content.rating != null) {
@@ -217,6 +215,17 @@ private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, use
     // 'staircase' of replies can appear only on top and all views in it must share the same
     // higher elevation - as they go first
     setContentElevation(holder, isTopContent = itemInfo.isInStaircase || holder.getPosition() == 0)
+}
+
+private fun updateAvatarView(avatarView: ImageView, userName: String, userInfoMap: Map<String, User>) {
+    val user = userInfoMap.get(userName)
+    if(user != null) {
+        Picasso.with(avatarView.getContext())
+                .load(Uri.parse(user.avatarUrl))
+                .into(avatarView)
+    } else {
+        // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
+    }
 }
 
 private fun setContentElevation(holder: RecyclerView.ViewHolder, isTopContent: Boolean) {
