@@ -1,21 +1,23 @@
 package advaitaworld
 
-import android.support.v7.app.ActionBarActivity
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.LinearLayoutManager
 import advaitaworld.util.SpaceItemDecoration
 import timber.log.Timber
 import rx.schedulers.Schedulers
-import rx.android.app.AppObservable
 import advaitaworld.db.Database
 import rx.Observable
 import android.view.Menu
 import android.view.MenuItem
 import android.support.v7.widget.Toolbar
 import android.content.Intent
+import rx.android.lifecycle.LifecycleObservable
+import advaitaworld.support.RxActionBarActivity
+import rx.android.lifecycle.LifecycleEvent
+import rx.android.schedulers.AndroidSchedulers
 
-public class MainActivity : ActionBarActivity() {
+public class MainActivity : RxActionBarActivity() {
     var adapter: PostFeedAdapter? = null
     val server: Server by ServerProvider()
     var db: Database? = null
@@ -44,7 +46,7 @@ public class MainActivity : ActionBarActivity() {
         // DB and which haven't. Pass the former to the adapter and fetch info for the latter from
         // server
         val postsData = server.getPosts(Section.Popular)
-        AppObservable.bindActivity(this, postsData)
+        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .map({ posts ->
                     val names = posts.map { it.content.author }
@@ -55,6 +57,7 @@ public class MainActivity : ActionBarActivity() {
                     Triple(posts, users, missingNames)
                 })
                 .doOnNext({ data -> fetchUserInfo(data.third) })
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { adapter?.swapData(it.first, it.second) },
                         { Timber.e(it, "parsing failed with exception") })
@@ -64,10 +67,11 @@ public class MainActivity : ActionBarActivity() {
         Timber.d("fetching info for users $missingNames")
         val userData = Observable.from(missingNames)
                 .flatMap({ server.getUserInfo(it) })
-        AppObservable.bindActivity(this, userData)
+        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), userData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 // FIXME remove these test cases
                 .doOnNext({ if(it.name != "Amin" && it.name != "veter") db?.saveUser(it) })
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { adapter?.onUserInfoUpdated(it) },
                         { Timber.e(it, "failed to retrieve a user avatar") })
