@@ -10,14 +10,25 @@ import android.view.View.OnClickListener
 import android.support.v4.view.ViewCompat
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.emptyPostData
-import advaitaworld.CommentsAdapter.PostViewHolder
+import rx.Observable
+import rx.android.lifecycle.LifecycleEvent
+import rx.Subscription
+import rx.android.lifecycle.LifecycleObservable
+import rx.schedulers.Schedulers
+import rx.android.schedulers.AndroidSchedulers
+import advaitaworld.parsing.User
+import timber.log.Timber
+import android.widget.ImageView
 import advaitaworld.CommentsAdapter.CommentViewHolder
 import advaitaworld.util.setVisible
+import advaitaworld.CommentsAdapter.PostViewHolder
+import com.squareup.picasso.Picasso
+import android.net.Uri
 
 /**
  * Adapter that represents a post and its comments
  */
-class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     {
         setHasStableIds(true)
     }
@@ -30,11 +41,43 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
     private var expandCommentAction: ((CommentNode) -> Unit)? = null
     private var data: List<ItemInfo> = listOf()
     private var postData: PostData = emptyPostData()
+    private var userDataSubscription: Subscription? = null
+    private val userInfo: MutableMap<String, User> = hashMapOf()
 
     public fun swapData(postData: PostData, data: List<ItemInfo>) {
         this.postData = postData
         this.data = data
+        startFetchingUserInfo()
         notifyDataSetChanged()
+    }
+
+    private fun startFetchingUserInfo() {
+        if(userDataSubscription != null) {
+            userDataSubscription!!.unsubscribe()
+        }
+        val userData = UserInfoProvider.getUsersByName(data.map { it.node.content.author })
+        userDataSubscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle, userData, LifecycleEvent.DESTROY)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { onUserInfoUpdated(it) },
+                        { exception -> Timber.e(exception, "failed to fetch user info") },
+                        { Timber.i("user info fetched, info map contains ${userInfo.size()} items") })
+    }
+
+    private fun onUserInfoUpdated(user: User) {
+        // see if data has posts by this user => notify update
+        val positions = data
+                .mapIndexed { (i, item) -> if(item.node.content.author == user.name) i else -1 }
+                .filter { it >= 0 }
+        // update info to be used when rebinding view
+        if(!positions.isEmpty()) {
+            userInfo.put(user.name, user)
+        }
+        //Timber.d("updating positions $positions")
+        for(pos in positions) {
+            notifyItemChanged(if(showPost) pos + 1 else pos)
+        }
     }
 
     fun getData(): List<ItemInfo> {
@@ -63,7 +106,7 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
             ITEM_TYPE_CONTENT -> bindPostHolder(holder as PostViewHolder, postData)
             ITEM_TYPE_COMMENT -> {
                 val pos = if (showPost) position - 1 else position
-                bindCommentHolder(holder as CommentViewHolder, data.get(pos))
+                bindCommentHolder(holder as CommentViewHolder, data.get(pos), userInfo)
             }
         }
     }
@@ -99,6 +142,7 @@ class CommentsAdapter(val showPost: Boolean) : RecyclerView.Adapter<RecyclerView
     class CommentViewHolder(itemView: View, expandAction: ((CommentNode) -> Unit)?) :
             RecyclerView.ViewHolder(itemView), OnClickListener, ItemInfoHolder {
 
+        val avatarView = itemView.findViewById(R.id.avatar) as ImageView
         val authorView = itemView.findViewById(R.id.author_name) as TextView
         val dateView = itemView.findViewById(R.id.date) as TextView
         val ratingView = itemView.findViewById(R.id.rating) as TextView
@@ -142,8 +186,16 @@ private fun bindPostHolder(holder: PostViewHolder, data: PostData) {
     setContentElevation(holder, isTopContent = true)
 }
 
-private  fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo) {
+private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, userInfo: Map<String, User>) {
     val content = itemInfo.node.content
+    val user = userInfo.get(content.author)
+    if(user != null) {
+        Picasso.with(holder.avatarView.getContext())
+                .load(Uri.parse(user.avatarUrl))
+                .into(holder.avatarView)
+    } else {
+        // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
+    }
     holder.authorView.setText(content.author)
     holder.dateView.setText(content.dateString)
     if(content.rating != null) {

@@ -23,7 +23,7 @@ import java.util.ArrayDeque
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
 
-    private val adapter: CommentsAdapter = CommentsAdapter(showPost = false)
+    private val adapter: CommentsAdapter = CommentsAdapter(lifecycle(), showPost = false)
     private var postId = ""
     private var rootPostData: PostData? = null
     // instantiate item animator beforehand so setting it would be quicker

@@ -20,13 +20,13 @@ object UserInfoProvider {
      */
     fun getUsersByName(names: List<String>) : Observable<User> {
         return Observable.just(db!!.getUsersByName(names)).flatMap({ existingUsers ->
-            val missingNames = names.filterNot { name -> existingUsers.any({ u -> u.name == name }) }
+            val missingNames = hashSetOf<String>()
+            names.filterNotTo(missingNames, { name -> existingUsers.any({ u -> u.name == name }) })
             Timber.d("missing names are: $missingNames\nexisting users: ${existingUsers.size()}")
             val missingNamesFetchers = missingNames.map({ server!!.getUserInfo(it) })
             Observable.merge(missingNamesFetchers)
                     // TODO check that it saves only missing ones and not ones started with
-                    // FIXME remove these test cases
-                    .doOnNext({ if(it.name != "Amin" && it.name != "veter") db!!.saveUser(it) })
+                    .doOnNext({ db!!.saveUser(it) })
                     .startWith(existingUsers)
         })
     }

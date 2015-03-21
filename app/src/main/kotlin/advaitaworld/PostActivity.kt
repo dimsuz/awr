@@ -18,7 +18,7 @@ import advaitaworld.util.CommentThreadsDecoration
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
-    private val adapter: CommentsAdapter = CommentsAdapter(showPost = true)
+    private val adapter: CommentsAdapter = CommentsAdapter(lifecycle(), showPost = true)
     private var postId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
