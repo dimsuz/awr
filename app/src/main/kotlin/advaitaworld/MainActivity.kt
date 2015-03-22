@@ -23,6 +23,7 @@ import android.widget.TextView
 import android.view.Gravity
 import com.advaitaworld.widgets.SlidingTabLayout
 import android.content.res.Resources
+import android.graphics.Color
 
 public class MainActivity : RxActionBarActivity() {
     var adapter: PostFeedAdapter? = null
@@ -45,6 +46,7 @@ public class MainActivity : RxActionBarActivity() {
 
         val tabsLayout = findViewById(R.id.tabs) as SlidingTabLayout
         tabsLayout.setSelectedIndicatorColors(getResources().getColor(R.color.accent))
+        tabsLayout.setTabTitleColors(Color.WHITE, getResources().getColor(R.color.primary_light))
         tabsLayout.setCustomTabView(R.layout.section_tab, R.id.tab_text_view)
         tabsLayout.setViewPager(viewPager)
     }
