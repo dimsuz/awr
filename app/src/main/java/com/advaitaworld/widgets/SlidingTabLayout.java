@@ -367,8 +367,8 @@ public class SlidingTabLayout extends HorizontalScrollView {
             }
         });
 
-        anim1.setDuration(300).start();
-        anim2.setDuration(300).start();
+        anim1.start();
+        anim2.start();
     }
 
     private class TabClickListener implements View.OnClickListener {
