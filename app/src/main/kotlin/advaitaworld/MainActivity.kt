@@ -19,14 +19,13 @@ import android.support.v4.view.ViewPager
 import android.support.v4.view.PagerAdapter
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import android.view.Gravity
 import com.advaitaworld.widgets.SlidingTabLayout
 import android.content.res.Resources
 import android.graphics.Color
+import android.content.Context
+import java.util.EnumMap
 
 public class MainActivity : RxActionBarActivity() {
-    var adapter: PostFeedAdapter? = null
     val server: Server by ServerProvider()
     var db: Database? = null
 
@@ -36,8 +35,6 @@ public class MainActivity : RxActionBarActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         setupTabsAndPager()
-        setupPostsList()
-        fetchPosts()
     }
 
     private fun setupTabsAndPager() {
@@ -49,42 +46,48 @@ public class MainActivity : RxActionBarActivity() {
         tabsLayout.setTabTitleColors(Color.WHITE, getResources().getColor(R.color.primary_light))
         tabsLayout.setCustomTabView(R.layout.section_tab, R.id.tab_text_view)
         tabsLayout.setViewPager(viewPager)
+        tabsLayout.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            }
+
+            override fun onPageSelected(position: Int) {
+                val viewPagerAdapter = viewPager.getAdapter() as MainPagesAdapter
+                val section = Section.values()[position]
+                val adapter = viewPagerAdapter.getPageAdapter(section)
+                fetchPosts(adapter, section)
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+            }
+        })
     }
 
-    private fun setupPostsList() {
-        val listView = findViewById(R.id.post_list) as RecyclerView
-        listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
-        listView.setHasFixedSize(true)
-        listView.addItemDecoration(SpaceItemDecoration(
-                getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
-        adapter = PostFeedAdapter()
-        listView.setAdapter(adapter)
-    }
-
-    private fun fetchPosts() {
-        val postsData = server.getPosts(Section.Popular)
+    private fun fetchPosts(adapter: PostFeedAdapter, section: Section) {
+        // FIXME if fetching for this section is already in progress, do nothing
+        val postsData = server.getPosts(section)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { postData ->
-                            adapter?.swapData(postData)
+                            adapter.swapData(postData)
                             // after saving main data in adapter, start fetching full user info
                             // (avatars, etc)
-                            fetchUserInfo(postData.map({ it.content.author }))
+                            //fetchUserInfo(postData.map({ it.content.author }))
                         },
                         { Timber.e(it, "parsing failed with exception") })
     }
 
-    private fun fetchUserInfo(userNames: List<String>) {
-        val userData = UserInfoProvider.getUsersByName(userNames)
-        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), userData, LifecycleEvent.DESTROY)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        { adapter?.onUserInfoUpdated(it) },
-                        { Timber.e(it, "failed to retrieve a user avatar") })
-    }
+    // FIXME fix avatar fetching, move it inside adapter, like it is done in CommentsAdapter
+//    private fun fetchUserInfo(userNames: List<String>) {
+//        val userData = UserInfoProvider.getUsersByName(userNames)
+//        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), userData, LifecycleEvent.DESTROY)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                        { adapter?.onUserInfoUpdated(it) },
+//                        { Timber.e(it, "failed to retrieve a user avatar") })
+//    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -110,6 +113,8 @@ public class MainActivity : RxActionBarActivity() {
 }
 
 private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
+    val adapters : EnumMap<Section, PostFeedAdapter> = EnumMap(javaClass<Section>())
+
     override fun getCount(): Int {
         return Section.values().size()
     }
@@ -119,9 +124,9 @@ private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val view = TextView(container.getContext())
-        view.setGravity(Gravity.CENTER)
-        view.setText(position.toString())
+        val view = createFeedListView(container.getContext())
+        val adapter = view.getAdapter() as PostFeedAdapter
+        adapters.put(Section.values()[position], adapter)
         container.addView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         return view
     }
@@ -132,5 +137,18 @@ private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
 
     override fun getPageTitle(position: Int): CharSequence {
         return resources.getString(Section.values()[position].nameResId)
+    }
+
+    private fun createFeedListView(context: Context) : RecyclerView {
+        val listView = RecyclerView(context)
+        listView.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false))
+        listView.addItemDecoration(SpaceItemDecoration(
+                context.getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
+        listView.setAdapter(PostFeedAdapter())
+        return listView
+    }
+
+    public fun getPageAdapter(section: Section): PostFeedAdapter {
+        return adapters.get(section)!!
     }
 }

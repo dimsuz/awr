@@ -69,8 +69,8 @@ public class Server(cache: Cache) {
     fun sectionUrl(section: Section) : String {
         return when(section) {
             Section.Popular -> "http://advaitaworld.com"
-            Section.Community -> "http://advaitaworld.com/blog/new"
-            Section.Personal -> "http://advaitaworld.com/personal_blog/new"
+            Section.Community -> "http://advaitaworld.com/blog/"
+            Section.Personal -> "http://advaitaworld.com/personal_blog/"
             else -> throw RuntimeException("unknown section")
         }
     }
