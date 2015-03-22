@@ -5,4 +5,7 @@
         <item quantity="one">+%d comment</item>
         <item quantity="many">+%d comments</item>
     </plurals>
+    <string name="section_main">Main</string>
+    <string name="section_blogs">Blogs</string>
+    <string name="section_personal_blogs">Personal</string>
 </resources>

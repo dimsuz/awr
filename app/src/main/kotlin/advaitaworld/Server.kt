@@ -31,10 +31,10 @@ class ServerProvider {
 
 }
 
-public enum class Section {
-    Popular
-    Community
-    Personal
+public enum class Section(val nameResId: Int) {
+    Popular : Section(R.string.section_main)
+    Community : Section(R.string.section_blogs)
+    Personal : Section(R.string.section_personal_blogs)
 }
 
 public class Server(cache: Cache) {

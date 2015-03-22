@@ -6,4 +6,7 @@
         <item quantity="few">+%d комментария</item>
         <item quantity="many">+%d комментариев</item>
     </plurals>
+    <string name="section_main">Популярное</string>
+    <string name="section_blogs">Коллективные</string>
+    <string name="section_personal_blogs">Персональные</string>
 </resources>

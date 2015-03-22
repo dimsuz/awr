@@ -15,6 +15,14 @@ import rx.android.lifecycle.LifecycleObservable
 import advaitaworld.support.RxActionBarActivity
 import rx.android.lifecycle.LifecycleEvent
 import rx.android.schedulers.AndroidSchedulers
+import android.support.v4.view.ViewPager
+import android.support.v4.view.PagerAdapter
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import android.view.Gravity
+import com.advaitaworld.widgets.SlidingTabLayout
+import android.content.res.Resources
 
 public class MainActivity : RxActionBarActivity() {
     var adapter: PostFeedAdapter? = null
@@ -26,8 +34,19 @@ public class MainActivity : RxActionBarActivity() {
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
+        setupTabsAndPager()
         setupPostsList()
         fetchPosts()
+    }
+
+    private fun setupTabsAndPager() {
+        val viewPager = findViewById(R.id.main_pager) as ViewPager
+        viewPager.setAdapter(MainPagesAdapter(getResources()))
+
+        val tabsLayout = findViewById(R.id.tabs) as SlidingTabLayout
+        tabsLayout.setSelectedIndicatorColors(getResources().getColor(R.color.accent))
+        tabsLayout.setCustomTabView(R.layout.section_tab, R.id.tab_text_view)
+        tabsLayout.setViewPager(viewPager)
     }
 
     private fun setupPostsList() {
@@ -84,5 +103,32 @@ public class MainActivity : RxActionBarActivity() {
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+}
+
+private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
+    override fun getCount(): Int {
+        return Section.values().size()
+    }
+
+    override fun isViewFromObject(view: View, obj: Any): Boolean {
+        return view == obj
+    }
+
+    override fun instantiateItem(container: ViewGroup, position: Int): Any {
+        val view = TextView(container.getContext())
+        view.setGravity(Gravity.CENTER)
+        view.setText(position.toString())
+        container.addView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        return view
+    }
+
+    override fun destroyItem(container: ViewGroup, position: Int, obj: Any) {
+        container.removeView(obj as View)
+    }
+
+    override fun getPageTitle(position: Int): CharSequence {
+        return resources.getString(Section.values()[position].nameResId)
     }
 }
