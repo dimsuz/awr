@@ -15,9 +15,11 @@
  */
 package com.advaitaworld.widgets;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
@@ -76,6 +78,9 @@ public class SlidingTabLayout extends HorizontalScrollView {
     private ViewPager.OnPageChangeListener mViewPagerPageChangeListener;
 
     private final SlidingTabStrip mTabStrip;
+    private int mSelectedTabColor;
+    private int mDefaultTabColor;
+
 
     public SlidingTabLayout(Context context) {
         this(context, null);
@@ -120,6 +125,15 @@ public class SlidingTabLayout extends HorizontalScrollView {
      */
     public void setSelectedIndicatorColors(int... colors) {
         mTabStrip.setSelectedIndicatorColors(colors);
+    }
+
+    // Added by me - dimsuz
+    /**
+     * Sets the colors to be used to draw tab's title text
+     */
+    public void setTabTitleColors(int selectedTabColor, int defaultTabColor) {
+        mSelectedTabColor = selectedTabColor;
+        mDefaultTabColor = defaultTabColor;
     }
 
     /**
@@ -194,16 +208,13 @@ public class SlidingTabLayout extends HorizontalScrollView {
                 // If there is a custom tab view layout id set, try and inflate it
                 tabView = LayoutInflater.from(getContext()).inflate(mTabViewLayoutId, mTabStrip,
                         false);
-                tabTitleView = (TextView) tabView.findViewById(mTabViewTextViewId);
             }
 
             if (tabView == null) {
                 tabView = createDefaultTabView(getContext());
             }
 
-            if (tabTitleView == null && TextView.class.isInstance(tabView)) {
-                tabTitleView = (TextView) tabView;
-            }
+            tabTitleView = getTabTitleView(tabView);
 
             if (mDistributeEvenly) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tabView.getLayoutParams();
@@ -222,6 +233,19 @@ public class SlidingTabLayout extends HorizontalScrollView {
             if (i == mViewPager.getCurrentItem()) {
                 tabView.setSelected(true);
             }
+            if(mSelectedTabColor != 0 && mDefaultTabColor != 0) {
+                tabTitleView.setTextColor(i == mViewPager.getCurrentItem() ? mSelectedTabColor : mDefaultTabColor);
+            }
+        }
+    }
+
+    private TextView getTabTitleView(View tabView) {
+        if(mTabViewTextViewId != 0) {
+            return (TextView) tabView.findViewById(mTabViewTextViewId);
+        } else if(TextView.class.isInstance(tabView)) {
+            return (TextView) tabView;
+        } else {
+            throw new RuntimeException("failed to find tab title");
         }
     }
 
@@ -296,14 +320,55 @@ public class SlidingTabLayout extends HorizontalScrollView {
                 mTabStrip.onViewPagerPageChanged(position, 0f);
                 scrollToTab(position, 0);
             }
+
+            int prevSelected = -1, newSelected = position;
             for (int i = 0; i < mTabStrip.getChildCount(); i++) {
-                mTabStrip.getChildAt(i).setSelected(position == i);
+                View tabView = mTabStrip.getChildAt(i);
+                if(prevSelected == -1 && tabView.isSelected()) { prevSelected = i; }
+                tabView.setSelected(position == i);
             }
+            updateTitleColors(prevSelected, newSelected);
+
             if (mViewPagerPageChangeListener != null) {
                 mViewPagerPageChangeListener.onPageSelected(position);
             }
         }
+    }
 
+    private void updateTitleColors(int prevSelectedPosition, int newSelectedPosition) {
+        if(mSelectedTabColor == 0 && mDefaultTabColor == 0) {
+            return;
+        }
+        View tabViewPrev = mTabStrip.getChildAt(prevSelectedPosition);
+        View tabViewNew = mTabStrip.getChildAt(newSelectedPosition);
+        final TextView tabTitlePrev = getTabTitleView(tabViewPrev);
+        final TextView tabTitleNew = getTabTitleView(tabViewNew);
+
+        ArgbEvaluator evaluator = new ArgbEvaluator();
+        ValueAnimator anim1 = new ValueAnimator();
+        anim1.setIntValues(mDefaultTabColor, mSelectedTabColor);
+        anim1.setEvaluator(evaluator);
+        anim1.setDuration(300);
+        anim1.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                tabTitleNew.setTextColor((Integer) valueAnimator.getAnimatedValue());
+            }
+        });
+
+        ValueAnimator anim2 = new ValueAnimator();
+        anim2.setIntValues(mSelectedTabColor, mDefaultTabColor);
+        anim2.setEvaluator(evaluator);
+        anim2.setDuration(300);
+        anim2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                tabTitlePrev.setTextColor((Integer) valueAnimator.getAnimatedValue());
+            }
+        });
+
+        anim1.setDuration(300).start();
+        anim2.setDuration(300).start();
     }
 
     private class TabClickListener implements View.OnClickListener {
