@@ -13,14 +13,36 @@ import timber.log.Timber
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
 import android.content.Intent
+import rx.android.lifecycle.LifecycleObservable
+import rx.android.lifecycle.LifecycleEvent
+import rx.schedulers.Schedulers
+import rx.android.schedulers.AndroidSchedulers
+import rx.Observable
+import rx.Subscription
 
-public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
-    var data: List<ShortPostInfo> = listOf()
-    val userInfo: MutableMap<String, User> = hashMapOf()
+public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
+    private var data: List<ShortPostInfo> = listOf()
+    private val userInfoMap: MutableMap<String, User> = hashMapOf()
+    private var userDataSubscription: Subscription? = null
 
     public fun swapData(data: List<ShortPostInfo>) {
         this.data = data
         notifyDataSetChanged()
+        startFetchingUserInfo()
+    }
+
+    private fun startFetchingUserInfo() {
+        if(userDataSubscription != null) {
+            userDataSubscription!!.unsubscribe()
+        }
+        val userData = UserInfoProvider.getUsersByName(data.map { it.content.author })
+        userDataSubscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle, userData, LifecycleEvent.DESTROY)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { onUserInfoUpdated(it) },
+                        { exception -> Timber.e(exception, "failed to fetch user info") },
+                        { Timber.i("user info fetched, info map contains ${userInfoMap.size()} items") })
     }
 
     public fun onUserInfoUpdated(user: User) {
@@ -30,9 +52,8 @@ public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
                 .filter { it >= 0 }
         // update info to be used when rebinding view
         if(!positions.isEmpty()) {
-            userInfo.put(user.name, user)
+            userInfoMap.put(user.name, user)
         }
-        Timber.d("updating positions $positions")
         for(pos in positions) {
             notifyItemChanged(pos)
         }
@@ -46,7 +67,7 @@ public class PostFeedAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val post = data.get(position)
-        val userInfo = userInfo.get(post.content.author)
+        val userInfo = userInfoMap.get(post.content.author)
         if(userInfo != null) {
             Picasso.with(holder.avatar.getContext())
                     .load(Uri.parse(userInfo.avatarUrl))

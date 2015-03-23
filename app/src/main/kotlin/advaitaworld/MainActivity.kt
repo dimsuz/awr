@@ -24,6 +24,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.content.Context
 import java.util.EnumMap
+import rx.Observable
 
 public class MainActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
@@ -39,7 +40,7 @@ public class MainActivity : RxActionBarActivity() {
 
     private fun setupTabsAndPager() {
         val viewPager = findViewById(R.id.main_pager) as ViewPager
-        viewPager.setAdapter(MainPagesAdapter(getResources()))
+        viewPager.setAdapter(MainPagesAdapter(getResources(), lifecycle()))
 
         val pageListener = createPageChangeListener(viewPager)
 
@@ -86,17 +87,6 @@ public class MainActivity : RxActionBarActivity() {
                         { Timber.e(it, "parsing failed with exception") })
     }
 
-    // FIXME fix avatar fetching, move it inside adapter, like it is done in CommentsAdapter
-//    private fun fetchUserInfo(userNames: List<String>) {
-//        val userData = UserInfoProvider.getUsersByName(userNames)
-//        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), userData, LifecycleEvent.DESTROY)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                        { adapter?.onUserInfoUpdated(it) },
-//                        { Timber.e(it, "failed to retrieve a user avatar") })
-//    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu)
@@ -120,7 +110,7 @@ public class MainActivity : RxActionBarActivity() {
 
 }
 
-private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
+private class MainPagesAdapter(val resources: Resources, val activityLifecycle: Observable<LifecycleEvent>) : PagerAdapter() {
     val adapters : EnumMap<Section, PostFeedAdapter> = EnumMap(javaClass<Section>())
 
     override fun getCount(): Int {
@@ -152,7 +142,7 @@ private class MainPagesAdapter(val resources: Resources) : PagerAdapter() {
         listView.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(SpaceItemDecoration(
                 context.getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
-        listView.setAdapter(PostFeedAdapter())
+        listView.setAdapter(PostFeedAdapter(activityLifecycle))
         return listView
     }
 
