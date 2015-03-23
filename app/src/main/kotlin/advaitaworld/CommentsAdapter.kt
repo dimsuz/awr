@@ -47,8 +47,8 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
     public fun swapData(postData: PostData, data: List<ItemInfo>) {
         this.postData = postData
         this.data = data
-        startFetchingUserInfo()
         notifyDataSetChanged()
+        startFetchingUserInfo()
     }
 
     private fun startFetchingUserInfo() {
