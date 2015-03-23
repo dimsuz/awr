@@ -41,12 +41,20 @@ public class MainActivity : RxActionBarActivity() {
         val viewPager = findViewById(R.id.main_pager) as ViewPager
         viewPager.setAdapter(MainPagesAdapter(getResources()))
 
+        val pageListener = createPageChangeListener(viewPager)
+
         val tabsLayout = findViewById(R.id.tabs) as SlidingTabLayout
         tabsLayout.setSelectedIndicatorColors(getResources().getColor(R.color.accent))
         tabsLayout.setTabTitleColors(Color.WHITE, getResources().getColor(R.color.primary_light))
         tabsLayout.setCustomTabView(R.layout.section_tab, R.id.tab_text_view)
         tabsLayout.setViewPager(viewPager)
-        tabsLayout.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+        tabsLayout.setOnPageChangeListener(pageListener)
+        // ah, the joy... infamous 'no initial page change event' problem...
+        viewPager.post { pageListener.onPageSelected(0) }
+    }
+
+    private fun createPageChangeListener(viewPager: ViewPager) : ViewPager.OnPageChangeListener {
+        return object : ViewPager.OnPageChangeListener {
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
             }
 
@@ -59,7 +67,7 @@ public class MainActivity : RxActionBarActivity() {
 
             override fun onPageScrollStateChanged(state: Int) {
             }
-        })
+        }
     }
 
     private fun fetchPosts(adapter: PostFeedAdapter, section: Section) {
