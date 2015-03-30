@@ -50,7 +50,7 @@ public class Database(context: Context) {
 private class DatabaseHelper(val context : Context)
 : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
-    {
+    init {
         Timber.d("creating DB helper")
     }
 

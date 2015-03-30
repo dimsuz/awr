@@ -49,7 +49,7 @@ public class Server(cache: Cache) {
 
     public fun getFullPost(postId: String) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
-        val logMsgCache = { (data: PostData) -> Timber.d("getting post $postId from cache") }
+        val logMsgCache = { data: PostData -> Timber.d("getting post $postId from cache") }
         return cache.getFullPost(postId).doOnNext(logMsgCache).onErrorResumeNext {
             Timber.d("getting post $postId from server")
             runMockableRequest(client, postUrl(postId))

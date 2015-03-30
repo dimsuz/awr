@@ -48,7 +48,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
     public fun onUserInfoUpdated(user: User) {
         // see if data has posts by this user => notify update
         val positions = data
-                .mapIndexed { (i, post) -> if(post.content.author == user.name) i else -1 }
+                .mapIndexed { i, post -> if(post.content.author == user.name) i else -1 }
                 .filter { it >= 0 }
         // update info to be used when rebinding view
         if(!positions.isEmpty()) {
@@ -95,7 +95,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         val rating = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
 
-        {
+        init {
             comments.setOnClickListener {
                 val context = comments.getContext()
                 val intent = Intent(context, javaClass<PostActivity>())

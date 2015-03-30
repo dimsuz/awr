@@ -25,7 +25,7 @@ public class SpaceItemDecoration(val space: Int) : RecyclerView.ItemDecoration()
 }
 
 public class DividerItemDecoration(context: Context, orientation: Int) : RecyclerView.ItemDecoration() {
-    class object {
+    companion object {
         public val HORIZONTAL_LIST: Int = LinearLayoutManager.HORIZONTAL
         public val VERTICAL_LIST: Int = LinearLayoutManager.VERTICAL
     }
@@ -35,7 +35,7 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
     private var startItem: Int = 0
     private val mDivider: Drawable
 
-    {
+    init {
         val a = context.obtainStyledAttributes(ATTRS)
         mDivider = a.getDrawable(0)
         a.recycle()
@@ -140,9 +140,9 @@ private fun getItemInfo(view: View, parent: RecyclerView) : ItemInfo? {
 public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
     private val DIVIDER_HEIGHT = resources.dpToPx(1)
     private val DIVIDER_PADDING = resources.dpToPx(64).toFloat()
-    private val paint = Paint();
+    private val paint = Paint()
 
-    {
+    init {
         paint.setStrokeWidth(DIVIDER_HEIGHT.toFloat())
         paint.setColor(resources.getColor(R.color.lightGray))
     }
@@ -178,9 +178,9 @@ public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDe
 
 public class CommentThreadsDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
     private val THREAD_WIDTH = resources.dpToPx(1)
-    private val paint = Paint();
+    private val paint = Paint()
 
-    {
+    init {
         paint.setStrokeWidth(THREAD_WIDTH.toFloat())
         paint.setColor(resources.getColor(R.color.lightGray))
     }

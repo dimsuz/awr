@@ -29,11 +29,11 @@ import android.net.Uri
  * Adapter that represents a post and its comments
  */
 class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    {
+    init {
         setHasStableIds(true)
     }
 
-    class object {
+    companion object {
         val ITEM_TYPE_CONTENT = 0
         val ITEM_TYPE_COMMENT = 1
     }
@@ -71,7 +71,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         // if showing post by this author, include its position right away at the top, adjust others
         val posAdjust = if(showPost) 1 else 0
         val positions = if(postData.content.author == user.name) arrayListOf(0) else arrayListOf()
-        data.mapIndexedTo(positions) { (i, item) -> if(item.node.content.author == user.name) i+posAdjust else -1 }
+        data.mapIndexedTo(positions) { i, item -> if(item.node.content.author == user.name) i+posAdjust else -1 }
                 .filter { it >= 0 }
         // update info to be used when rebinding view
         if(!positions.isEmpty()) {
@@ -159,7 +159,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         val ratingPosColor = itemView.getResources().getColor(R.color.rating_bg_positive)
         override var itemInfo : ItemInfo? = null
 
-        {
+        init {
             if(expandAction != null) {
                 expandView.setOnClickListener(this)
             }

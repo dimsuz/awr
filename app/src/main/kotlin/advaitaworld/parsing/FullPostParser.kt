@@ -78,7 +78,7 @@ private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
             return
         }
         val content = parseComment(domNode as Element)
-        val (id, parentId) = parseCommentIds(domNode as Element, pair)
+        val (id, parentId) = parseCommentIds(domNode, pair)
 
         // top-level nodes can have id == -1
         val parentNode = if(parentId != -1L) workTree.get(parentId) else null
@@ -96,7 +96,7 @@ private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
         val (id, parentId) = parseCommentIds(domNode as Element, pair)
         val node = workTree.get(id)!!
         val parsedChildren = node.children.map { it.resultNode!! }
-        val deepCount = parsedChildren.fold(parsedChildren.size(), { (count, child) -> count + child.deepChildCount })
+        val deepCount = parsedChildren.fold(parsedChildren.size(), { count, child -> count + child.deepChildCount })
         val resultChildren = if(!parsedChildren.isEmpty()) parsedChildren else Collections.emptyList()
         node.resultNode = CommentNode(node.path, node.contentInfo, resultChildren, deepCount)
 
