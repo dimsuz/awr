@@ -75,6 +75,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         } else {
             // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
         }
+        holder.title.setText(post.title)
         holder.content.setText(post.content.text)
         holder.author.setText(post.content.author)
         holder.timestamp.setText(post.content.dateString)
@@ -88,6 +89,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val title = itemView.findViewById(R.id.title) as TextView
         val content = itemView.findViewById(R.id.content) as TextView
         val author = itemView.findViewById(R.id.author_name) as TextView
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView

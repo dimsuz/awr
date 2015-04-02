@@ -11,6 +11,7 @@ public data class ContentInfo(val author: String,
 
 public data class ShortPostInfo(
         val postId : String,
+        val title: String,
         val content: ContentInfo,
         val commentCount: String?)
 
