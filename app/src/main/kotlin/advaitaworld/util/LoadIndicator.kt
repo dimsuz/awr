@@ -16,11 +16,11 @@ import timber.log.Timber
  * A transformer which can be composed onto some Observable to provide an convenient
  * way to show a loading indicator (progress bar) until it completes
  */
-public class LoadIndicator<T> private (val container: ViewGroup,
-                                       val retryActionNameResId: Int,
-                                       val errorTextResId: Int,
-                                       val retryAction: (() -> Unit)?,
-                                       val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>?)
+public class LoadIndicator<T> private (private val container: ViewGroup,
+                                       private val retryActionNameResId: Int,
+                                       private val errorTextResId: Int,
+                                       private val retryAction: (() -> Unit)?,
+                                       private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>?)
 : Observable.Transformer<T,T> {
 
     companion object {
