@@ -1,20 +1,17 @@
 package advaitaworld
 
-import android.os.Bundle
-import rx.schedulers.Schedulers
-import rx.android.schedulers.AndroidSchedulers
-import rx.android.lifecycle.LifecycleObservable
-import advaitaworld.util.printError
 import advaitaworld.support.RxActionBarActivity
-import android.view.Menu
-import android.support.v7.widget.Toolbar
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.LinearLayoutManager
-import rx.android.lifecycle.LifecycleEvent
+import advaitaworld.util.*
 import android.content.Intent
-import advaitaworld.util.CommentItemDecoration
-import advaitaworld.util.StaircaseItemDecoration
-import advaitaworld.util.CommentThreadsDecoration
+import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
+import android.view.Menu
+import rx.android.lifecycle.LifecycleEvent
+import rx.android.lifecycle.LifecycleObservable
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 
 public class PostActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -32,9 +29,11 @@ public class PostActivity : RxActionBarActivity() {
         }
         postId = postIntentId
 
-        setupPostView()
+        val listView = setupPostView()
 
-        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), server.getFullPost(postId), LifecycleEvent.DESTROY)
+        val postData = server.getFullPost(postId)
+        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postData, LifecycleEvent.DESTROY)
+                .compose(LoadIndicator.createFor(postData).showIn(listView, adapter))
                 .map { prepareAdapterData(it, null) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -43,7 +42,7 @@ public class PostActivity : RxActionBarActivity() {
                         printError("failed to retrieve fullpost"))
     }
 
-    private fun setupPostView() {
+    private fun setupPostView() : RecyclerView {
         val listView = findViewById(R.id.post_view) as RecyclerView
         listView.setLayoutManager(LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(StaircaseItemDecoration(getResources()))
@@ -57,6 +56,8 @@ public class PostActivity : RxActionBarActivity() {
             intent.putExtra(EXTRA_COMMENT_PATH, node.path)
             startActivity(intent)
         }
+
+        return listView
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
