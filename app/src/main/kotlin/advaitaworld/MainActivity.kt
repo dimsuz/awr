@@ -1,30 +1,29 @@
 package advaitaworld
 
-import android.os.Bundle
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.LinearLayoutManager
-import advaitaworld.util.SpaceItemDecoration
-import timber.log.Timber
-import rx.schedulers.Schedulers
 import advaitaworld.db.Database
-import android.view.Menu
-import android.view.MenuItem
-import android.support.v7.widget.Toolbar
-import android.content.Intent
-import rx.android.lifecycle.LifecycleObservable
 import advaitaworld.support.RxActionBarActivity
-import rx.android.lifecycle.LifecycleEvent
-import rx.android.schedulers.AndroidSchedulers
-import android.support.v4.view.ViewPager
-import android.support.v4.view.PagerAdapter
-import android.view.View
-import android.view.ViewGroup
-import com.advaitaworld.widgets.SlidingTabLayout
+import advaitaworld.util.LoadIndicator
+import advaitaworld.util.SpaceItemDecoration
+import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Color
-import android.content.Context
-import java.util.EnumMap
+import android.os.Bundle
+import android.support.v4.view.PagerAdapter
+import android.support.v4.view.ViewPager
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
+import android.view.*
+import com.advaitaworld.widgets.SlidingTabLayout
 import rx.Observable
+import rx.android.lifecycle.LifecycleEvent
+import rx.android.lifecycle.LifecycleObservable
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
+import timber.log.Timber
+import java.util.EnumMap
+import kotlin.properties.Delegates
 
 public class MainActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
@@ -62,8 +61,8 @@ public class MainActivity : RxActionBarActivity() {
             override fun onPageSelected(position: Int) {
                 val viewPagerAdapter = viewPager.getAdapter() as MainPagesAdapter
                 val section = Section.values()[position]
-                val adapter = viewPagerAdapter.getPageAdapter(section)
-                fetchPosts(adapter, section)
+                val pageListView = viewPagerAdapter.getPageView(section)
+                fetchPosts(pageListView, section)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
@@ -71,12 +70,18 @@ public class MainActivity : RxActionBarActivity() {
         }
     }
 
-    private fun fetchPosts(adapter: PostFeedAdapter, section: Section) {
-        // FIXME if fetching for this section is already in progress, do nothing
+    private fun fetchPosts(pageListView: RecyclerView, section: Section) {
+        // FIXME 1. if fetching for this section is already in progress, do nothing
+        // FIXME 2. if fetching is completed, do not start it
         val postsData = server.getPosts(section)
+        val adapter = pageListView.getAdapter() as PostFeedAdapter
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                // FIXME specify an error text and repeat action
+                .compose(LoadIndicator
+                        .createFor(postsData)
+                        .showIn(pageListView, adapter))
                 .subscribe(
                         { postData ->
                             adapter.swapData(postData)
@@ -111,7 +116,7 @@ public class MainActivity : RxActionBarActivity() {
 }
 
 private class MainPagesAdapter(val resources: Resources, val activityLifecycle: Observable<LifecycleEvent>) : PagerAdapter() {
-    val adapters : EnumMap<Section, PostFeedAdapter> = EnumMap(javaClass<Section>())
+    val pageViews : EnumMap<Section, RecyclerView> = EnumMap(javaClass<Section>())
 
     override fun getCount(): Int {
         return Section.values().size()
@@ -123,8 +128,7 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         val view = createFeedListView(container.getContext())
-        val adapter = view.getAdapter() as PostFeedAdapter
-        adapters.put(Section.values()[position], adapter)
+        pageViews.put(Section.values()[position], view)
         container.addView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         return view
     }
@@ -146,7 +150,7 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
         return listView
     }
 
-    public fun getPageAdapter(section: Section): PostFeedAdapter {
-        return adapters.get(section)!!
+    public fun getPageView(section: Section): RecyclerView {
+        return pageViews.get(section)!!
     }
 }

@@ -1,7 +1,8 @@
 package advaitaworld.util
 
-import android.view.View
 import android.content.res.Resources
+import android.view.View
+import android.view.ViewGroup
 
 public fun View.adjustPadding(dLeft: Int, dTop: Int, dRight: Int, dBottom: Int) {
     this.setPadding(this.getPaddingLeft() + dLeft, this.getPaddingTop() + dTop,
@@ -14,4 +15,9 @@ public fun View.setVisible(visible: Boolean) {
 
 public fun Resources.dpToPx(dp: Int) : Int {
     return Math.round(this.getDisplayMetrics().density * dp)
+}
+
+public fun ViewGroup.children() : Sequence<View> {
+    val count = this.getChildCount()
+    return sequenceOf(0..(count-1)).map { this.getChildAt(it) }
 }
