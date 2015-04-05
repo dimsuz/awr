@@ -28,6 +28,7 @@ import kotlin.properties.Delegates
 public class MainActivity : RxActionBarActivity() {
     val server: Server by ServerProvider()
     var db: Database? = null
+    var mainPager : ViewPager by Delegates.notNull()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,19 +39,19 @@ public class MainActivity : RxActionBarActivity() {
     }
 
     private fun setupTabsAndPager() {
-        val viewPager = findViewById(R.id.main_pager) as ViewPager
-        viewPager.setAdapter(MainPagesAdapter(getResources(), lifecycle()))
+        mainPager = findViewById(R.id.main_pager) as ViewPager
+        mainPager.setAdapter(MainPagesAdapter(getResources(), lifecycle()))
 
-        val pageListener = createPageChangeListener(viewPager)
+        val pageListener = createPageChangeListener(mainPager)
 
         val tabsLayout = findViewById(R.id.tabs) as SlidingTabLayout
         tabsLayout.setSelectedIndicatorColors(getResources().getColor(R.color.accent))
         tabsLayout.setTabTitleColors(Color.WHITE, getResources().getColor(R.color.primary_light))
         tabsLayout.setCustomTabView(R.layout.section_tab, R.id.tab_text_view)
-        tabsLayout.setViewPager(viewPager)
+        tabsLayout.setViewPager(mainPager)
         tabsLayout.setOnPageChangeListener(pageListener)
         // ah, the joy... infamous 'no initial page change event' problem...
-        viewPager.post { pageListener.onPageSelected(0) }
+        mainPager.post { pageListener.onPageSelected(0) }
     }
 
     private fun createPageChangeListener(viewPager: ViewPager) : ViewPager.OnPageChangeListener {
