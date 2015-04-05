@@ -20,10 +20,7 @@ import rx.android.schedulers.AndroidSchedulers
  * way to show a loading indicator (progress bar) until it completes
  */
 public class LoadIndicator<T> private (private val container: ViewGroup,
-                                       private val retryActionNameResId: Int,
-                                       private val errorTextResId: Int,
-                                       private val retryAction: (() -> Unit)?,
-                                       private val background: Drawable?,
+                                       private val config: LoadIndicator.Config,
                                        private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>?)
 : Observable.Transformer<T,T> {
 
@@ -39,6 +36,13 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
             return Builder()
         }
     }
+
+    internal data class Config(
+        val errorMessageResId : Int,
+        val retryActionResId : Int,
+        val retryAction: (() -> Unit)?,
+        val background: Drawable?
+    )
 
     public class Builder<T> internal  () {
         var errorMessageResId = 0
@@ -81,7 +85,9 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
          */
         public fun showIn(container: ViewGroup) : LoadIndicator<T> {
             checkConfiguration()
-            return LoadIndicator(container, retryActionResId, errorMessageResId, retryAction, backgroundDrawable, null)
+            return LoadIndicator(container,
+                    Config(errorMessageResId, retryActionResId, retryAction, backgroundDrawable),
+                    null)
         }
 
         /**
@@ -96,7 +102,9 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
          */
         public fun showIn(listView: RecyclerView, adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) : LoadIndicator<T> {
             checkConfiguration()
-            return LoadIndicator(listView, retryActionResId, errorMessageResId, retryAction, backgroundDrawable, adapter)
+            return LoadIndicator(listView,
+                    Config(errorMessageResId, retryActionResId, retryAction, backgroundDrawable),
+                    adapter)
         }
 
         private fun checkConfiguration() {
@@ -171,7 +179,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showProgressInRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.setAdapter(WaitAdapter(background))
+        recyclerView.setAdapter(WaitAdapter(config))
     }
 
     private fun hideProgressInRecyclerView(recyclerView: RecyclerView) {
@@ -180,14 +188,14 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showErrorInRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.setAdapter(ErrorAdapter(background, errorTextResId, retryActionNameResId, retryAction))
+        recyclerView.setAdapter(ErrorAdapter(config))
     }
 
-    private class WaitAdapter(val background: Drawable?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private class WaitAdapter(val config: Config) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_progress, parent, false)
-            if(background != null) {
-                view.setBackgroundDrawable(background)
+            if(config.background != null) {
+                view.setBackgroundDrawable(config.background)
             }
             stretchToRecyclerViewSize(parent, view)
             return object : RecyclerView.ViewHolder(view) {  }
@@ -201,34 +209,12 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
         }
     }
 
-    private class ErrorAdapter(val background: Drawable?,
-                               val errorMessageResId: Int,
-                               val retryActionNameResId: Int,
-                               val retryAction: (() -> Unit)?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private class ErrorAdapter(val config: Config) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_error, parent, false)
-            if(background != null) {
-                view.setBackgroundDrawable(background)
-            }
-            setupViews(view)
-            stretchToRecyclerViewSize(parent, view)
-            return object : RecyclerView.ViewHolder(view) {  }
-        }
-
-        private fun setupViews(topLayout: View) {
-            val errorMsg = topLayout.findViewById(R.id.error_msg) as TextView
-            val button = topLayout.findViewById(R.id.retry_button) as TextView
-
-            // expecting all resources are validated by Builder and present
-            errorMsg.setText(errorMessageResId)
-            val buttonAction = retryAction
-            if(buttonAction != null) {
-                button.setText(retryActionNameResId)
-                button.setOnClickListener { buttonAction() }
-            } else {
-                button.setVisible(false)
-            }
+            val errorView = prepareErrorView(parent, config)
+            stretchToRecyclerViewSize(parent, errorView)
+            return object : RecyclerView.ViewHolder(errorView) {  }
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -238,6 +224,27 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
             return 1
         }
     }
+}
+
+private fun prepareErrorView(parent: ViewGroup, config: LoadIndicator.Config) : View {
+    val errorViewLayout = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_error, parent, false)
+    if(config.background != null) {
+        errorViewLayout.setBackgroundDrawable(config.background)
+    }
+
+    val errorMsg = errorViewLayout.findViewById(R.id.error_msg) as TextView
+    val button = errorViewLayout.findViewById(R.id.retry_button) as TextView
+
+    // expecting all resources are validated by Builder and present
+    errorMsg.setText(config.errorMessageResId)
+    val buttonAction = config.retryAction
+    if(buttonAction != null) {
+        button.setText(config.retryActionResId)
+        button.setOnClickListener { buttonAction() }
+    } else {
+        button.setVisible(false)
+    }
+    return errorViewLayout
 }
 
 private fun stretchToRecyclerViewSize(parent: View, view: View) {
