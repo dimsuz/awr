@@ -3,6 +3,7 @@ package advaitaworld
 import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.*
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -33,7 +34,7 @@ public class PostActivity : RxActionBarActivity() {
 
         val postData = server.getFullPost(postId)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postData, LifecycleEvent.DESTROY)
-                .compose(LoadIndicator.createFor(postData).showIn(listView, adapter))
+                .compose(LoadIndicator.createFor(postData).withBackgroundColor(Color.WHITE).showIn(listView, adapter))
                 .map { prepareAdapterData(it, null) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

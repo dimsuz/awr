@@ -1,6 +1,8 @@
 package advaitaworld.util
 
 import advaitaworld.R
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -10,7 +12,6 @@ import android.widget.ProgressBar
 import rx.Observable
 import rx.android.internal.Assertions
 import rx.android.schedulers.AndroidSchedulers
-import timber.log.Timber
 
 /**
  * A transformer which can be composed onto some Observable to provide an convenient
@@ -20,6 +21,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
                                        private val retryActionNameResId: Int,
                                        private val errorTextResId: Int,
                                        private val retryAction: (() -> Unit)?,
+                                       private val background: Drawable?,
                                        private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>?)
 : Observable.Transformer<T,T> {
 
@@ -40,6 +42,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
         var errorMessageResId = 0
         var retryActionResId = 0
         var retryAction: (() -> Unit)? = null
+        var backgroundDrawable: Drawable? = null
 
         /**
          * If source observable produces an error, show this error text
@@ -61,13 +64,22 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
         }
 
         /**
+         * Specify the background color to use on indicator layout view.
+         * Default is to use no color (transparent)
+         */
+        public fun withBackgroundColor(color: Int) : Builder<T> {
+            backgroundDrawable = ColorDrawable(color)
+            return this
+        }
+
+        /**
          * Specifies the target container to show indicator in.
          * This should probably be a [FrameLayout] instance or some other [ViewGroup].
          * To show load indicator in [RecyclerView], use other overload of showIn
          */
         public fun showIn(container: ViewGroup) : LoadIndicator<T> {
             checkConfiguration()
-            return LoadIndicator(container, retryActionResId, errorMessageResId, retryAction, null)
+            return LoadIndicator(container, retryActionResId, errorMessageResId, retryAction, backgroundDrawable, null)
         }
 
         /**
@@ -82,7 +94,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
          */
         public fun showIn(listView: RecyclerView, adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) : LoadIndicator<T> {
             checkConfiguration()
-            return LoadIndicator(listView, retryActionResId, errorMessageResId, retryAction, adapter)
+            return LoadIndicator(listView, retryActionResId, errorMessageResId, retryAction, backgroundDrawable, adapter)
         }
 
         private fun checkConfiguration() {
@@ -136,7 +148,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showProgressInRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.setAdapter(WaitAdapter())
+        recyclerView.setAdapter(WaitAdapter(background))
     }
 
     private fun hideProgressInRecyclerView(recyclerView: RecyclerView) {
@@ -144,9 +156,12 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
         recyclerView.setAdapter(adapter)
     }
 
-    private class WaitAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private class WaitAdapter(val background: Drawable?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.wait_progress_bar, parent, false)
+            if(background != null) {
+                view.setBackgroundDrawable(background)
+            }
             // have to manually update layout params to make item match parent height
             val lp = view.getLayoutParams()
             lp.height = parent.getHeight() - parent.getPaddingTop() - parent.getPaddingBottom()
