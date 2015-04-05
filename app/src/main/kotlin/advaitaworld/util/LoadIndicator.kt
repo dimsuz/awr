@@ -179,7 +179,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showProgressInRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.setAdapter(WaitAdapter(config))
+        recyclerView.setAdapter(SingleItemAdapter(prepareLoadingView(recyclerView, config)))
     }
 
     private fun hideProgressInRecyclerView(recyclerView: RecyclerView) {
@@ -188,15 +188,12 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showErrorInRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.setAdapter(ErrorAdapter(config))
+        recyclerView.setAdapter(SingleItemAdapter(prepareErrorView(recyclerView, config)))
     }
 
-    private class WaitAdapter(val config: Config) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private class SingleItemAdapter(val view: View) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_progress, parent, false)
-            if(config.background != null) {
-                view.setBackgroundDrawable(config.background)
-            }
+            // make this single item full sized
             stretchToRecyclerViewSize(parent, view)
             return object : RecyclerView.ViewHolder(view) {  }
         }
@@ -208,22 +205,14 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
             return 1
         }
     }
+}
 
-    private class ErrorAdapter(val config: Config) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val errorView = prepareErrorView(parent, config)
-            stretchToRecyclerViewSize(parent, errorView)
-            return object : RecyclerView.ViewHolder(errorView) {  }
-        }
-
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        }
-
-        override fun getItemCount(): Int {
-            return 1
-        }
+private fun prepareLoadingView(parent: ViewGroup, config: LoadIndicator.Config) : View {
+    val loadingView = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_progress, parent, false)
+    if(config.background != null) {
+        loadingView.setBackgroundDrawable(config.background)
     }
+    return loadingView
 }
 
 private fun prepareErrorView(parent: ViewGroup, config: LoadIndicator.Config) : View {
