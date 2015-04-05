@@ -1,25 +1,26 @@
 package advaitaworld
 
-import advaitaworld.support.RxActionBarActivity
-import android.os.Bundle
-import android.support.v7.widget.Toolbar
-import rx.android.lifecycle.LifecycleObservable
-import rx.android.lifecycle.LifecycleEvent
-import rx.schedulers.Schedulers
-import rx.android.schedulers.AndroidSchedulers
-import timber.log.Timber
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.LinearLayoutManager
-import advaitaworld.parsing.findByPath
+import advaitaworld.parsing.CommentNode
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.emptyContentInfo
-import advaitaworld.parsing.CommentNode
+import advaitaworld.parsing.findByPath
+import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.CommentItemDecoration
-import advaitaworld.util.StaircaseItemDecoration
 import advaitaworld.util.CommentThreadsDecoration
+import advaitaworld.util.LoadIndicator
+import advaitaworld.util.StaircaseItemDecoration
+import android.os.Bundle
 import android.support.v7.widget.DefaultItemAnimator
-import java.util.ArrayDeque
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.view.MenuItem
+import rx.android.lifecycle.LifecycleEvent
+import rx.android.lifecycle.LifecycleObservable
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
+import timber.log.Timber
+import java.util.ArrayDeque
 
 public class CommentsActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
@@ -45,12 +46,13 @@ public class CommentsActivity : RxActionBarActivity() {
         if(postId.isEmpty()) throw RuntimeException("post id missing")
         if(commentPath == null) throw RuntimeException("comment path is missing")
 
-        setupCommentsView()
+        val listView = setupCommentsView()
 
         val observable = server.getFullPost(postId)
                 .doOnNext { rootPostData = it }
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
+                .compose(LoadIndicator.createFor(observable).showIn(listView, adapter))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -58,7 +60,7 @@ public class CommentsActivity : RxActionBarActivity() {
                         { Timber.e(it, "failed to retrieve fullpost") })
     }
 
-    private fun setupCommentsView() {
+    private fun setupCommentsView() : RecyclerView {
         val listView = findViewById(R.id.post_view) as RecyclerView
         layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         listView.setLayoutManager(layoutManager)
@@ -76,6 +78,8 @@ public class CommentsActivity : RxActionBarActivity() {
             navHistory.addLast(currentPath)
             navigateToPath(node.path)
         }
+
+        return listView
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
