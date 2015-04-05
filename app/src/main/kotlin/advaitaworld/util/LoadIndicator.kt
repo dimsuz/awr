@@ -158,7 +158,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
 
     private class WaitAdapter(val background: Drawable?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.wait_progress_bar, parent, false)
+            val view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_indicator_progress, parent, false)
             if(background != null) {
                 view.setBackgroundDrawable(background)
             }
