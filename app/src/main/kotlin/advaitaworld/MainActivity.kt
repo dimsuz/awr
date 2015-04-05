@@ -106,8 +106,11 @@ public class MainActivity : RxActionBarActivity() {
         val id = item.getItemId()
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            startActivity(Intent(this, javaClass<PostActivity>()))
+        if (id == R.id.action_refresh) {
+            val mainAdapter = mainPager.getAdapter() as MainPagesAdapter
+            val section = Section.values()[mainPager.getCurrentItem()]
+            val listView = mainAdapter.getPageView(section)
+            fetchPosts(listView, section)
             return true
         }
 
