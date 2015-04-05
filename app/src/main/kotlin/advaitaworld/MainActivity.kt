@@ -75,13 +75,15 @@ public class MainActivity : RxActionBarActivity() {
         // FIXME 1. if fetching for this section is already in progress, do nothing
         // FIXME 2. if fetching is completed, do not start it
         val postsData = server.getPosts(section)
-        val adapter = pageListView.getAdapter() as PostFeedAdapter
+        val adapter = PostFeedAdapter(lifecycle())
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 // FIXME specify an error text and repeat action
                 .compose(LoadIndicator
                         .createFor(postsData)
+                        .withErrorText(R.string.error_msg_data_fetch_failed)
+                        .withRetryAction(R.string.action_retry, { fetchPosts(pageListView, section) })
                         .showIn(pageListView, adapter))
                 .subscribe(
                         { postData ->
@@ -150,7 +152,6 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
         listView.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(SpaceItemDecoration(
                 context.getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
-        listView.setAdapter(PostFeedAdapter(activityLifecycle))
         return listView
     }
 

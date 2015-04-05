@@ -9,4 +9,6 @@
     <string name="section_main">Популярное</string>
     <string name="section_blogs">Коллективные</string>
     <string name="section_personal_blogs">Персональные</string>
+    <string name="error_msg_data_fetch_failed">Ошибка подключения</string>
+    <string name="action_retry">Повторить</string>
 </resources>

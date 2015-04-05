@@ -34,7 +34,13 @@ public class PostActivity : RxActionBarActivity() {
 
         val postData = server.getFullPost(postId)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postData, LifecycleEvent.DESTROY)
-                .compose(LoadIndicator.createFor(postData).withBackgroundColor(Color.WHITE).showIn(listView, adapter))
+                .compose(LoadIndicator
+                        .createFor(postData)
+                        .withBackgroundColor(Color.WHITE)
+                        .withErrorText(R.string.error_msg_data_fetch_failed)
+                        // FIXME implement
+                        .withRetryAction(R.string.action_retry, { throw RuntimeException("FIXME implement me")})
+                        .showIn(listView, adapter))
                 .map { prepareAdapterData(it, null) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

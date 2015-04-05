@@ -52,7 +52,12 @@ public class CommentsActivity : RxActionBarActivity() {
                 .doOnNext { rootPostData = it }
 
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
-                .compose(LoadIndicator.createFor(observable).showIn(listView, adapter))
+                .compose(LoadIndicator
+                        .createFor(observable)
+                        .withErrorText(R.string.error_msg_data_fetch_failed)
+                        // FIXME implement
+                        .withRetryAction(R.string.action_retry, { throw RuntimeException("FIXME implement me")})
+                        .showIn(listView, adapter))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

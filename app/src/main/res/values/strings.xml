@@ -8,4 +8,6 @@
     <string name="section_main">Main</string>
     <string name="section_blogs">Blogs</string>
     <string name="section_personal_blogs">Personal</string>
+    <string name="error_msg_data_fetch_failed">Failed to fetch data</string>
+    <string name="action_retry">Retry</string>
 </resources>
