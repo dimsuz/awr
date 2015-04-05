@@ -157,20 +157,17 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
 
     private fun showProgressInViewGroup(viewGroup: ViewGroup) {
         viewGroup.children().forEach { it.setVisible(false) }
-        val progressBar = ProgressBar(container.getContext())
-        progressBar.setTag("pb")
-        viewGroup.addView(progressBar,
-                FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        val loadingView = prepareLoadingView(viewGroup, config)
+        viewGroup.addView(loadingView)
     }
 
     private fun hideProgressInViewGroup(viewGroup: ViewGroup) {
         // FIXME instead of showing *all*, show only those which were visible initally
         // (that requires remembering children state in showProgressInViewGroup)
         viewGroup.children().forEach { it.setVisible(true) }
-        val progressBar = viewGroup.findViewWithTag("pb")
-        if(progressBar != null) {
-            viewGroup.removeView(progressBar)
+        val loadingView = viewGroup.findViewById(R.id.load_indicator_progress)
+        if(loadingView != null) {
+            viewGroup.removeView(loadingView)
         }
     }
 
