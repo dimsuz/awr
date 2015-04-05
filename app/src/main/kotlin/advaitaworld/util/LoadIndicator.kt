@@ -157,6 +157,8 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun hideProgressInViewGroup(viewGroup: ViewGroup) {
+        // FIXME instead of showing *all*, show only those which were visible initally
+        // (that requires remembering children state in showProgressInViewGroup)
         viewGroup.children().forEach { it.setVisible(true) }
         val progressBar = viewGroup.findViewWithTag("pb")
         if(progressBar != null) {
