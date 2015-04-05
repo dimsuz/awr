@@ -79,7 +79,6 @@ public class MainActivity : RxActionBarActivity() {
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                // FIXME specify an error text and repeat action
                 .compose(LoadIndicator
                         .createFor(postsData)
                         .withErrorText(R.string.error_msg_data_fetch_failed)
