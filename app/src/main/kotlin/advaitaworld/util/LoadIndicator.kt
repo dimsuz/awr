@@ -172,7 +172,9 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
     }
 
     private fun showErrorInViewGroup(viewGroup: ViewGroup) {
-        // FIXME implement
+        viewGroup.children().forEach { it.setVisible(false) }
+        val errorView = prepareErrorView(viewGroup, config)
+        viewGroup.addView(errorView)
     }
 
     private fun showProgressInRecyclerView(recyclerView: RecyclerView) {
@@ -239,4 +241,3 @@ private fun stretchToRecyclerViewSize(parent: View, view: View) {
     lp.height = parent.getHeight() - parent.getPaddingTop() - parent.getPaddingBottom()
     view.setLayoutParams(lp)
 }
-
