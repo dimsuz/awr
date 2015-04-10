@@ -1,11 +1,6 @@
 * General
-  - в LoadIndicator-e сделать выдачу сообщения об ошибке, кнопку Retry
   - кэшировать посты не только в памяти
   - кэш аватарок должен инвалидейтится время от времени
-  - нормальный loading bar показывать
-    * в post activity
-    * в comments activity
-    * в post feed
   - iframe/youtube
     * в post feed
     * в комментариях
