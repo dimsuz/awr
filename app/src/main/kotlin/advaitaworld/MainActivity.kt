@@ -5,7 +5,6 @@ import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.SpaceItemDecoration
 import android.content.Context
-import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
@@ -14,9 +13,13 @@ import android.support.v4.view.ViewPager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import com.advaitaworld.widgets.SlidingTabLayout
 import rx.Observable
+import rx.Subscription
 import rx.android.lifecycle.LifecycleEvent
 import rx.android.lifecycle.LifecycleObservable
 import rx.android.schedulers.AndroidSchedulers
@@ -26,9 +29,11 @@ import java.util.EnumMap
 import kotlin.properties.Delegates
 
 public class MainActivity : RxActionBarActivity() {
-    val server: Server by ServerProvider()
-    var db: Database? = null
-    var mainPager : ViewPager by Delegates.notNull()
+    private val server: Server by ServerProvider()
+    private var db: Database? = null
+    private var mainPager : ViewPager by Delegates.notNull()
+    private val fetchSubscriptions : EnumMap<Section, Subscription> = EnumMap(javaClass<Section>())
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,11 +77,14 @@ public class MainActivity : RxActionBarActivity() {
     }
 
     private fun fetchPosts(pageListView: RecyclerView, section: Section) {
-        // FIXME 1. if fetching for this section is already in progress, do nothing
-        // FIXME 2. if fetching is completed, do not start it
+        if(fetchSubscriptions.get(section) != null && !fetchSubscriptions.get(section).isUnsubscribed()) {
+            Timber.d("fetching posts for $section is already in progress, not starting new fetch")
+            return
+        }
+        // FIXME if fetching is completed, do not start it
         val postsData = server.getPosts(section)
         val adapter = PostFeedAdapter(lifecycle())
-        LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
+        val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .compose(LoadIndicator
@@ -88,10 +96,10 @@ public class MainActivity : RxActionBarActivity() {
                         { postData ->
                             adapter.swapData(postData)
                             // after saving main data in adapter, start fetching full user info
-                            // (avatars, etc)
                             //fetchUserInfo(postData.map({ it.content.author }))
                         },
                         { Timber.e(it, "parsing failed with exception") })
+        fetchSubscriptions.put(section, subscription)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
