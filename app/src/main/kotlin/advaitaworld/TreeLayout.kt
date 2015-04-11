@@ -28,3 +28,17 @@ public fun buildTreeLayout(node: CommentNode, startIndent: Int = 0) : List<ItemI
     }
     return items
 }
+
+/**
+ * Analyzes a passed node information and produces a set of [ItemInfo] objects which can be used
+ * in adapter to present a plain list of comment items.
+ *
+ * This overload prepares a display info for the case where a list of sibling nodes is designated
+ * as a primary content, rather than a tree emanating from the single root
+ *
+ * @param nodes a list of sibling nodes
+ */
+public fun buildTreeLayout(nodes: List<CommentNode>, startIndent: Int = 0) : List<ItemInfo> {
+    // in this case there is no support for 'staircasing', simple list of siblings...
+    return nodes.map { ItemInfo(startIndent, it, isInStaircase = false) }
+}

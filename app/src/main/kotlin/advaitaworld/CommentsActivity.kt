@@ -118,14 +118,16 @@ public class CommentsActivity : RxActionBarActivity() {
  * of item indent information suitable for passing to a CommentsAdapter
  */
 fun prepareAdapterData(postData: PostData, startPath: LongArray?) : Pair<PostData, List<ItemInfo>> {
-    // build indented comment tree by adding a fake root on top, this will provide
-    // the right structure, then discard this extra root from results
-
-    // If comment path is provided, no need to add a fake root, because tree will already have a single root
+    // If comment path is provided, use a root-unfolding overload, otherwise use sibling-overload
+    // the former will support merging of comment 'staircases', while the latter will simply produce
+    // a plain list of top level sibling comments
+    //
+    // path is usually provided when viewing a particular comments thread, so here 'staircases' are useful.
+    // path is not provided when displaying a list of siblings under the post - and this needs to be
+    // a concise summary with no lengthy blocks of merged toghether comments - so no merging is needed here
     var layout : List<ItemInfo>
     if(startPath == null) {
-        val fakeRoot = CommentNode(longArray(-1), emptyContentInfo(), postData.comments, 0)
-        layout = buildTreeLayout(fakeRoot, startIndent = -1).drop(1)
+        layout = buildTreeLayout(postData.comments)
     } else {
         layout = buildTreeLayout(postData.limitToNode(startPath).comments.single())
     }
