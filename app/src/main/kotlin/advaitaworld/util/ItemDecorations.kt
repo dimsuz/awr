@@ -1,19 +1,18 @@
 package advaitaworld.util
 
-import android.support.v7.widget.RecyclerView
-import android.graphics.Rect
-import android.view.View
-import android.content.Context
-import android.support.v7.widget.LinearLayoutManager
-import android.graphics.drawable.Drawable
-import android.graphics.Canvas
-import android.support.v4.view.ViewCompat
 import advaitaworld.CommentsAdapter
-import advaitaworld.R
-import android.content.res.Resources
 import advaitaworld.ItemInfo
+import advaitaworld.R
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Color
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.support.v4.view.ViewCompat
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.view.View
 
 public class SpaceItemDecoration(val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
