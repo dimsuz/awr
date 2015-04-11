@@ -111,6 +111,9 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
     }
 }
 
+/**
+ * Decorates comment views with indent and margin
+ */
 public class CommentItemDecoration : RecyclerView.ItemDecoration() {
     var margin : Int = 0
 
@@ -137,6 +140,9 @@ private fun getItemInfo(view: View, parent: RecyclerView) : ItemInfo? {
     }
 }
 
+/**
+ * Decorates items in so called 'staircase' - a flow of 1-to-1 discussion between two users
+ */
 public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
     private val DIVIDER_HEIGHT = resources.dpToPx(1)
     private val DIVIDER_PADDING = resources.dpToPx(64).toFloat()
@@ -176,6 +182,9 @@ public class StaircaseItemDecoration(resources: Resources) : RecyclerView.ItemDe
     }
 }
 
+/**
+ * Decorates a child comments with tiny 'threads' to show to which parent they belong to
+ */
 public class CommentThreadsDecoration(resources: Resources) : RecyclerView.ItemDecoration() {
     private val THREAD_WIDTH = resources.dpToPx(1)
     private val paint = Paint()

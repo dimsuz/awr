@@ -5,16 +5,25 @@ import advaitaworld.parsing.CommentNode
 public data class ItemInfo(
         val indentLevel: Int,
         val node: CommentNode,
+        /**
+         * Whether this item is part of 'staircase' - a flow of 1-to-1 reply conversation between only two users
+         */
         val isInStaircase: Boolean
 )
 
-public fun buildTreeLayout(node: CommentNode, startIndent: Int = 0) : List<ItemInfo> {
+/**
+ * Analyzes a passed node tree and produces a set of [ItemInfo] objects which can be used
+ * in adapter to present a plain list of comment items
+ *
+ * @param root a root of the tree to unfold to a plain list
+ */
+public fun buildTreeLayout(root: CommentNode, startIndent: Int = 0) : List<ItemInfo> {
     val items : MutableList<ItemInfo> = arrayListOf()
 
-    items.add(ItemInfo(startIndent, node, isInStaircase = node.children.size() == 1))
+    items.add(ItemInfo(startIndent, root, isInStaircase = root.children.size() == 1))
 
     // merge the 'staircase' of single-replies into a same indent level
-    var n = node
+    var n = root
     while(n.children.size() == 1) {
         val child = n.children.first()
         items.add(ItemInfo(startIndent, child, isInStaircase = true))
