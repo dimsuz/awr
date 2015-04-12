@@ -7,17 +7,19 @@ import advaitaworld.util.SpaceItemDecoration
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.os.Bundle
+import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.advaitaworld.widgets.SlidingTabLayout
+import com.mikepenz.materialdrawer.Drawer
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import com.mikepenz.materialdrawer.model.SectionDrawerItem
 import rx.Observable
 import rx.Subscription
 import rx.android.lifecycle.LifecycleEvent
@@ -40,7 +42,36 @@ public class MainActivity : RxActionBarActivity() {
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
+        setupDrawer()
         setupTabsAndPager()
+    }
+
+    private fun setupDrawer() {
+        Drawer().withActivity(this)
+                .withToolbar(findViewById(R.id.toolbar) as Toolbar)
+                .addDrawerItems(
+                        PrimaryDrawerItem()
+                                .withIcon(R.drawable.ic_account_box_grey600_24dp)
+                                .withName(R.string.login)
+                                .withCheckable(false),
+                        PrimaryDrawerItem()
+                                .withIcon(this, R.drawable.ic_settings_grey600_24dp)
+                                .withName(R.string.settings),
+                        SectionDrawerItem().withCapsName(this, R.string.blog_section_traditions),
+                        PrimaryDrawerItem().withName("Традиция 1"),
+                        PrimaryDrawerItem().withName("Традиция 2"),
+                        PrimaryDrawerItem().withName("Традиция 3"),
+                        SectionDrawerItem().withCapsName(this, R.string.blog_section_satsang),
+                        PrimaryDrawerItem().withName("Сатсанг 1"),
+                        PrimaryDrawerItem().withName("Сатсанг 2"),
+                        PrimaryDrawerItem().withName("Сатсанг 3"),
+                        SectionDrawerItem().withCapsName(this, R.string.blog_section_misc),
+                        PrimaryDrawerItem().withName("Misc1 1"),
+                        PrimaryDrawerItem().withName("Misc1 2"),
+                        PrimaryDrawerItem().withName("Misc1 3")
+                )
+                .withSelectedItem(-1)
+                .build()
     }
 
     private fun setupTabsAndPager() {
@@ -165,4 +196,19 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
     public fun getPageView(section: Section): RecyclerView {
         return pageViews.get(section)!!
     }
+}
+
+public fun SectionDrawerItem.withCapsName(context: Context, nameRes: Int) : SectionDrawerItem {
+    return this.withName(context.getResources().getString(nameRes).toUpperCase())
+}
+
+/**
+ * Default implementation of Material Drawer is unable to color icon according to the selected
+ * text color, do this manually
+ */
+public fun PrimaryDrawerItem.withIcon(context: Context, iconRes: Int) : PrimaryDrawerItem {
+    val icon = ResourcesCompat.getDrawable(context.getResources(), iconRes, context.getTheme())
+    val selectedIcon = ResourcesCompat.getDrawable(context.getResources(), iconRes, context.getTheme()).mutate()
+    selectedIcon.setColorFilter(context.getResources().getColor(R.color.material_drawer_selected_text), PorterDuff.Mode.SRC_IN)
+    return this.withIcon(icon).withSelectedIcon(selectedIcon)
 }

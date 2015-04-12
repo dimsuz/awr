@@ -15,4 +15,5 @@
     <color name="rating_bg_negative">#9eee5252</color>
     <color name="lightestGray">#efefef</color>
     <color name="lightGray">#cecece</color>
+    <color name="material_drawer_selected_text">@color/primary</color>
 </resources>

@@ -38,4 +38,7 @@ dependencies {
     compile 'org.jsoup:jsoup:1.8.1'
     compile 'com.squareup.okhttp:okhttp:2.3.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile('com.mikepenz.materialdrawer:library:2.7.7@aar') {
+        transitive = true
+    }
 }
