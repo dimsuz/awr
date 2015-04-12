@@ -31,12 +31,11 @@ dependencies {
     compile "com.android.support:recyclerview-v7:21.0.3"
     compile "com.android.support:cardview-v7:21.0.3"
     compile "com.android.support:support-v4:21.0.3"
-    compile "io.reactivex:rxjava:1.0.5"
+    compile "io.reactivex:rxjava:1.0.9"
     compile "io.reactivex:rxandroid:0.24.0"
     compile "io.reactivex:rxandroid-framework:0.24.0"
-    compile 'com.jakewharton.timber:timber:2.5.0'
+    compile 'com.jakewharton.timber:timber:2.7.1'
     compile 'org.jsoup:jsoup:1.8.1'
-    compile 'com.squareup.okhttp:okhttp:2.2.0'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0' // needed by picasso
-    compile 'com.squareup.picasso:picasso:2.4.0'
+    compile 'com.squareup.okhttp:okhttp:2.3.0'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }
