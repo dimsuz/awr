@@ -20,7 +20,7 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:scaleType="centerCrop"
-            android:src="@color/secondary_text"/>
+            android:src="@drawable/placeholder_avatar"/>
         <TextView
             android:id="@+id/author_name"
             android:layout_width="wrap_content"

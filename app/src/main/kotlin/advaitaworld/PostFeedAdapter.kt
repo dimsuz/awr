@@ -71,6 +71,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         if(userInfo != null) {
             Picasso.with(holder.avatar.getContext())
                     .load(Uri.parse(userInfo.avatarUrl))
+                    .error(if(BuildConfig.DEBUG) R.drawable.placeholder_error else R.drawable.placeholder_avatar)
                     .into(holder.avatar)
         } else {
             // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user

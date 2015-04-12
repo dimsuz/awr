@@ -15,7 +15,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:scaleType="center"
-        android:src="@drawable/placeholder_48x48"
+        android:src="@drawable/placeholder_avatar"
         />
     <TextView
         android:id="@+id/author_name"
