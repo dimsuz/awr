@@ -171,9 +171,9 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val view = createFeedListView(container.getContext())
+        val view = createFeedListView(container)
+        container.addView(view)
         pageViews.put(Section.values()[position], view)
-        container.addView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         return view
     }
 
@@ -185,8 +185,9 @@ private class MainPagesAdapter(val resources: Resources, val activityLifecycle: 
         return resources.getString(Section.values()[position].nameResId)
     }
 
-    private fun createFeedListView(context: Context) : RecyclerView {
-        val listView = RecyclerView(context)
+    private fun createFeedListView(container: ViewGroup) : RecyclerView {
+        val context = container.getContext()
+        val listView = LayoutInflater.from(context).inflate(R.layout.posts_feed_list, container, false) as RecyclerView
         listView.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false))
         listView.addItemDecoration(SpaceItemDecoration(
                 context.getResources().getDimensionPixelSize(R.dimen.card_vertical_margin)))
