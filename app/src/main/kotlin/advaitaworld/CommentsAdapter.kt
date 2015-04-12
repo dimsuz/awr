@@ -222,10 +222,11 @@ private fun updateAvatarView(avatarView: ImageView, userName: String, userInfoMa
     if(user != null) {
         Picasso.with(avatarView.getContext())
                 .load(Uri.parse(user.avatarUrl))
+                .placeholder(R.drawable.placeholder_avatar)
                 .error(if(BuildConfig.DEBUG) R.drawable.placeholder_error else R.drawable.placeholder_avatar)
                 .into(avatarView)
     } else {
-        // FIXME set some default bg, otherwise it leaves previously used one for a newly binded user
+        avatarView.setImageResource(R.drawable.placeholder_avatar)
     }
 }
 
