@@ -8,15 +8,7 @@
               android:baselineAligned="false"
               tools:context=".MainActivity"
     >
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        android:background="@color/primary"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        >
-    </android.support.v7.widget.Toolbar>
+    <include layout="@layout/main_toolbar"/>
 
     <com.advaitaworld.widgets.SlidingTabLayout
         android:id="@+id/tabs"
