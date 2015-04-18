@@ -12,6 +12,7 @@
     <string name="error_msg_data_fetch_failed">Ошибка подключения</string>
     <string name="action_retry">Повторить</string>
     <string name="login">Войти</string>
+    <string name="home">Главная</string>
     <string name="settings">Настройки</string>
     <string name="blog_section_traditions">Традиции</string>
     <string name="blog_section_satsang">Сатсанг</string>

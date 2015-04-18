@@ -2,6 +2,7 @@ package advaitaworld
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.PorterDuff
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.Toolbar
@@ -9,14 +10,16 @@ import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.SectionDrawerItem
 
+
 public fun createMainNavigationDrawer(activity: Activity) {
+    val DRAWER_ITEM_LOGIN = 0
     val drawer = Drawer().withActivity(activity)
         .withToolbar(activity.findViewById(R.id.toolbar) as Toolbar)
         .addDrawerItems(
             PrimaryDrawerItem()
-                .withIcon(R.drawable.ic_account_box_grey600_24dp)
-                .withName(R.string.login)
-                .withCheckable(false),
+                .withIdentifier(DRAWER_ITEM_LOGIN)
+                .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
+                .withName(R.string.login),
             PrimaryDrawerItem()
                 .withIcon(activity, R.drawable.ic_settings_grey600_24dp)
                 .withName(R.string.settings),
@@ -35,6 +38,20 @@ public fun createMainNavigationDrawer(activity: Activity) {
         )
         .withSelectedItem(-1)
         .build()
+
+    drawer.setOnDrawerItemClickListener { adapterView, view, position, id, drawerItem ->
+        val clazz = when(drawerItem.getIdentifier()) {
+            DRAWER_ITEM_LOGIN -> javaClass<AuthActivity>()
+            else -> null
+        }
+        if(clazz != null) {
+            val context = adapterView.getContext()
+            val flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            val intent = Intent(context, clazz)
+            intent.setFlags(flags)
+            context.startActivity(intent)
+        }
+    }
 }
 
 private fun SectionDrawerItem.withCapsName(context: Context, nameRes: Int) : SectionDrawerItem {

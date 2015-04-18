@@ -24,6 +24,8 @@
             android:exported="true" />
         <activity
             android:name=".CommentsActivity" />
+        <activity
+            android:name=".AuthActivity" />
     </application>
 
 </manifest>
