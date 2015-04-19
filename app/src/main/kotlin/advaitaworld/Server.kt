@@ -1,17 +1,11 @@
 package advaitaworld
 
-import rx.Observable
-import com.squareup.okhttp.OkHttpClient
-import timber.log.Timber
-import com.squareup.okhttp.ResponseBody
-import org.jsoup.Jsoup
+import advaitaworld.parsing.*
 import android.content.Context
-import advaitaworld.parsing.parseFullPost
-import advaitaworld.parsing.ShortPostInfo
-import advaitaworld.parsing.PostData
-import advaitaworld.parsing.parsePostFeed
-import advaitaworld.parsing.User
-import com.squareup.okhttp.MediaType
+import com.squareup.okhttp.*
+import org.jsoup.Jsoup
+import rx.Observable
+import timber.log.Timber
 
 // FIXME move to some particular place which contains common app dependency providers?
 private var server: Server? = null
@@ -65,6 +59,17 @@ public class Server(cache: Cache) {
                 .map({ parseUserProfile(name, it.string()) })
     }
 
+    public fun loginUser(userLogin: String, userPassword: String) : Observable<LoginInfo> {
+        // 1. Extract a sessionId and securityKey from the main page
+        // 2. Use them in login request
+        return runMockableRequest(client, sectionUrl(Section.Popular))
+             // extract info with no user name, but other keys for login request
+            .map { extractLoginInfo(it.charStream()) }
+            .flatMap({ loginInfo -> runRequest(client, loginRequest(userLogin, userPassword, loginInfo))})
+             // extract again after login, this time with logged in user name
+            .map { extractLoginInfo(it.charStream()) }
+    }
+
     // some other implementation of Server could use different urls
     fun sectionUrl(section: Section) : String {
         return when(section) {
@@ -82,6 +87,19 @@ public class Server(cache: Cache) {
 
     fun postUrl(postId: String) : String {
         return "http://advaitaworld.com/blog/$postId.html"
+    }
+
+    fun loginRequest(userLogin: String, password: String, loginInfo: LoginInfo): Request {
+        val postBody = FormEncodingBuilder()
+            .add("login", userLogin)
+            .add("password", password)
+            .add("security_ls_key", loginInfo.securityKey)
+            .build()
+        // TODO save SESSION_ID to cookie store
+        return Request.Builder()
+            .url("http://advaitaworld.com/login/ajax-login/")
+            .post(postBody)
+            .build()
     }
 }
 

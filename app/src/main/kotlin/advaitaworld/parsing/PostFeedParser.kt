@@ -1,8 +1,8 @@
 package advaitaworld.parsing
 
-import org.jsoup.Jsoup
 import android.text.Html
-import java.util.regex.Pattern
+import org.jsoup.Jsoup
+import java.io.Reader
 
 fun parsePostFeed(content: String): List<ShortPostInfo> {
     val document = Jsoup.parse(content)
@@ -25,3 +25,6 @@ fun parsePostFeed(content: String): List<ShortPostInfo> {
     return parsedPosts
 }
 
+fun extractLoginInfo(content: Reader) : LoginInfo {
+    throw UnsupportedOperationException()
+}

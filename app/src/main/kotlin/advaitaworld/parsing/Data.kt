@@ -31,7 +31,15 @@ public data class PostData(val title: String,
                            val content: ContentInfo,
                            val comments: List<CommentNode>)
 
+/**
+ * Represents information common for all AW users
+ */
 public data class User(val name: String, val avatarUrl: String)
+
+/**
+ * Holds information about logged in user account
+ */
+public data class LoginInfo(val userName: String, val sessionId: String, val securityKey: String)
 
 private val emptyContent = ContentInfo("", "", "", null)
 public fun emptyContentInfo() : ContentInfo {
