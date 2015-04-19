@@ -17,4 +17,6 @@
     <string name="blog_section_traditions">Традиции</string>
     <string name="blog_section_satsang">Сатсанг</string>
     <string name="blog_section_misc">Разное</string>
+    <string name="hint_login">Логин</string>
+    <string name="hint_password">Пароль</string>
 </resources>

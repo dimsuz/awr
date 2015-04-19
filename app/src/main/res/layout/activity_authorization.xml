@@ -8,11 +8,14 @@
 
     <include layout="@layout/main_toolbar"/>
 
+    <!-- made layout focusable so it would steal the default autofocus from edit texts,
+         which show some jerky animation otherwise (jerky only on activity start) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_gravity="center"
+        android:focusableInTouchMode="true"
         >
         <TextView
             android:layout_width="wrap_content"
@@ -24,20 +27,41 @@
             android:textSize="24sp"
             android:text="@string/app_name"
             />
-        <EditText
+        <com.advaitaworld.widgets.FloatLabelLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            />
-        <EditText
+            app:floatLabelTextAppearance="@style/TextAppearance.AdvaitaWorld.FloatLabel"
+            >
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_login"
+                android:singleLine="true"
+                android:inputType="textNoSuggestions"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@+id/password"
+                />
+        </com.advaitaworld.widgets.FloatLabelLayout>
+        <com.advaitaworld.widgets.FloatLabelLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            />
+            app:floatLabelTextAppearance="@style/TextAppearance.AdvaitaWorld.FloatLabel"
+            >
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_password"
+                android:singleLine="true"
+                android:inputType="textPassword"
+                android:imeOptions="actionGo"
+                />
+        </com.advaitaworld.widgets.FloatLabelLayout>
         <Button
             android:layout_width="300dp"
             android:layout_height="wrap_content"

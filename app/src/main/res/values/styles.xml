@@ -9,4 +9,8 @@
         <item name="android:textColorSecondary">@color/secondary_text</item>
     </style>
 
+    <style name="TextAppearance.AdvaitaWorld.FloatLabel" parent="android:TextAppearance.Small">
+        <item name="android:textColor">@color/floatlabel</item>
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

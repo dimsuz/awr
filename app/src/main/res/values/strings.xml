@@ -16,4 +16,6 @@
     <string name="blog_section_traditions">Traditions</string>
     <string name="blog_section_satsang">Satsang</string>
     <string name="blog_section_misc">Other</string>
+    <string name="hint_login">Login</string>
+    <string name="hint_password">Password</string>
 </resources>
