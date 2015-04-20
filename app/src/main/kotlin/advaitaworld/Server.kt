@@ -60,8 +60,19 @@ public class Server(cache: Cache) {
     }
 
     public fun loginUser(userLogin: String, userPassword: String) : Observable<LoginInfo> {
-        // 1. Extract a sessionId and securityKey from the main page
-        // 2. Use them in login request
+        // Login mechanism uses a combination of two cookies:
+        // - "PHPSESSID" which is a user session id. Usually gets set to expire after browser session.
+        // - "key" which is a token which marks an authorized user. Usually gets set to expire after few days
+        //
+        // PHPSESSID gets sent by server in response on the initial page request, but also can
+        // be extracted from the html code (from script section in 'head').
+        //
+        // "key" gets sent as the response to a login request, after successful authorization
+        //
+        // Login request needs:
+        //   - login, password
+        //   - securityLsKey (extracted from html) [required?]
+        //   - [PHPSESSID cookie?]
         return runMockableRequest(client, sectionUrl(Section.Popular))
              // extract info with no user name, but other keys for login request
             .map { extractLoginInfo(it.charStream(), needUserInfo = false) }
