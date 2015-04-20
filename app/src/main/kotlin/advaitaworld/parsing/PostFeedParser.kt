@@ -33,35 +33,41 @@ fun extractLoginInfo(content: Reader, needUserInfo: Boolean) : LoginInfo {
     val reader = BufferedReader(content)
     try {
         val patterns = createMatchPatterns(needUserInfo)
-        val matchResults: MutableMap<String, MatchResult> = hashMapOf()
+        val matchResults: MutableMap<String, String> = hashMapOf()
         reader.lines()
             .takeWhile { matchResults.size() != patterns.size() }
             .forEach { line ->
                 Timber.d("analyzing line $line")
                 for(e in patterns) {
-                    val matcher = e.getValue().matcher(line)
+                    val matchInfo = e.getValue()
+                    val matcher = matchInfo.pattern.matcher(line)
                     if(matcher.find()) {
                         // found one, save it,
-                        matchResults.put(e.getKey(), matcher.toMatchResult())
-                        // this line could contain some other pattern, so next for-loop iteration
+                        matchResults.put(e.getKey(), matcher.group(matchInfo.groupNo))
+                        // this parsed line could contain some other pattern, so next for-loop iteration
                         // will continue from the last spot
                     }
                 }
             }
-        return processMatchResults(matchResults)
+        val result = toLoginInfo(matchResults)
+        Timber.d("got login info! $result")
+        return result
     } finally {
         reader.close()
     }
 }
 
-private fun createMatchPatterns(needUserInfo: Boolean) : Map<String, Pattern> {
+private data class MatchInfo(val pattern: Pattern, val groupNo: Int)
+private fun createMatchPatterns(needUserInfo: Boolean) : Map<String, MatchInfo> {
     val patterns = hashMapOf(
-        "sessionId" to Pattern.compile(""),
-        "securityKey" to Pattern.compile(""))
-    if(needUserInfo) patterns.put("userName", Pattern.compile(""))
+        "sessionId" to MatchInfo(Pattern.compile(""), 0),
+        "securityKey" to MatchInfo(Pattern.compile(""), 0))
+    if(needUserInfo) patterns.put("userName", MatchInfo(Pattern.compile(""), 1))
     return patterns
 }
 
-private fun processMatchResults(matchResults: Map<String, MatchResult>): LoginInfo {
-    throw UnsupportedOperationException()
+private fun toLoginInfo(matchResults: Map<String, String>): LoginInfo {
+    return LoginInfo(matchResults.getOrElse("userName", { "" }),
+        matchResults.getOrElse("sessionId", { throw RuntimeException("expected parsed sessionId") }),
+        matchResults.getOrElse("sessionKey", { throw RuntimeException("expected parsed sessionKey") }))
 }
