@@ -64,10 +64,10 @@ public class Server(cache: Cache) {
         // 2. Use them in login request
         return runMockableRequest(client, sectionUrl(Section.Popular))
              // extract info with no user name, but other keys for login request
-            .map { extractLoginInfo(it.charStream(), needFullInfo = false) }
+            .map { extractLoginInfo(it.charStream(), needUserInfo = false) }
             .flatMap({ loginInfo -> runRequest(client, loginRequest(userLogin, userPassword, loginInfo))})
              // extract again after login, this time with logged in user name
-            .map { extractLoginInfo(it.charStream(), needFullInfo = true) }
+            .map { extractLoginInfo(it.charStream(), needUserInfo = true) }
     }
 
     // some other implementation of Server could use different urls
