@@ -6,6 +6,8 @@ import com.squareup.okhttp.*
 import org.jsoup.Jsoup
 import rx.Observable
 import timber.log.Timber
+import java.net.CookieHandler
+import java.net.URI
 
 // FIXME move to some particular place which contains common app dependency providers?
 private var server: Server? = null
@@ -73,6 +75,10 @@ public class Server(cache: Cache) {
         //   - login, password
         //   - securityLsKey (extracted from html) [required?]
         //   - [PHPSESSID cookie?]
+        if(client.getCookieHandler() == null) {
+            Timber.d("installing a cookie handler")
+            client.setCookieHandler(AdvaitaWorldCookieHandler())
+        }
         return runMockableRequest(client, sectionUrl(Section.Popular))
              // extract info with no user name, but other keys for login request
             .map { extractLoginInfo(it.charStream(), needUserInfo = false) }
@@ -112,6 +118,20 @@ public class Server(cache: Cache) {
             .post(postBody)
             .build()
     }
+}
+
+private class AdvaitaWorldCookieHandler : CookieHandler() {
+    override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
+        Timber.d("received cookies from $uri, headers: $responseHeaders")
+    }
+
+    override fun get(uri: URI, requestHeaders: Map<String, List<String>>): Map<String, List<String>> {
+        Timber.d("got cookies request from $uri, headers: $requestHeaders")
+        val resultHeaders : MutableMap<String, List<String>> = hashMapOf()
+        Timber.d("returning headers: $requestHeaders")
+        return resultHeaders
+    }
+
 }
 
 private fun parseUserProfile(name: String, html: String): User {
