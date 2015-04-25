@@ -1,4 +1,4 @@
-package advaitaworld
+package advaitaworld.net
 
 import com.squareup.okhttp.OkHttpClient
 import rx.Observable

@@ -1,5 +1,9 @@
 package advaitaworld
 
+import advaitaworld.net.AdvaitaWorldCookieHandler
+import advaitaworld.net.Cache
+import advaitaworld.net.MemoryCache
+import advaitaworld.net.runRequest
 import advaitaworld.parsing.*
 import android.content.Context
 import com.squareup.okhttp.*
@@ -8,8 +12,6 @@ import rx.Observable
 import timber.log.Timber
 import java.io.BufferedReader
 import java.io.Reader
-import java.net.CookieHandler
-import java.net.URI
 import java.util.regex.Pattern
 
 // FIXME move to some particular place which contains common app dependency providers?
@@ -129,20 +131,6 @@ public class Server(cache: Cache) {
             .post(postBody)
             .build()
     }
-}
-
-private class AdvaitaWorldCookieHandler : CookieHandler() {
-    override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
-        Timber.d("received cookies from $uri, headers: $responseHeaders")
-    }
-
-    override fun get(uri: URI, requestHeaders: Map<String, List<String>>): Map<String, List<String>> {
-        Timber.d("got cookies request from $uri, headers: $requestHeaders")
-        val resultHeaders : MutableMap<String, List<String>> = hashMapOf()
-        Timber.d("returning headers: $requestHeaders")
-        return resultHeaders
-    }
-
 }
 
 private fun parseUserProfile(name: String, html: String): User {

@@ -1,4 +1,4 @@
-package advaitaworld
+package advaitaworld.net
 
 import advaitaworld.parsing.PostData
 import android.util.SparseArray
