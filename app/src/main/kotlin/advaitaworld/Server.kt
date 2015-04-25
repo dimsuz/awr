@@ -25,7 +25,7 @@ class ServerProvider {
     }
 
     fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
-        return get(context)
+        return get(context.getApplicationContext())
     }
 
 }
