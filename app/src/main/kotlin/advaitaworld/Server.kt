@@ -92,7 +92,7 @@ public class Server(cache: Cache) {
         //   - retrieve a main page again and extract a logged in user name from it
         return runRequest(client, sectionUrl(Section.Popular))
             .map { extractSecurityKey(it.charStream()) }
-            .flatMap { securityKey -> runRequest(client, loginRequest(userLogin, userPassword, securityKey))}
+            .flatMap { securityKey -> runRequest(client, loginRequest(userLogin, userPassword, securityKey)) }
             .flatMap { runRequest(client, sectionUrl(Section.Popular)) }
             .map { extractUserName(it.charStream()) }
     }
