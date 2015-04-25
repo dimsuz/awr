@@ -19,7 +19,7 @@ private var server: Server? = null
 class ServerProvider {
     fun get(context: Context): Server {
         if(server == null) {
-            server = Server(MemoryCache())
+            server = Server(context, MemoryCache())
             // FIXME remove this
             initMockData(context, server!!)
         }
@@ -38,9 +38,16 @@ public enum class Section(val nameResId: Int) {
     Personal : Section(R.string.section_personal_blogs)
 }
 
-public class Server(cache: Cache) {
+public class Server(context: Context, cache: Cache) {
     private val client = OkHttpClient()
     private val cache = cache
+
+    init {
+        if(client.getCookieHandler() == null) {
+            Timber.d("installing a cookie handler")
+            client.setCookieHandler(AdvaitaWorldCookieHandler(context))
+        }
+    }
 
     public fun getPosts(section: Section) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
@@ -80,11 +87,15 @@ public class Server(cache: Cache) {
         //   - login, password
         //   - securityLsKey (extracted from html) [required?]
         //   - [PHPSESSID cookie?]
-
-        if(client.getCookieHandler() == null) {
-            Timber.d("installing a cookie handler")
-            client.setCookieHandler(AdvaitaWorldCookieHandler())
-        }
+        //
+        // Login response contains:
+        //   - json body of format
+        //      { sUrlRedirect: "url"
+        //        sMsgTitle: "" // title of error message (can be empty even if error)
+        //        sMsg: "" // error message (usually filled in if error)
+        //        bStateError: true|false }
+        //   - cookie named "key" which will be required along with PHPSESSID cookie for
+        //     proper recognition of user as being logged in
 
         // Login procedure is as follows:
         //   - retrieve a main page to ensure that cookies and securityLsKey are retrieved
@@ -93,6 +104,7 @@ public class Server(cache: Cache) {
         return runRequest(client, sectionUrl(Section.Popular))
             .map { extractSecurityKey(it.charStream()) }
             .flatMap { securityKey -> runRequest(client, loginRequest(userLogin, userPassword, securityKey)) }
+            .map { Timber.d("got loging response:\n${it.string()}") }
             .flatMap { runRequest(client, sectionUrl(Section.Popular)) }
             .map { extractUserName(it.charStream()) }
     }
