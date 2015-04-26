@@ -36,13 +36,14 @@
             app:floatLabelTextAppearance="@style/TextAppearance.AdvaitaWorld.FloatLabel"
             >
             <EditText
+                android:id="@+id/auth_login_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_login"
                 android:singleLine="true"
-                android:inputType="textNoSuggestions"
+                android:inputType="textEmailAddress"
                 android:imeOptions="actionNext"
-                android:nextFocusDown="@+id/password"
+                android:nextFocusDown="@+id/auth_password_edit"
                 />
         </com.advaitaworld.widgets.FloatLabelLayout>
         <com.advaitaworld.widgets.FloatLabelLayout
@@ -53,7 +54,7 @@
             app:floatLabelTextAppearance="@style/TextAppearance.AdvaitaWorld.FloatLabel"
             >
             <EditText
-                android:id="@+id/password"
+                android:id="@+id/auth_password_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_password"

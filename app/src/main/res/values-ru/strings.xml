@@ -19,4 +19,5 @@
     <string name="blog_section_misc">Разное</string>
     <string name="hint_login">Логин</string>
     <string name="hint_password">Пароль</string>
+    <string name="auth_error_missing_credentials">Необходимо указать логин и пароль</string>
 </resources>

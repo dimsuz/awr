@@ -18,4 +18,5 @@
     <string name="blog_section_misc">Other</string>
     <string name="hint_login">Login</string>
     <string name="hint_password">Password</string>
+    <string name="auth_error_missing_credentials">Login or password are not specified</string>
 </resources>
