@@ -28,10 +28,10 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
         val cookies = responseHeaders.get("Set-Cookie")
         if(cookies != null) {
-            Timber.d("received cookies from $uri:\n${cookies.join("\n")}")
+            Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
             val sessionId = extractSessionId(cookies)
             if(sessionId != null) {
-                Timber.d("saving session id '$sessionId' to cookie store")
+                Timber.d("  saving session id '$sessionId' to cookie store")
                 // NOTE sessionId cookie has no Expire param set, so not saving it
                 // to prefs so it will expire at the session end (aka app launch end)
                 sessionCookieStore.put(SESSION_ID_COOKIE_NAME, sessionId)
