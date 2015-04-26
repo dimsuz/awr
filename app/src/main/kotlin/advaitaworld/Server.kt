@@ -7,6 +7,7 @@ import advaitaworld.net.runRequest
 import advaitaworld.parsing.*
 import android.content.Context
 import com.squareup.okhttp.*
+import org.json.JSONObject
 import org.jsoup.Jsoup
 import rx.Observable
 import timber.log.Timber
@@ -104,7 +105,13 @@ public class Server(context: Context, cache: Cache) {
         return runRequest(client, sectionUrl(Section.Popular))
             .map { extractSecurityKey(it.charStream()) }
             .flatMap { securityKey -> runRequest(client, loginRequest(userLogin, userPassword, securityKey)) }
-            .map { Timber.d("got loging response:\n${it.string()}") }
+            .map {
+                val error = extractLoginErrorMaybe(it.string())
+                if(error != null) {
+                    Timber.e("login failed: $error")
+                    throw RuntimeException(error)
+                }
+            }
             .flatMap { runRequest(client, sectionUrl(Section.Popular)) }
             .map { extractUserName(it.charStream()) }
     }
@@ -191,6 +198,18 @@ private fun extractLine(content: Reader, pattern: Pattern) : String {
         throw RuntimeException("failed to find line matching pattern $pattern")
     } finally {
         reader.close()
+    }
+}
+
+/**
+ * Finds if login response had an error, returns a localized string description
+ */
+private fun extractLoginErrorMaybe(content: String) : String? {
+    val jsonObj = JSONObject(content)
+    if(jsonObj.getBoolean("bStateError")) {
+        return jsonObj.getString("sMsg")
+    } else {
+        return null
     }
 }
 

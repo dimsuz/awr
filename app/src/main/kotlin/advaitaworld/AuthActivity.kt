@@ -26,7 +26,6 @@ public class AuthActivity : RxActionBarActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                 { userName -> Timber.d("successfully logged in, username: $userName") },
-                { e -> Timber.d("received"); Timber.e(e, "user login failed") })
-        })
+                { ex -> Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show() })
     }
 }
