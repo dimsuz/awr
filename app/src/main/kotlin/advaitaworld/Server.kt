@@ -74,6 +74,17 @@ public class Server(context: Context, cache: Cache) {
                 .map({ parseUserProfile(name, it.string()) })
     }
 
+    public fun isLoggedIn() : Boolean {
+        // currently use a 'key' cookie availability as a flag that login was successfully performed
+        // not sure if this is the most correct way to do this, will have to experiment and see
+        // how it goes...
+        val cookieHandler = client.getCookieHandler()!! as AdvaitaWorldCookieHandler
+        return cookieHandler.getCookieValue(AdvaitaWorldCookieHandler.KEY_COOKIE_NAME) != null
+    }
+
+    /**
+     * Performs a user login and returns a sitename of logged in user on success
+     */
     public fun loginUser(userLogin: String, userPassword: String) : Observable<String> {
         // Login mechanism uses a combination of two cookies:
         // - "PHPSESSID" which is a user session id. Usually gets set to expire after browser session.
@@ -86,6 +97,7 @@ public class Server(context: Context, cache: Cache) {
         //
         // Login request needs:
         //   - login, password
+        //   - remember: "on"/"off"
         //   - securityLsKey (extracted from html) [required?]
         //   - [PHPSESSID cookie?]
         //
@@ -143,8 +155,8 @@ public class Server(context: Context, cache: Cache) {
             .add("login", userLogin)
             .add("password", password)
             .add("security_ls_key", securityKey)
+            .add("remember", "on")
             .build()
-        // TODO save SESSION_ID to cookie store
         return Request.Builder()
             .url("http://advaitaworld.com/login/ajax-login/")
             .post(postBody)

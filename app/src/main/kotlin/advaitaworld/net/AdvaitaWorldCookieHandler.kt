@@ -5,10 +5,14 @@ import android.content.SharedPreferences
 import timber.log.Timber
 import java.net.CookieHandler
 import java.net.URI
+import java.util.HashMap
 import java.util.regex.Pattern
 
 public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHandler() {
-    private val SESSION_ID_COOKIE_NAME = "PHPSESSID"
+    public companion object {
+        public val SESSION_ID_COOKIE_NAME : String = "PHPSESSID"
+        public val KEY_COOKIE_NAME  : String = "key"
+    }
 
     /**
      * represents a cookie store which contains cookies served only during a user session
@@ -25,16 +29,35 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
         return context.getSharedPreferences("cookie_store", Context.MODE_PRIVATE)
     }
 
+    /**
+     * Returns a cookie. Checks both session-only and permanent cookie stores
+     */
+    public fun getCookieValue(name: String) : String? {
+        return sessionCookieStore.getOrElse(name, { getStorePrefs().getString(name, null) })
+    }
+
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
+        // Interested are two cookies:
+        // PHPSESSID - session id. expires after session ended
+        // key - which gets sent for 'remembering' user across sessions. expires after some interval,
+        // returned by server.
+        // first is saved to the in-memory store, second - in persistent store
         val cookies = responseHeaders.get("Set-Cookie")
         if(cookies != null) {
             Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
-            val sessionId = extractSessionId(cookies)
+            val sessionId = extractCookie(cookies, SESSION_ID_COOKIE_NAME)
             if(sessionId != null) {
                 Timber.d("  saving session id '$sessionId' to cookie store")
                 // NOTE sessionId cookie has no Expire param set, so not saving it
                 // to prefs so it will expire at the session end (aka app launch end)
                 sessionCookieStore.put(SESSION_ID_COOKIE_NAME, sessionId)
+            }
+            val key = extractCookie(cookies, KEY_COOKIE_NAME)
+            if(key != null) {
+                Timber.d("  saving key '$key' to a permanent cookie store")
+                // NOTE sessionId cookie has no Expire param set, so not saving it
+                // to prefs so it will expire at the session end (aka app launch end)
+                getStorePrefs().edit().putString(KEY_COOKIE_NAME, key).apply()
             }
         }
     }
@@ -42,16 +65,29 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
     override fun get(uri: URI, requestHeaders: Map<String, List<String>>): Map<String, List<String>> {
         Timber.d("got cookies request from $uri")
         val resultHeaders : MutableMap<String, List<String>> = hashMapOf()
-        val cookies = sessionCookieStore.map { entry -> "${entry.getKey()}=${entry.getValue()}" }
-        for(c in sessionCookieStore) {
+        val cookies = getAllCookies().map { entry -> "${entry.getKey()}=${entry.getValue()}" }
+        for(c in cookies) {
             resultHeaders.put("Cookie", cookies)
         }
         Timber.d("returning cookies: $resultHeaders")
         return resultHeaders
     }
 
-    private fun extractSessionId(cookies : List<String>) : String? {
-        val pattern = Pattern.compile("$SESSION_ID_COOKIE_NAME=(.+?);")
+    /**
+     * Returns both in-memory and stored cookies in a single map
+     */
+    private fun getAllCookies() : Map<String, String> {
+        val allCookies = HashMap(sessionCookieStore)
+        val prefs = getStorePrefs()
+        val stored = prefs.getAll()
+        for(c in stored) {
+            allCookies.put(c.getKey(), prefs.getString(c.getKey(), ""))
+        }
+        return allCookies
+    }
+
+    private fun extractCookie(cookies : List<String>, name: String) : String? {
+        val pattern = Pattern.compile("$name=(.+?);")
         for(c in cookies) {
             val matcher = pattern.matcher(c)
             if(matcher.find()) {
