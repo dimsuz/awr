@@ -124,6 +124,9 @@ public class MainActivity : RxActionBarActivity() {
             val listView = mainAdapter.getPageView(section)
             fetchPosts(listView, section)
             return true
+        } else if(id == R.id.action_logout) {
+            val profile = getCurrentUserProfile(this, server)
+            if(profile != null) server.logoutUser(profile)
         }
 
         return super.onOptionsItemSelected(item)

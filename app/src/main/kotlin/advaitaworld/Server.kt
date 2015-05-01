@@ -117,18 +117,44 @@ public class Server(context: Context, cache: Cache) {
         //   - retrieve a main page again and extract a logged in user name from it
         return runRequest(client, sectionUrl(Section.Popular))
             .map { extractSecurityKey(it.charStream()) }
-            .flatMap { securityKey -> runRequest(client, loginRequest(userLogin, userPassword, securityKey)) }
-            .map {
-                val error = extractLoginErrorMaybe(it.string())
+            .flatMap { securityKey ->
+                runRequest(client, loginRequest(userLogin, userPassword, securityKey))
+                    .map { responseBody -> Pair(responseBody, securityKey) }
+            }
+            .map { bodyKeyPair ->
+                val error = extractLoginErrorMaybe(bodyKeyPair.first.string())
                 if(error != null) {
                     Timber.e("login failed: $error")
                     throw RuntimeException(error)
                 }
+                bodyKeyPair
             }
-            .flatMap { runRequest(client, sectionUrl(Section.Popular)) }
-            .map { extractUserName(it.charStream()) }
-            .flatMap { name -> getUserInfo(name) }
-            .map { user -> ProfileInfo(user.name, userLogin, user.avatarUrl) }
+            // request a page again, this time user will be logged in, his name should appear
+            .flatMap { bodyKeyPair ->
+                runRequest(client, sectionUrl(Section.Popular))
+                    .map { responseBody -> Pair(responseBody, bodyKeyPair.second) }
+            }
+            // start assembling finalized ProfileInfo: get user name. login, securityKey are known
+            .map { bodyKeyPair ->
+                val userName = extractUserName(bodyKeyPair.first.charStream())
+                ProfileInfo(userName, userLogin, "", bodyKeyPair.second)
+            }
+            // finally a last piece: avatar url
+            .flatMap { profileInfo ->
+                getUserInfo(profileInfo.name)
+                    .map { ProfileInfo(profileInfo.name, profileInfo.email, it.avatarUrl, profileInfo.securityKey) }
+            }
+    }
+
+    /**
+     * Logs out currently signed in user
+     */
+    public fun logoutUser(profileInfo: ProfileInfo) : Observable<Unit> {
+        if(!isLoggedIn()) {
+            return Observable.error(IllegalStateException("no user is currently logged in, but logout requested"))
+        }
+        val url = "http://advaitaworld.com/login/exit/?security_ls_key=${profileInfo.securityKey}"
+        return runRequest(client, url).map {}
     }
 
     // some other implementation of Server could use different urls

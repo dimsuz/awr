@@ -13,6 +13,7 @@ public fun setCurrentUserProfile(context: Context, profileInfo: ProfileInfo) {
         .putString(PREF_KEY_LAST_LOGIN_NAME, profileInfo.name)
         .putString(PREF_KEY_LAST_LOGIN_EMAIL, profileInfo.email)
         .putString(PREF_KEY_LAST_LOGIN_IMAGE_URL, profileInfo.pictureUrl)
+        .putString(PREF_KEY_LAST_LOGIN_SECURITY_KEY, profileInfo.securityKey)
         .apply()
 }
 
@@ -26,10 +27,12 @@ public fun getCurrentUserProfile(context: Context, server: Server) : ProfileInfo
     val name = prefs.getString(PREF_KEY_LAST_LOGIN_NAME, null)
     val email = prefs.getString(PREF_KEY_LAST_LOGIN_EMAIL, null)
     val pictureUrl = prefs.getString(PREF_KEY_LAST_LOGIN_IMAGE_URL, null)
-    if(name != null && email != null && pictureUrl != null) {
-        return ProfileInfo(name, email, pictureUrl)
+    val securityKey = prefs.getString(PREF_KEY_LAST_LOGIN_SECURITY_KEY, null)
+    if(name != null && email != null && pictureUrl != null && securityKey != null) {
+        return ProfileInfo(name, email, pictureUrl, securityKey)
     } else {
-        throw RuntimeException("profile info data missing, expected not null name=$name, email=$email, url=$pictureUrl")
+        throw RuntimeException("profile info data missing, expected not null name=$name, " +
+            "email=$email, url=$pictureUrl, securityKey=$securityKey")
     }
 }
 

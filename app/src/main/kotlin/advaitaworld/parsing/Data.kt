@@ -39,7 +39,7 @@ public data class User(val name: String, val avatarUrl: String)
 /**
  * Represents information about LOGGED IN user profile
  */
-public data class ProfileInfo(val name: String, val email: String, val pictureUrl: String)
+public data class ProfileInfo(val name: String, val email: String, val pictureUrl: String, val securityKey: String)
 
 private val emptyContent = ContentInfo("", "", "", null)
 public fun emptyContentInfo() : ContentInfo {
