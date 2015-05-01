@@ -3,9 +3,9 @@ package advaitaworld
 import advaitaworld.support.RxActionBarActivity
 import android.os.Bundle
 import android.support.v7.widget.Toolbar
-import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import com.dd.CircularProgressButton
 import rx.android.lifecycle.LifecycleEvent
 import rx.android.lifecycle.LifecycleObservable
 import rx.android.schedulers.AndroidSchedulers
@@ -19,7 +19,7 @@ public class AuthActivity : RxActionBarActivity() {
 
     private var loginEdit: EditText by Delegates.notNull()
     private var passwordEdit: EditText by Delegates.notNull()
-    private var loginButton: Button by Delegates.notNull()
+    private var loginButton: CircularProgressButton by Delegates.notNull()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +30,8 @@ public class AuthActivity : RxActionBarActivity() {
 
         loginEdit = findViewById(R.id.auth_login_edit) as EditText
         passwordEdit = findViewById(R.id.auth_password_edit) as EditText
-        loginButton = findViewById(R.id.auth_button_login) as Button
+        loginButton = findViewById(R.id.auth_button_login) as CircularProgressButton
+        loginButton.setIndeterminateProgressMode(true)
 
         val loginClicks = ViewObservable.clicks(loginButton)
             .map { loginEdit.getText().length() != 0 && passwordEdit.getText().length() != 0 }
@@ -46,12 +47,24 @@ public class AuthActivity : RxActionBarActivity() {
     }
 
     private fun startLogin(login: String, password: String) {
+        loginButton.setProgress(50) // will show progress bar
         val observable = server.loginUser(login, password)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                { userName -> Timber.d("successfully logged in, username: $userName") },
-                { ex -> Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show() })
+                { userName ->
+                    Timber.d("successfully logged in, username: $userName")
+                    // show 'ok' for some time, then finish
+                    loginButton.setProgress(100)
+                    loginButton.postDelayed({ finish() }, 800)
+                },
+                { ex ->
+                    // FIXME display this not in toast, but permanently somewhere in layout
+                    Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show()
+                    // show error for some time, then reset to default state (for retry)
+                    loginButton.setProgress(-1)
+                    loginButton.postDelayed({ loginButton.setProgress(0) }, 1200)
+                })
     }
 }

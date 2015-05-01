@@ -63,12 +63,16 @@
                 android:imeOptions="actionGo"
                 />
         </com.advaitaworld.widgets.FloatLabelLayout>
-        <Button
+        <com.dd.CircularProgressButton
             android:id="@+id/auth_button_login"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
+            android:layout_width="196dp"
+            android:layout_height="56dp"
             android:layout_marginTop="16dp"
             android:layout_gravity="center_horizontal"
-            android:text="@string/login" />
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            app:cpb_iconComplete="@drawable/ic_check_white_36dp"
+            app:cpb_iconError="@drawable/ic_close_white_36dp"
+            app:cpb_textIdle="@string/login" />
     </LinearLayout>
 </FrameLayout>
