@@ -36,6 +36,11 @@ public data class PostData(val title: String,
  */
 public data class User(val name: String, val avatarUrl: String)
 
+/**
+ * Represents information about LOGGED IN user profile
+ */
+public data class ProfileInfo(val name: String, val email: String, val pictureUrl: String)
+
 private val emptyContent = ContentInfo("", "", "", null)
 public fun emptyContentInfo() : ContentInfo {
     return emptyContent

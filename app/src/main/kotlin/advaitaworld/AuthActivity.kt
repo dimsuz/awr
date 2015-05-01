@@ -1,5 +1,6 @@
 package advaitaworld
 
+import advaitaworld.parsing.ProfileInfo
 import advaitaworld.support.RxActionBarActivity
 import android.os.Bundle
 import android.support.v7.widget.Toolbar
@@ -26,7 +27,7 @@ public class AuthActivity : RxActionBarActivity() {
         setContentView(R.layout.activity_authorization)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         setTitle(R.string.login)
-        createMainNavigationDrawer(this)
+        createMainNavigationDrawer(this, getCurrentUserProfile(this, server))
 
         loginEdit = findViewById(R.id.auth_login_edit) as EditText
         passwordEdit = findViewById(R.id.auth_password_edit) as EditText
@@ -49,6 +50,7 @@ public class AuthActivity : RxActionBarActivity() {
     private fun startLogin(login: String, password: String) {
         loginButton.setProgress(50) // will show progress bar
         val observable = server.loginUser(login, password)
+            .doOnNext({ profile -> setCurrentUserProfile(this, profile) })
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

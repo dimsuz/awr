@@ -42,7 +42,7 @@ public class MainActivity : RxActionBarActivity() {
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
-        createMainNavigationDrawer(this)
+        createMainNavigationDrawer(this, getCurrentUserProfile(this, server))
         setupTabsAndPager()
     }
 

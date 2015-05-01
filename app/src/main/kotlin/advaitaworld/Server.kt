@@ -6,6 +6,7 @@ import advaitaworld.net.MemoryCache
 import advaitaworld.net.runRequest
 import advaitaworld.parsing.*
 import android.content.Context
+import android.preference.PreferenceManager
 import com.squareup.okhttp.*
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -83,9 +84,9 @@ public class Server(context: Context, cache: Cache) {
     }
 
     /**
-     * Performs a user login and returns a sitename of logged in user on success
+     * Performs a user login and returns a profile info of logged in user on success
      */
-    public fun loginUser(userLogin: String, userPassword: String) : Observable<String> {
+    public fun loginUser(userLogin: String, userPassword: String) : Observable<ProfileInfo> {
         // Login mechanism uses a combination of two cookies:
         // - "PHPSESSID" which is a user session id. Usually gets set to expire after browser session.
         // - "key" which is a token which marks an authorized user. Usually gets set to expire after few days
@@ -126,6 +127,8 @@ public class Server(context: Context, cache: Cache) {
             }
             .flatMap { runRequest(client, sectionUrl(Section.Popular)) }
             .map { extractUserName(it.charStream()) }
+            .flatMap { name -> getUserInfo(name) }
+            .map { user -> ProfileInfo(user.name, userLogin, user.avatarUrl) }
     }
 
     // some other implementation of Server could use different urls

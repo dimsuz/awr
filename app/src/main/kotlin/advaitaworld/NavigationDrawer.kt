@@ -1,27 +1,48 @@
 package advaitaworld
 
+import advaitaworld.parsing.ProfileInfo
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.Toolbar
+import android.widget.ImageView
 import com.mikepenz.materialdrawer.Drawer
+import com.mikepenz.materialdrawer.accountswitcher.AccountHeader
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import com.mikepenz.materialdrawer.model.SectionDrawerItem
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
-import com.mikepenz.materialdrawer.model.interfaces.Tagable
 import timber.log.Timber
 
 
-public fun createMainNavigationDrawer(activity: Activity) {
+/**
+ * Creates a navigation drawer for an activity
+ *
+ * @param profileInfo will use profile info for showing account header. If null is passed, will show
+ * a "log in" entry instead
+ */
+public fun createMainNavigationDrawer(activity: Activity, profileInfo: ProfileInfo?) {
     val items = createDrawerItems(activity)
     val currentActivityIndex = getSelectedIndex(items, activity)
-    val drawer = Drawer().withActivity(activity)
+    val drawerBuilder = Drawer().withActivity(activity)
         .withToolbar(activity.findViewById(R.id.toolbar) as Toolbar)
         .addDrawerItems(*items)
         .withSelectedItem(currentActivityIndex)
-        .build()
+    if(profileInfo != null) {
+        val accountHeader = AccountHeader()
+            .withActivity(activity)
+            .withHeaderBackground(R.drawable.nav_drawer_header)
+            .withHeaderBackgroundScaleType(ImageView.ScaleType.CENTER_CROP)
+            .addProfiles(
+                ProfileDrawerItem()
+                    .withName(profileInfo.name).withEmail(profileInfo.email)
+                    .withIcon(profileInfo.pictureUrl))
+            .build()
+        drawerBuilder.withAccountHeader(accountHeader)
+    }
+    val drawer = drawerBuilder.build()
 
     drawer.setOnDrawerItemClickListener { adapterView, view, position, id, drawerItem ->
         val itemActivityClass = drawerItem.getTag() as Class<*>
