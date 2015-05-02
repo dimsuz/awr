@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.PorterDuff
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.Toolbar
 import android.widget.ImageView
@@ -14,8 +16,33 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import com.mikepenz.materialdrawer.model.SectionDrawerItem
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
+import com.mikepenz.materialdrawer.util.DrawerImageLoader
+import com.squareup.picasso.Picasso
 import timber.log.Timber
 
+/**
+ * Creates an image loader which is used by navigation drawer library to load images
+ * (in particular profile image)
+ */
+public fun createDrawerImageLoader() : DrawerImageLoader.IDrawerImageLoader {
+    return object : DrawerImageLoader.IDrawerImageLoader {
+        override fun placeholder(context: Context): Drawable? {
+            return context.getResources().getDrawable(R.drawable.placeholder_avatar)
+        }
+
+        override fun set(imageView: ImageView, uri: Uri, placeholder: Drawable) {
+            Picasso
+                .with(imageView.getContext())
+                .load(uri)
+                .placeholder(placeholder)
+                .into(imageView)
+        }
+
+        override fun cancel(imageView: ImageView) {
+            Picasso.with(imageView.getContext()).cancelRequest(imageView)
+        }
+    }
+}
 
 /**
  * Creates a navigation drawer for an activity
