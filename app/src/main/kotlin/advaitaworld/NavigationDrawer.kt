@@ -24,7 +24,7 @@ import timber.log.Timber
  * a "log in" entry instead
  */
 public fun createMainNavigationDrawer(activity: Activity, profileInfo: ProfileInfo?) {
-    val items = createDrawerItems(activity)
+    val items = createDrawerItems(activity, isLoggedIn = profileInfo != null)
     val currentActivityIndex = getSelectedIndex(items, activity)
     val drawerBuilder = Drawer().withActivity(activity)
         .withToolbar(activity.findViewById(R.id.toolbar) as Toolbar)
@@ -67,12 +67,12 @@ private fun getSelectedIndex(items: Array<IDrawerItem>, activity: Activity): Int
     return items.indexOfFirst { it -> it.getTag() == activity.javaClass }
 }
 
-private fun createDrawerItems(activity: Activity) : Array<IDrawerItem> {
-    return array(
-        PrimaryDrawerItem()
-            .withTag(javaClass<AuthActivity>())
-            .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
-            .withName(R.string.login),
+private fun createDrawerItems(activity: Activity, isLoggedIn: Boolean) : Array<IDrawerItem> {
+    val loginItem = PrimaryDrawerItem()
+        .withTag(javaClass<AuthActivity>())
+        .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
+        .withName(R.string.login)
+    val items = array<IDrawerItem>(
         PrimaryDrawerItem()
             .withTag(javaClass<MainActivity>())
             .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
@@ -92,6 +92,13 @@ private fun createDrawerItems(activity: Activity) : Array<IDrawerItem> {
         PrimaryDrawerItem().withName("Misc1 1"),
         PrimaryDrawerItem().withName("Misc1 2"),
         PrimaryDrawerItem().withName("Misc1 3"))
+    if(!isLoggedIn) {
+        val result = arrayListOf<IDrawerItem>(loginItem)
+        result.addAll(items)
+        return result.copyToArray()
+    } else {
+        return items
+    }
 }
 
 private fun SectionDrawerItem.withCapsName(context: Context, nameRes: Int) : SectionDrawerItem {
