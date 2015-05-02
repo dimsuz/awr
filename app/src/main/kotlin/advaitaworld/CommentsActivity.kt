@@ -4,7 +4,6 @@ import advaitaworld.net.Server
 import advaitaworld.net.ServerProvider
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.findByPath
-import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.CommentItemDecoration
 import advaitaworld.util.CommentThreadsDecoration
 import advaitaworld.util.LoadIndicator
@@ -22,9 +21,7 @@ import rx.schedulers.Schedulers
 import timber.log.Timber
 import java.util.ArrayDeque
 
-public class CommentsActivity : RxActionBarActivity() {
-    private val server: Server by ServerProvider()
-
+public class CommentsActivity : BaseActivity(BaseActivity.Config(R.layout.activity_comments, useNavDrawer = false)) {
     private val adapter: CommentsAdapter = CommentsAdapter(lifecycle(), showPost = false)
     private var postId = ""
     private var rootPostData: PostData? = null
@@ -36,8 +33,6 @@ public class CommentsActivity : RxActionBarActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_comments)
-        setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         getSupportActionBar().setDisplayHomeAsUpEnabled(true)
         getSupportActionBar().setTitle("Комментарии")
 

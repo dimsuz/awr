@@ -2,7 +2,6 @@ package advaitaworld
 
 import advaitaworld.net.Server
 import advaitaworld.net.ServerProvider
-import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.*
 import android.content.Intent
 import android.graphics.Color
@@ -16,15 +15,12 @@ import rx.android.lifecycle.LifecycleObservable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 
-public class PostActivity : RxActionBarActivity() {
-    private val server: Server by ServerProvider()
+public class PostActivity : BaseActivity(BaseActivity.Config(R.layout.activity_post, useNavDrawer = false)) {
     private val adapter: CommentsAdapter = CommentsAdapter(lifecycle(), showPost = true)
     private var postId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_post)
-        setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         getSupportActionBar().setDisplayShowTitleEnabled(false)
         val postIntentId = getIntent().getStringExtra(EXTRA_POST_ID)
         if(postIntentId == null) {

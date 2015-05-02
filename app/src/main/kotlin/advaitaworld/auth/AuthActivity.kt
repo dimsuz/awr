@@ -15,9 +15,7 @@ import rx.schedulers.Schedulers
 import timber.log.Timber
 import kotlin.properties.Delegates
 
-public class AuthActivity : RxActionBarActivity() {
-    private val server: advaitaworld.net.Server by advaitaworld.net.ServerProvider()
-    private val profileManager = ProfileManager(server)
+public class AuthActivity : BaseActivity(BaseActivity.Config(R.layout.activity_authorization)) {
 
     private var loginEdit: EditText by Delegates.notNull()
     private var passwordEdit: EditText by Delegates.notNull()
@@ -25,10 +23,7 @@ public class AuthActivity : RxActionBarActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_authorization)
-        setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         setTitle(R.string.login)
-        createMainNavigationDrawer(this, profileManager.getCurrentUserProfile(this))
 
         loginEdit = findViewById(R.id.auth_login_edit) as EditText
         passwordEdit = findViewById(R.id.auth_password_edit) as EditText

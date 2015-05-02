@@ -5,7 +5,6 @@ import advaitaworld.db.Database
 import advaitaworld.net.Section
 import advaitaworld.net.Server
 import advaitaworld.net.ServerProvider
-import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.SpaceItemDecoration
 import android.content.res.Resources
@@ -28,20 +27,14 @@ import timber.log.Timber
 import java.util.EnumMap
 import kotlin.properties.Delegates
 
-public class MainActivity : RxActionBarActivity() {
-    private val server: Server by ServerProvider()
-    private val profileManager = ProfileManager(server)
+public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_main)) {
     private var db: Database? = null
     private var mainPager : ViewPager by Delegates.notNull()
     private val fetchSubscriptions : EnumMap<Section, Subscription> = EnumMap(javaClass<Section>())
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         db = Database(getApplicationContext())
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
-        createMainNavigationDrawer(this, profileManager.getCurrentUserProfile(this))
         setupTabsAndPager()
     }
 
