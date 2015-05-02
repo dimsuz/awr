@@ -75,14 +75,6 @@ public class Server(context: Context, cache: Cache) {
                 .map({ parseUserProfile(name, it.string()) })
     }
 
-    public fun isLoggedIn() : Boolean {
-        // currently use a 'key' cookie availability as a flag that login was successfully performed
-        // not sure if this is the most correct way to do this, will have to experiment and see
-        // how it goes...
-        val cookieHandler = client.getCookieHandler()!! as AdvaitaWorldCookieHandler
-        return cookieHandler.getCookieValue(AdvaitaWorldCookieHandler.KEY_COOKIE_NAME) != null
-    }
-
     /**
      * Performs a user login and returns a profile info of logged in user on success
      */
@@ -150,9 +142,6 @@ public class Server(context: Context, cache: Cache) {
      * Logs out currently signed in user
      */
     public fun logoutUser(profileInfo: ProfileInfo) : Observable<Unit> {
-        if(!isLoggedIn()) {
-            return Observable.error(IllegalStateException("no user is currently logged in, but logout requested"))
-        }
         val url = "http://advaitaworld.com/login/exit/?security_ls_key=${profileInfo.securityKey}"
         return runRequest(client, url).map {}
     }

@@ -17,6 +17,7 @@ import kotlin.properties.Delegates
 
 public class AuthActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
+    private val profileManager = ProfileManager(server)
 
     private var loginEdit: EditText by Delegates.notNull()
     private var passwordEdit: EditText by Delegates.notNull()
@@ -27,7 +28,7 @@ public class AuthActivity : RxActionBarActivity() {
         setContentView(R.layout.activity_authorization)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
         setTitle(R.string.login)
-        createMainNavigationDrawer(this, getCurrentUserProfile(this, server))
+        createMainNavigationDrawer(this, profileManager.getCurrentUserProfile(this))
 
         loginEdit = findViewById(R.id.auth_login_edit) as EditText
         passwordEdit = findViewById(R.id.auth_password_edit) as EditText
@@ -49,8 +50,7 @@ public class AuthActivity : RxActionBarActivity() {
 
     private fun startLogin(login: String, password: String) {
         loginButton.setProgress(50) // will show progress bar
-        val observable = server.loginUser(login, password)
-            .doOnNext({ profile -> setCurrentUserProfile(this, profile) })
+        val observable = profileManager.loginUser(this, login, password)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

@@ -32,6 +32,7 @@ import kotlin.properties.Delegates
 
 public class MainActivity : RxActionBarActivity() {
     private val server: Server by ServerProvider()
+    private val profileManager = ProfileManager(server)
     private var db: Database? = null
     private var mainPager : ViewPager by Delegates.notNull()
     private val fetchSubscriptions : EnumMap<Section, Subscription> = EnumMap(javaClass<Section>())
@@ -42,7 +43,7 @@ public class MainActivity : RxActionBarActivity() {
         db = Database(getApplicationContext())
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar) as Toolbar)
-        createMainNavigationDrawer(this, getCurrentUserProfile(this, server))
+        createMainNavigationDrawer(this, profileManager.getCurrentUserProfile(this))
         setupTabsAndPager()
     }
 
@@ -125,8 +126,15 @@ public class MainActivity : RxActionBarActivity() {
             fetchPosts(listView, section)
             return true
         } else if(id == R.id.action_logout) {
-            val profile = getCurrentUserProfile(this, server)
-            if(profile != null) server.logoutUser(profile)
+            val profile = profileManager.getCurrentUserProfile(this)
+            if(profile != null) {
+                profileManager.logoutUser(this, profile)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                    { Timber.d("logout of $it was success")},
+                    { Timber.d(it, "logout failed with error")})
+            }
         }
 
         return super.onOptionsItemSelected(item)

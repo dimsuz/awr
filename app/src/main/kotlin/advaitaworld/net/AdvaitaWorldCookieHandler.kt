@@ -33,7 +33,9 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
      * Returns a cookie. Checks both session-only and permanent cookie stores
      */
     public fun getCookieValue(name: String) : String? {
-        return sessionCookieStore.getOrElse(name, { getStorePrefs().getString(name, null) })
+        val cookieValue = sessionCookieStore.get(name)
+        // either return or continue with a look up in stored cookies
+        return if(cookieValue != null) cookieValue else getStorePrefs().getString(name, null)
     }
 
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
