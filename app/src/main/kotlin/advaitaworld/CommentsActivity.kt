@@ -133,7 +133,7 @@ fun prepareAdapterData(postData: PostData, startPath: LongArray?) : Pair<PostDat
  * Returns a copy of PostData which has only comments starting with the one pointed by path
  */
 private fun PostData.limitToNode(path: LongArray): PostData {
-    val targetComment = this.comments.stream()
+    val targetComment = this.comments.sequence()
             .map { it.findByPath(path) }
             .filter { it != null }
             .take(1)
