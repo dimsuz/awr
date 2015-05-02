@@ -1,11 +1,12 @@
-package advaitaworld
+package advaitaworld.auth
 
+import advaitaworld.*
 import advaitaworld.parsing.ProfileInfo
 import android.content.Context
 import android.preference.PreferenceManager
 import rx.Observable
 
-public class ProfileManager(private val server: Server) {
+public class ProfileManager(private val server: advaitaworld.net.Server) {
     /**
      * Logs the user and performs some additional common post-login actions
      */
@@ -65,4 +66,3 @@ public class ProfileManager(private val server: Server) {
         }
     }
 }
-

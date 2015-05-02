@@ -1,9 +1,11 @@
 package advaitaworld
 
-import rx.Observable
+import advaitaworld.db.Database
+import advaitaworld.net.Server
+import advaitaworld.net.ServerProvider
 import advaitaworld.parsing.User
 import android.content.Context
-import advaitaworld.db.Database
+import rx.Observable
 import timber.log.Timber
 
 object UserInfoProvider {

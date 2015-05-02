@@ -1,5 +1,6 @@
 package advaitaworld
 
+import advaitaworld.auth.AuthActivity
 import advaitaworld.parsing.ProfileInfo
 import android.app.Activity
 import android.content.Context

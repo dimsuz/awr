@@ -1,12 +1,9 @@
-package advaitaworld
+package advaitaworld.net
 
-import advaitaworld.net.AdvaitaWorldCookieHandler
-import advaitaworld.net.Cache
-import advaitaworld.net.MemoryCache
-import advaitaworld.net.runRequest
+import advaitaworld.BuildConfig
+import advaitaworld.R
 import advaitaworld.parsing.*
 import android.content.Context
-import android.preference.PreferenceManager
 import com.squareup.okhttp.*
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -14,6 +11,7 @@ import rx.Observable
 import timber.log.Timber
 import java.io.BufferedReader
 import java.io.Reader
+import java.util.Scanner
 import java.util.regex.Pattern
 
 // FIXME move to some particular place which contains common app dependency providers?
@@ -35,9 +33,9 @@ class ServerProvider {
 }
 
 public enum class Section(val nameResId: Int) {
-    Popular : Section(R.string.section_main)
-    Community : Section(R.string.section_blogs)
-    Personal : Section(R.string.section_personal_blogs)
+    Popular : Section(advaitaworld.R.string.section_main)
+    Community : Section(advaitaworld.R.string.section_blogs)
+    Personal : Section(advaitaworld.R.string.section_personal_blogs)
 }
 
 public class Server(context: Context, cache: Cache) {
@@ -166,7 +164,7 @@ public class Server(context: Context, cache: Cache) {
     }
 
     private fun loginRequest(userLogin: String, password: String, securityKey: String): Request {
-        if(BuildConfig.DEBUG) {
+        if(advaitaworld.BuildConfig.DEBUG) {
             Timber.d("creating login request:\nuser=$userLogin,\nsecurityKey=$securityKey")
         }
         val postBody = FormEncodingBuilder()

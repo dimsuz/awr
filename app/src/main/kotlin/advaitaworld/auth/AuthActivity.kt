@@ -1,6 +1,6 @@
-package advaitaworld
+package advaitaworld.auth
 
-import advaitaworld.parsing.ProfileInfo
+import advaitaworld.*
 import advaitaworld.support.RxActionBarActivity
 import android.os.Bundle
 import android.support.v7.widget.Toolbar
@@ -16,7 +16,7 @@ import timber.log.Timber
 import kotlin.properties.Delegates
 
 public class AuthActivity : RxActionBarActivity() {
-    private val server: Server by ServerProvider()
+    private val server: advaitaworld.net.Server by advaitaworld.net.ServerProvider()
     private val profileManager = ProfileManager(server)
 
     private var loginEdit: EditText by Delegates.notNull()

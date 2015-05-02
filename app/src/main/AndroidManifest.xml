@@ -25,7 +25,7 @@
         <activity
             android:name=".CommentsActivity" />
         <activity
-            android:name=".AuthActivity" />
+            android:name=".auth.AuthActivity" />
     </application>
 
 </manifest>

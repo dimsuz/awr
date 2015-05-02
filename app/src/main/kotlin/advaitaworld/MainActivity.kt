@@ -1,15 +1,16 @@
 package advaitaworld
 
+import advaitaworld.auth.ProfileManager
 import advaitaworld.db.Database
+import advaitaworld.net.Section
+import advaitaworld.net.Server
+import advaitaworld.net.ServerProvider
 import advaitaworld.support.RxActionBarActivity
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.SpaceItemDecoration
-import android.content.Context
 import android.content.res.Resources
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.os.Bundle
-import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.widget.LinearLayoutManager
@@ -17,9 +18,6 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.view.*
 import com.advaitaworld.widgets.SlidingTabLayout
-import com.mikepenz.materialdrawer.Drawer
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.SectionDrawerItem
 import rx.Observable
 import rx.Subscription
 import rx.android.lifecycle.LifecycleEvent
