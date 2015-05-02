@@ -45,6 +45,7 @@ public class AuthActivity : BaseActivity(BaseActivity.Config(R.layout.activity_a
 
     private fun startLogin(login: String, password: String) {
         loginButton.setProgress(50) // will show progress bar
+        val profileManager = AnApplication.get(this).profileManager
         val observable = profileManager.loginUser(this, login, password)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), observable, LifecycleEvent.DESTROY)
             .subscribeOn(Schedulers.io())

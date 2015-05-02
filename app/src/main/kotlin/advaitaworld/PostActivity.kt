@@ -1,7 +1,5 @@
 package advaitaworld
 
-import advaitaworld.net.Server
-import advaitaworld.net.ServerProvider
 import advaitaworld.util.*
 import android.content.Intent
 import android.graphics.Color
@@ -30,6 +28,7 @@ public class PostActivity : BaseActivity(BaseActivity.Config(R.layout.activity_p
 
         val listView = setupPostView()
 
+        val server = AnApplication.get(this).server
         val postData = server.getFullPost(postId)
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postData, LifecycleEvent.DESTROY)
                 .compose(LoadIndicator

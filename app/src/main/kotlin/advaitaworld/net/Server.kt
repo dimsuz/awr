@@ -14,24 +14,6 @@ import java.io.Reader
 import java.util.Scanner
 import java.util.regex.Pattern
 
-// FIXME move to some particular place which contains common app dependency providers?
-private var server: Server? = null
-class ServerProvider {
-    fun get(context: Context): Server {
-        if(server == null) {
-            server = Server(context, MemoryCache())
-            // FIXME remove this
-            initMockData(context, server!!)
-        }
-        return server!!
-    }
-
-    fun get(context: Context, propertyMetadata: PropertyMetadata): Server {
-        return get(context)
-    }
-
-}
-
 public enum class Section(val nameResId: Int) {
     Popular : Section(advaitaworld.R.string.section_main)
     Community : Section(advaitaworld.R.string.section_blogs)

@@ -1,10 +1,6 @@
 package advaitaworld
 
-import advaitaworld.auth.ProfileManager
-import advaitaworld.db.Database
 import advaitaworld.net.Section
-import advaitaworld.net.Server
-import advaitaworld.net.ServerProvider
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.SpaceItemDecoration
 import android.content.res.Resources
@@ -28,13 +24,11 @@ import java.util.EnumMap
 import kotlin.properties.Delegates
 
 public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_main)) {
-    private var db: Database? = null
     private var mainPager : ViewPager by Delegates.notNull()
     private val fetchSubscriptions : EnumMap<Section, Subscription> = EnumMap(javaClass<Section>())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = Database(getApplicationContext())
         setupTabsAndPager()
     }
 
@@ -77,6 +71,7 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
             return
         }
         // FIXME if fetching is completed, do not start it
+        val server = AnApplication.get(this).server
         val postsData = server.getPosts(section)
         val adapter = PostFeedAdapter(lifecycle())
         val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
@@ -117,6 +112,7 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
             fetchPosts(listView, section)
             return true
         } else if(id == R.id.action_logout) {
+            val profileManager = AnApplication.get(this).profileManager
             val profile = profileManager.getCurrentUserProfile(this)
             if(profile != null) {
                 profileManager.logoutUser(this, profile)

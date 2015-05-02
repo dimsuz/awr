@@ -1,7 +1,5 @@
 package advaitaworld
 
-import advaitaworld.net.Server
-import advaitaworld.net.ServerProvider
 import advaitaworld.parsing.PostData
 import advaitaworld.parsing.findByPath
 import advaitaworld.util.CommentItemDecoration
@@ -43,6 +41,7 @@ public class CommentsActivity : BaseActivity(BaseActivity.Config(R.layout.activi
 
         val listView = setupCommentsView()
 
+        val server = AnApplication.get(this).server
         val observable = server.getFullPost(postId)
                 .doOnNext { rootPostData = it }
 
