@@ -38,6 +38,12 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
         return if(cookieValue != null) cookieValue else getStorePrefs().getString(name, null)
     }
 
+    // maps cookie names to whether to store them permanently across sessions or not
+    private data class CookieConfig(val name: String, val storeAcrossSessions: Boolean)
+    private val cookieConfigs = array(
+        CookieConfig(SESSION_ID_COOKIE_NAME, false),
+        CookieConfig(KEY_COOKIE_NAME, true))
+
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
         // Interested are two cookies:
         // PHPSESSID - session id. expires after session ended
@@ -45,21 +51,18 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
         // returned by server.
         // first is saved to the in-memory store, second - in persistent store
         val cookies = responseHeaders.get("Set-Cookie")
-        if(cookies != null) {
-            Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
-            val sessionId = extractCookie(cookies, SESSION_ID_COOKIE_NAME)
-            if(sessionId != null) {
-                Timber.d("  saving session id '$sessionId' to cookie store")
-                // NOTE sessionId cookie has no Expire param set, so not saving it
-                // to prefs so it will expire at the session end (aka app launch end)
-                sessionCookieStore.put(SESSION_ID_COOKIE_NAME, sessionId)
-            }
-            val key = extractCookie(cookies, KEY_COOKIE_NAME)
-            if(key != null) {
-                Timber.d("  saving key '$key' to a permanent cookie store")
-                // NOTE sessionId cookie has no Expire param set, so not saving it
-                // to prefs so it will expire at the session end (aka app launch end)
-                getStorePrefs().edit().putString(KEY_COOKIE_NAME, key).apply()
+        if(cookies == null) { return }
+
+        Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
+        for(knownCookie in cookieConfigs) {
+            val cookieValue = extractCookie(cookies, knownCookie.name)
+            if(cookieValue != null) {
+                Timber.d("  saving '${knownCookie.name}' to a ${if(knownCookie.storeAcrossSessions) "permanent" else "temporary"} cookie store")
+                if(knownCookie.storeAcrossSessions) {
+                    getStorePrefs().edit().putString(knownCookie.name, cookieValue).apply()
+                } else {
+                    sessionCookieStore.put(knownCookie.name, cookieValue)
+                }
             }
         }
     }
