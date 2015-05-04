@@ -39,14 +39,14 @@ public class Server(context: Context, cache: Cache) {
 
     public fun getFullPost(postId: String) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
-        val logMsgCache = { data: PostData -> Timber.d("getting post $postId from cache") }
-        return cache.getFullPost(postId).doOnNext(logMsgCache).onErrorResumeNext {
-            Timber.d("getting post $postId from server")
-            runMockableRequest(client, postUrl(postId))
-                    .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") }
-                    .doOnNext { postData -> Timber.d("saving $postId to cache") }
-                    .doOnNext { postData -> cache.saveFullPost(postId, postData) }
-        }
+        val requestObservable = runMockableRequest(client, postUrl(postId))
+            .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") }
+            .doOnNext { postData -> Timber.d("saving $postId to cache") }
+            .doOnNext { postData -> cache.saveFullPost(postId, postData) }
+
+        return cache.getFullPost(postId)
+            .doOnNext { data: PostData -> Timber.d("getting post $postId from cache") }
+            .onErrorResumeNext(requestObservable)
     }
 
     public fun getUserInfo(name: String) : Observable<User> {
