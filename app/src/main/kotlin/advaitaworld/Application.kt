@@ -4,6 +4,7 @@ import advaitaworld.auth.ProfileManager
 import advaitaworld.db.Database
 import advaitaworld.net.MemoryCache
 import advaitaworld.net.Server
+import advaitaworld.net.initMockData
 import android.app.Application
 import android.content.Context
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
@@ -38,6 +39,7 @@ public class AnApplication : Application() {
 
     private fun createGlobalObjects() {
         server = Server(this, MemoryCache())
+        initMockData(this, server) // FIXME remove!
         database = Database(this)
         profileManager = ProfileManager(server)
     }
