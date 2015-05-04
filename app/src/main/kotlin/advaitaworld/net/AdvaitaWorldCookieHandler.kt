@@ -91,10 +91,13 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
         return allCookies
     }
 
-    private fun extractCookie(cookies : List<String>, name: String) : String? {
+    private fun extractCookie(cookies: List<String>, name: String) : String? {
         val pattern = Pattern.compile("$name=(.+?);")
-        for(c in cookies) {
-            val matcher = pattern.matcher(c)
+        // need to go backwards because it turns out server can return several cookies with same
+        // key but different value - need to extract one that appears last
+        // (example: happens for cookie "key": key=deleted,...,key=uuid-value)
+        for(i in cookies.size()-1 downTo 0) {
+            val matcher = pattern.matcher(cookies.get(i))
             if(matcher.find()) {
                 return matcher.group(1)
             }
