@@ -3,6 +3,7 @@ package advaitaworld.net
 import advaitaworld.parsing.PostData
 import android.util.SparseArray
 import rx.Observable
+import timber.log.Timber
 
 public trait Cache {
     /**
@@ -16,6 +17,11 @@ public trait Cache {
      * saving finishes or an error if saving fails
      */
     public fun saveFullPost(postId: String, data: PostData) : Observable<String>
+
+    /**
+     * Clears cache
+     */
+    public fun clear()
 }
 
 public class MemoryCache : Cache {
@@ -32,4 +38,8 @@ public class MemoryCache : Cache {
         return Observable.just(postId)
     }
 
+    override fun clear() {
+        Timber.d("clearing requests cache")
+        cache.clear()
+    }
 }

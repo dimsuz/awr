@@ -116,6 +116,7 @@ public class Server(context: Context, cache: Cache) {
                 getUserInfo(profileInfo.name)
                     .map { ProfileInfo(profileInfo.name, profileInfo.email, it.avatarUrl, profileInfo.securityKey) }
             }
+            .doOnNext { cache.clear() }
     }
 
     /**
