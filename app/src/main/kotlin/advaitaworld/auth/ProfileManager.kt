@@ -13,6 +13,7 @@ public class ProfileManager(private val server: advaitaworld.net.Server) {
     public fun loginUser(context: Context, userLogin: String, password: String) : Observable<ProfileInfo> {
         return server.loginUser(userLogin, password)
             .doOnNext({ profile -> setCurrentUserProfile(context, profile) })
+            .doOnNext({ Events.UserLogin.fire() })
     }
 
     /**
@@ -22,6 +23,7 @@ public class ProfileManager(private val server: advaitaworld.net.Server) {
         return server.logoutUser(profileInfo)
             .map { profileInfo }
             .doOnNext({ removeLoggedUserProfile(context) })
+            .doOnNext({ Events.UserLogout.fire() })
     }
 
     /**
