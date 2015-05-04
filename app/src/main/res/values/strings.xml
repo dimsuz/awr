@@ -3,7 +3,7 @@
     <string name="app_name">Advaita World</string>
     <plurals name="commentses">
         <item quantity="one">+%d comment</item>
-        <item quantity="many">+%d comments</item>
+        <item quantity="other">+%d comments</item>
     </plurals>
     <string name="section_main">Main</string>
     <string name="section_blogs">Blogs</string>
