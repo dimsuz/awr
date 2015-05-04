@@ -30,11 +30,12 @@ public class AnApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Timber.plant(Timber.DebugTree())
-        UserInfoProvider.initialize(this)
-        DrawerImageLoader.init(createDrawerImageLoader())
 
         // Using this until there will be some proper DI for Kotlin...
         createGlobalObjects()
+
+        UserInfoProvider.initialize(this)
+        DrawerImageLoader.init(createDrawerImageLoader())
     }
 
     private fun createGlobalObjects() {
