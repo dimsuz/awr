@@ -31,16 +31,16 @@ public class Server(context: Context, cache: Cache) {
         }
     }
 
-    public fun getPosts(section: Section) : Observable<List<ShortPostInfo>> {
+    public fun getPosts(section: Section, mediaResolver: MediaResolver) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
         return runMockableRequest(client, sectionUrl(section))
-                .map({ parsePostFeed(it.string()) })
+                .map({ parsePostFeed(it.string(), mediaResolver) })
     }
 
-    public fun getFullPost(postId: String) : Observable<PostData> {
+    public fun getFullPost(postId: String, mediaResolver: MediaResolver) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
         val requestObservable = runMockableRequest(client, postUrl(postId))
-            .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/") }
+            .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/", mediaResolver = mediaResolver) }
             .doOnNext { postData -> Timber.d("saving $postId to cache") }
             .doOnNext { postData -> cache.saveFullPost(postId, postData) }
 

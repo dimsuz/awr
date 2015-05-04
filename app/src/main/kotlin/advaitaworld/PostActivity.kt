@@ -1,5 +1,6 @@
 package advaitaworld
 
+import advaitaworld.parsing.DefaultMediaResolver
 import advaitaworld.util.*
 import android.content.Intent
 import android.graphics.Color
@@ -29,7 +30,7 @@ public class PostActivity : BaseActivity(BaseActivity.Config(R.layout.activity_p
         val listView = setupPostView()
 
         val server = AnApplication.get(this).server
-        val postData = server.getFullPost(postId)
+        val postData = server.getFullPost(postId, DefaultMediaResolver(this))
         LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postData, LifecycleEvent.DESTROY)
                 .compose(LoadIndicator
                         .createFor(postData)

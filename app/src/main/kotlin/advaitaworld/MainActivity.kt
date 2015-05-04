@@ -1,6 +1,7 @@
 package advaitaworld
 
 import advaitaworld.net.Section
+import advaitaworld.parsing.DefaultMediaResolver
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.SpaceItemDecoration
 import android.content.res.Resources
@@ -72,7 +73,7 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
         }
         // FIXME if fetching is completed, do not start it
         val server = AnApplication.get(this).server
-        val postsData = server.getPosts(section)
+        val postsData = server.getPosts(section, DefaultMediaResolver(this))
         val adapter = PostFeedAdapter(lifecycle())
         val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())

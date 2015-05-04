@@ -41,3 +41,7 @@ private fun <T> runBodyOnce(body: () -> T, subscriber: Subscriber<T>?) {
 public fun printError(message: String) : (Throwable) -> Unit {
     return { e -> Timber.e(e, message) }
 }
+
+public fun isUiThread() : Boolean {
+    return Looper.myLooper() == Looper.getMainLooper()
+}

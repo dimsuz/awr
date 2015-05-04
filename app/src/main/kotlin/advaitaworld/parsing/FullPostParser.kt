@@ -1,23 +1,24 @@
 package advaitaworld.parsing
 
-import org.jsoup.Jsoup
+import android.content.Context
 import android.text.Html
+import android.util.LongSparseArray
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import timber.log.Timber
-import android.util.LongSparseArray
-import org.jsoup.select.NodeVisitor
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeTraversor
-import java.util.regex.Pattern
+import org.jsoup.select.NodeVisitor
+import timber.log.Timber
 import java.util.Collections
+import java.util.regex.Pattern
 
 /**
  * Parses a full post
  * @param stream a stream containing the html of the post page
  * @param baseUri a base uri to be used for resolving links
  */
-public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostData {
+public fun parseFullPost(stream: java.io.InputStream, baseUri: String, mediaResolver: MediaResolver) : PostData {
     val document = Jsoup.parse(stream, "UTF-8", baseUri)
     val topicContainer = document.selectFirst(".topic-container")
     val title = topicContainer.selectFirst(".topic-title").text()
@@ -26,11 +27,11 @@ public fun parseFullPost(stream: java.io.InputStream, baseUri: String) : PostDat
     val dateString = topicContainer.selectFirst(".topic-info-date > time").text()
     val voteCountStr = topicContainer.selectFirst(".vote-count > span").text()
     val voteCount = parsePostVoteCount(voteCountStr)
-    val contentInfo = ContentInfo(author, Html.fromHtml(content), dateString, voteCount)
-    return PostData(title, contentInfo, parseComments(document))
+    val contentInfo = ContentInfo(author, parseHtmlContent(content, mediaResolver), dateString, voteCount)
+    return PostData(title, contentInfo, parseComments(document, mediaResolver))
 }
 
-private fun parseComments(document: Document): List<CommentNode> {
+private fun parseComments(document: Document, mediaResolver: MediaResolver): List<CommentNode> {
     // select all the top-level comment nodes
     val nodes = document.select("#comments > .comment-wrapper")
     if(nodes.isEmpty()) {
@@ -42,7 +43,7 @@ private fun parseComments(document: Document): List<CommentNode> {
     val threadCount = nodes.size()
     val avgCommentPerThreadCount = commentsCount/threadCount
     Timber.d("$threadCount threads contain $commentsCount comments, average comments per thread is $avgCommentPerThreadCount")
-    return nodes.map { parseCommentsThreadIterative(it, avgCommentPerThreadCount) }
+    return nodes.map { parseCommentsThreadIterative(it, mediaResolver, avgCommentPerThreadCount) }
 }
 
 private class WorkNode(
@@ -55,8 +56,8 @@ private class WorkNode(
         var resultNode: CommentNode?
 )
 
-private fun parseCommentsThreadIterative(commentWrapper: Element, avgCommentPerThreadCount: Int) : CommentNode {
-    val visitor = Visitor(avgCommentPerThreadCount)
+private fun parseCommentsThreadIterative(commentWrapper: Element, mediaResolver: MediaResolver, avgCommentPerThreadCount: Int) : CommentNode {
+    val visitor = Visitor(mediaResolver, avgCommentPerThreadCount)
     NodeTraversor(visitor).traverse(commentWrapper)
     return visitor.rootNode!!
 }
@@ -67,7 +68,8 @@ private fun parseCommentsThreadIterative(commentWrapper: Element, avgCommentPerT
  * between comments by analyzing data of "up-to-parent" actions which originally cause JS calls.
  * Comments are also given same IDs as they have on website.
  */
-private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
+private class Visitor(mediaResolver: MediaResolver, avgCommentPerThreadCount: Int) : NodeVisitor {
+    val mediaResolver = mediaResolver
     val workTree : LongSparseArray<WorkNode> = LongSparseArray(avgCommentPerThreadCount)
     // reusable temporary var to avoid GC
     val pair = longArray(-1, -1)
@@ -77,7 +79,7 @@ private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
         if(!domNode.nodeName().equals("div") || !domNode.attr("class").startsWith("comment-wrapper")) {
             return
         }
-        val content = parseComment(domNode as Element)
+        val content = parseComment(domNode as Element, mediaResolver)
         val (id, parentId) = parseCommentIds(domNode, pair)
 
         // top-level nodes can have id == -1
@@ -120,7 +122,7 @@ private class Visitor(avgCommentPerThreadCount: Int) : NodeVisitor {
     }
 }
 
-private fun parseComment(commentElem: Element): ContentInfo {
+private fun parseComment(commentElem: Element, mediaResolver: MediaResolver): ContentInfo {
     // NOTE: not using select(css) or selectFirst(css) here, because it proved to be very slow,
     // mainly because it uses String.split to match 'class' attributes which creates new instances
     // of Pattern on each invocation!
@@ -132,7 +134,7 @@ private fun parseComment(commentElem: Element): ContentInfo {
     val dateString = sectionElem.getElementsByTag("time").first().text()
     val voteCountStr = sectionElem.getElementsByAttributeValue("class", "vote-count").text()
     val voteCount = parsePostVoteCount(voteCountStr)
-    return ContentInfo(author, Html.fromHtml(content), dateString, voteCount)
+    return ContentInfo(author, parseHtmlContent(content, mediaResolver), dateString, voteCount)
 }
 
 private val commentIdPattern = Pattern.compile("\\((\\d+),(\\d+)\\)")

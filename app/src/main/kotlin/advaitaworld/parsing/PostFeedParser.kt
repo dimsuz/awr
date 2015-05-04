@@ -1,14 +1,10 @@
 package advaitaworld.parsing
 
+import android.content.Context
 import android.text.Html
 import org.jsoup.Jsoup
-import timber.log.Timber
-import java.io.BufferedReader
-import java.io.Reader
-import java.util.regex.MatchResult
-import java.util.regex.Pattern
 
-fun parsePostFeed(content: String): List<ShortPostInfo> {
+fun parsePostFeed(content: String, mediaResolver: MediaResolver): List<ShortPostInfo> {
     val document = Jsoup.parse(content)
     val posts = document.select("article.topic")
     val parsedPosts = posts.map({ postElem ->
@@ -23,7 +19,7 @@ fun parsePostFeed(content: String): List<ShortPostInfo> {
         val postTitle = postTitleElem.text()
         val postLink = postTitleElem.attr("href")
         val postId = parsePostLink(postLink)!!
-        val contentInfo = ContentInfo(author, Html.fromHtml(text), dateString, voteCount)
+        val contentInfo = ContentInfo(author, parseHtmlContent(text, mediaResolver), dateString, voteCount)
         ShortPostInfo(postId, postTitle, contentInfo, commentCount)
     })
     return parsedPosts
