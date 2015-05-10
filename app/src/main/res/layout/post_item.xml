@@ -52,29 +52,56 @@
             android:textColor="@color/primary_text"
             android:textStyle="bold"
             android:textSize="18sp"/>
-        <TextView
-            android:id="@+id/content"
-            android:maxHeight="250dp"
+        <LinearLayout
+            android:id="@+id/content_layout"
+            android:background="?attr/selectableItemBackground"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="12dp"
             android:layout_alignParentLeft="true"
             android:layout_below="@id/title"
-            android:textColor="@color/primary_text"
-            android:textSize="15sp"
+            >
+            <TextView
+                android:id="@+id/content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primary_text"
+                android:textSize="15sp"
+                />
+            <TextView
+                android:id="@+id/expand_post"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/secondary_text"
+                android:textAllCaps="true"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="..."
+                />
+        </LinearLayout>
+        <View
+            android:id="@+id/action_divider"
+            android:background="@color/lightGray"
+            android:layout_below="@id/content_layout"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
             />
         <include layout="@layout/rating_actions"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:layout_below="@id/content"
+                 android:layout_below="@id/action_divider"
                  android:layout_alignParentLeft="true" />
         <TextView
             android:background="?android:attr/selectableItemBackground"
             android:id="@+id/comments"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/post_action_view_height"
-            android:layout_below="@id/content"
+            android:layout_below="@id/action_divider"
             android:layout_alignParentRight="true"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"

@@ -13,6 +13,7 @@ public data class ShortPostInfo(
         val postId : String,
         val title: String,
         val content: ContentInfo,
+        val isExpandable: Boolean,
         val commentCount: String?)
 
 public data class CommentNode(val path: LongArray,

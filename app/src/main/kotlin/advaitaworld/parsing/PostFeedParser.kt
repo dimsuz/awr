@@ -18,8 +18,11 @@ fun parsePostFeed(content: String, mediaResolver: MediaResolver): List<ShortPost
         val postLink = postTitleElem.attr("href")
         val postId = parsePostLink(postLink)!!
         val parsedPost = parseHtmlContent(text, mediaResolver)
-        val contentInfo = ContentInfo(author, shortenForDisplay(parsedPost), dateString, voteCount)
-        ShortPostInfo(postId, postTitle, contentInfo, commentCount)
+        val shortenedPost = shortenForDisplay(parsedPost)
+        val contentInfo = ContentInfo(author, shortenedPost, dateString, voteCount)
+        ShortPostInfo(postId, postTitle, contentInfo,
+            isExpandable = parsedPost.length() != shortenedPost.length(),
+            commentCount = commentCount)
     })
     return parsedPosts
 }

@@ -12,6 +12,7 @@ import advaitaworld.PostFeedAdapter.ViewHolder
 import timber.log.Timber
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
+import advaitaworld.util.setVisible
 import android.content.Intent
 import rx.android.lifecycle.LifecycleObservable
 import rx.android.lifecycle.LifecycleEvent
@@ -84,6 +85,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         holder.rating.setText(post.content.rating ?: "")
         holder.rating.setVisibility(if(post.content.rating != null) View.VISIBLE else View.GONE)
         holder.comments.setText(post.commentCount ?: "")
+        holder.expandButton.setVisible(post.isExpandable)
     }
 
     override fun getItemCount(): Int {
@@ -93,19 +95,23 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title = itemView.findViewById(R.id.title) as TextView
         val content = itemView.findViewById(R.id.content) as TextView
+        val contentLayout = itemView.findViewById(R.id.content_layout)
         val author = itemView.findViewById(R.id.author_name) as TextView
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView
         val comments = itemView.findViewById(R.id.comments) as TextView
         val rating = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
+        val expandButton = itemView.findViewById(R.id.expand_post)
 
         init {
-            comments.setOnClickListener {
+            val openPostAction = { view: View ->
                 val context = comments.getContext()
                 val intent = Intent(context, javaClass<PostActivity>())
                 intent.putExtra(EXTRA_POST_ID, data.get(getPosition()).postId)
                 context.startActivity(intent)
             }
+            comments.setOnClickListener(openPostAction)
+            contentLayout.setOnClickListener(openPostAction)
         }
     }
 
