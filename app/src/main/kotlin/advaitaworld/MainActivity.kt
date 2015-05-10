@@ -74,6 +74,7 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
         val server = AnApplication.get(this).server
         val postsData = server.getPosts(section, DefaultMediaResolver(this))
         val adapter = PostFeedAdapter(lifecycle())
+        setupVoteActions(adapter)
         val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -90,6 +91,11 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
                         },
                         { Timber.e(it, "parsing failed with exception") })
         fetchSubscriptions.put(section, subscription)
+    }
+
+    private fun setupVoteActions(adapter: PostFeedAdapter) {
+        adapter.setVoteChangeAction { postId, isVoteUp ->
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
