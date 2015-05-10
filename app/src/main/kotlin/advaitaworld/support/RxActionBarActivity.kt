@@ -13,9 +13,9 @@ package advaitaworld.support
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import android.os.Bundle
-import android.support.v7.app.ActionBarActivity
 
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import rx.Observable
 import rx.android.lifecycle.LifecycleEvent
 import rx.subjects.BehaviorSubject
@@ -26,7 +26,7 @@ import rx.subjects.BehaviorSubject
 /**
  * An Activity with reactive extensions.
  */
-public open class RxActionBarActivity : ActionBarActivity() {
+public open class RxActionBarActivity : AppCompatActivity() {
     private val lifecycleSubject = BehaviorSubject.create<LifecycleEvent>()
 
     public fun lifecycle(): Observable<LifecycleEvent> {
