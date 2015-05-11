@@ -25,11 +25,12 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 
-public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
+public class PostFeedAdapter(resources: Resources,
+                             private val voteRequestSender: VoteRequestSender,
+                             private val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
     private var data: List<ShortPostInfo> = listOf()
     private val userInfoMap: MutableMap<String, User> = hashMapOf()
     private var userDataSubscription: Subscription? = null
-    private var voteAction: ((String, Boolean) -> Unit)? = null
     private val voteUpDrawable : Drawable
     private val voteUpVotedDrawable : Drawable
     private val voteDownDrawable : Drawable
@@ -50,10 +51,6 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
         startFetchingUserInfo()
     }
 
-
-    public fun setVoteChangeAction(action: (postId: String, isVoteUp: Boolean) -> Unit) {
-        voteAction = action
-    }
 
     private fun startFetchingUserInfo() {
         if(userDataSubscription != null) {
@@ -138,16 +135,36 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
             }
             comments.setOnClickListener(openPostAction)
             contentLayout.setOnClickListener(openPostAction)
-            if(voteAction != null) {
-                voteUpButton.setOnClickListener {
-                    animateVoteStart(true)
-                    voteAction!!(data.get(getAdapterPosition()).postId, true)
+            setupClickListeners()
+        }
+
+        private fun setupClickListeners() {
+            val listener = { isVoteUp : Boolean ->
+                animateVoteStart(isVoteUp)
+                val postId = data.get(getAdapterPosition()).postId
+                val observable : Observable<String>
+                val successAction : (String) -> Unit
+                val errorAction : (Throwable) -> Unit
+                when(isVoteUp) {
+                    true -> {
+                        observable = voteRequestSender.sendVoteUpRequest(postId)
+                        successAction = { newRating: String -> animateVoteUpFinish(true, newRating) }
+                        errorAction = { Timber.e(it, "failed to update rating"); animateVoteUpFinish(false, newRating = "") }
+                    }
+                    else -> {
+                        observable = voteRequestSender.sendVoteDownRequest(postId)
+                        successAction = { newRating: String -> animateVoteDownFinish(true, newRating) }
+                        errorAction = { Timber.e(it, "failed to update rating"); animateVoteUpFinish(false, newRating = "") }
+                    }
                 }
-                voteDownButton.setOnClickListener {
-                    animateVoteStart(false)
-                    voteAction!!(data.get(getAdapterPosition()).postId, false)
-                }
+                LifecycleObservable.bindUntilLifecycleEvent(lifecycle, observable, LifecycleEvent.DESTROY)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(successAction, errorAction)
             }
+
+            voteUpButton.setOnClickListener { listener(true) }
+            voteDownButton.setOnClickListener { listener(false) }
         }
 
         private fun animateVoteStart(isVoteUp: Boolean) {
@@ -170,11 +187,6 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
                 .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
                 .setDuration(200)
                 .setStartDelay(300)
-            if(isVoteUp) {
-                voteUpButton.postDelayed({ animateVoteUpFinish(true, "+273") }, 2000)
-            } else {
-                voteUpButton.postDelayed({ animateVoteDownFinish(true, "-273") }, 2000)
-            }
         }
 
         private fun animateVoteUpFinish(success: Boolean, newRating: String) {
@@ -298,4 +310,15 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
 
     }
 
+}
+
+public trait VoteRequestSender {
+    /**
+     * Sends a rating vote up request and returns a new rating as string
+     */
+    fun sendVoteUpRequest(postId: String) : Observable<String>
+    /**
+     * Sends a rating vote up request and returns a new rating as string
+     */
+    fun sendVoteDownRequest(postId: String) : Observable<String>
 }

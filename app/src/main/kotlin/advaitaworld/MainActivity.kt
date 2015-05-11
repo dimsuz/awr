@@ -21,6 +21,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 import java.util.EnumMap
+import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
 public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_main)) {
@@ -73,8 +74,7 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
         // FIXME if fetching is completed, do not start it
         val server = AnApplication.get(this).server
         val postsData = server.getPosts(section, DefaultMediaResolver(this))
-        val adapter = PostFeedAdapter(getResources(), lifecycle())
-        setupVoteActions(adapter)
+        val adapter = PostFeedAdapter(getResources(), createVoteRequestSender(), lifecycle())
         val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -91,11 +91,6 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
                         },
                         { Timber.e(it, "parsing failed with exception") })
         fetchSubscriptions.put(section, subscription)
-    }
-
-    private fun setupVoteActions(adapter: PostFeedAdapter) {
-        adapter.setVoteChangeAction { postId, isVoteUp ->
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -133,6 +128,18 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
         return super.onOptionsItemSelected(item)
     }
 
+    public fun createVoteRequestSender() : VoteRequestSender {
+        return object : VoteRequestSender {
+            override fun sendVoteUpRequest(postId: String): Observable<String> {
+                return Observable.just("+33").delay(2000, TimeUnit.MILLISECONDS)
+            }
+
+            override fun sendVoteDownRequest(postId: String): Observable<String> {
+                return Observable.just("-33").delay(2000, TimeUnit.MILLISECONDS)
+            }
+
+        }
+    }
 }
 
 private class MainPagesAdapter(val resources: Resources, val activityLifecycle: Observable<LifecycleEvent>) : PagerAdapter() {
