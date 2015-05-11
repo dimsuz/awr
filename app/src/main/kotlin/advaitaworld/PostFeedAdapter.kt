@@ -3,8 +3,7 @@ package advaitaworld
 import advaitaworld.PostFeedAdapter.ViewHolder
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
-import advaitaworld.util.setVisible
-import advaitaworld.util.withEndActionCompat
+import advaitaworld.util.*
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
@@ -106,11 +105,10 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
         holder.content.setText(post.content.text)
         holder.author.setText(post.content.author)
         holder.timestamp.setText(post.content.dateString)
-        holder.rating.setText(post.content.rating ?: "")
-        holder.rating.setVisibility(if(post.content.rating != null) View.VISIBLE else View.GONE)
         holder.comments.setText(post.commentCount ?: "")
         holder.expandButton.setVisible(post.isExpandable)
         holder.bindVoteViews(post.content.userVote)
+        holder.bindRatingView(post.content.rating ?: "")
     }
 
     override fun getItemCount(): Int {
@@ -124,7 +122,7 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
         val author = itemView.findViewById(R.id.author_name) as TextView
         val timestamp = itemView.findViewById(R.id.timestamp) as TextView
         val comments = itemView.findViewById(R.id.comments) as TextView
-        val rating = itemView.findViewById(R.id.rating) as TextView
+        val ratingView = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
         val expandButton = itemView.findViewById(R.id.expand_post)
         val voteUpButton = itemView.findViewById(R.id.vote_up) as ImageView
@@ -142,81 +140,145 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
             contentLayout.setOnClickListener(openPostAction)
             if(voteAction != null) {
                 voteUpButton.setOnClickListener {
-                    animateVote(true)
+                    animateVoteStart(true)
                     voteAction!!(data.get(getAdapterPosition()).postId, true)
                 }
                 voteDownButton.setOnClickListener {
-                    animateVote(false)
+                    animateVoteStart(false)
                     voteAction!!(data.get(getAdapterPosition()).postId, false)
                 }
             }
         }
 
-        private fun animateVote(isVoteUp: Boolean) {
+        private fun animateVoteStart(isVoteUp: Boolean) {
             val context = voteUpButton.getContext()
+            val interpolator = AnimationUtils.loadInterpolator(context, android.R.interpolator.accelerate_quad)
+            val dy = - voteUpButton.getHeight().toFloat()
+            val upAnim = voteUpButton.animate().translationYBy(dy).alpha(0f)
+                .setInterpolator(interpolator)
+                .setDuration(200)
+            val downAnim = voteDownButton.animate().translationYBy(dy).alpha(0f)
+                .setInterpolator(interpolator)
+                .setDuration(200)
+            if(isVoteUp) { downAnim.setStartDelay(100) } else { upAnim.setStartDelay(100) }
+
+            voteProgress.setVisible(true)
+            voteProgress.setAlpha(0f)
+            voteProgress.setScaleX(0.2f)
+            voteProgress.setScaleY(0.2f)
+            voteProgress.animate().scaleX(1f).scaleY(1f).alpha(1f)
+                .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
+                .setDuration(200)
+                .setStartDelay(300)
             if(isVoteUp) {
-                val interpolator = AnimationUtils.loadInterpolator(context, android.R.interpolator.accelerate_quad)
-                val dy = - voteUpButton.getHeight().toFloat()
-                voteUpButton.animate().translationYBy(dy).alpha(0f)
-                    .setInterpolator(interpolator)
-                    .setDuration(300)
-                voteDownButton.animate().translationYBy(dy).alpha(0f)
-                    .setInterpolator(interpolator)
-                    .setDuration(300)
-                    .setStartDelay(100)
-                voteProgress.setVisible(true)
-                voteProgress.setAlpha(0f)
-                voteProgress.setScaleX(0.2f)
-                voteProgress.setScaleY(0.2f)
-                voteProgress.animate().scaleX(1f).scaleY(1f).alpha(1f)
-                    .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
-                    .setDuration(200)
-                    .setStartDelay(200)
-                voteUpButton.postDelayed({ animateVoteUpFinish(true) }, 2000)
+                voteUpButton.postDelayed({ animateVoteUpFinish(true, "+273") }, 2000)
+            } else {
+                voteUpButton.postDelayed({ animateVoteDownFinish(true, "-273") }, 2000)
             }
         }
 
-        private fun animateVoteUpFinish(success: Boolean) {
-            val context = voteUpButton.getContext()
+        private fun animateVoteUpFinish(success: Boolean, newRating: String) {
+            animateVoteFinish(
+                selectedVoteButton = voteUpButton,
+                otherVoteButton = voteDownButton,
+                selectedDrawable = voteUpVotedDrawable,
+                newRating = newRating)
+        }
+
+        private fun animateVoteDownFinish(success: Boolean, newRating: String) {
+            animateVoteFinish(
+                selectedVoteButton = voteDownButton,
+                otherVoteButton = voteUpButton,
+                selectedDrawable = voteDownVotedDrawable,
+                newRating = newRating)
+        }
+
+        private fun animateVoteFinish(selectedVoteButton: ImageView,
+                                      otherVoteButton: ImageView,
+                                      selectedDrawable: Drawable,
+                                      newRating: String) {
+
+            val context = selectedVoteButton.getContext()
+            val overShootInterpolator = AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot)
+            val moveVoteResultDown = {
+                selectedVoteButton.animate().alpha(1f).setDuration(200)
+                selectedVoteButton.animate().translationY(0f).setDuration(200)
+                    .setInterpolator(overShootInterpolator)
+                Unit
+            }
+            val showNewRatingAndVoteButton = {
+                ratingView.setScaleX(0.2f)
+                ratingView.setScaleY(0.2f)
+                ratingView.animate().alpha(1f).setDuration(200)
+                ratingView.animate().scaleX(1f).scaleY(1f).setDuration(200)
+                    .setInterpolator(overShootInterpolator)
+                    .withEndActionCompat(moveVoteResultDown)
+            }
+            //
+            // Animation starts here
+            // It is sequenced in a way to prevent layout passes happening during animations
+            //
+            // - hide progress bar
+            // - remove it from layout
+            // - also remove other (non-voted) button
+            // - set new rating
+            // - wait until layout pass finishes
+            // - add voted button to layout, with alpha 0
+            // - animate vote text view show, this would alter layout
+            // - animate selected button show, it would move from above in already altered
+            //   by new rating position (shifted to right)
             voteProgress.animate()
                 .alpha(0f)
                 .setDuration(200)
                 .withEndActionCompat {
                     voteProgress.setVisible(false)
-                    // vote down will no longer be needed, reset its state
-                    voteDownButton.setVisible(false)
-                    voteDownButton.setTranslationY(0f)
-                    voteDownButton.setAlpha(1f)
+                    // other vote button will no longer be needed, reset its state, hide
+                    otherVoteButton.setVisible(false)
+                    otherVoteButton.setTranslationY(0f)
+                    otherVoteButton.setAlpha(1f)
                     // vote up needs its drawable tinted before coming back
-                    voteUpButton.setImageDrawable(voteUpVotedDrawable)
-                    rating.setVisible(true)
-                    rating.setText("+283")
-                    rating.setAlpha(0f)
+                    selectedVoteButton.setImageDrawable(selectedDrawable)
+                    // actually needed only for vote_down, see rating_actions.xml
+                    if(selectedVoteButton.getMarginLeft() != 0) {
+                        selectedVoteButton.adjustMargin(-selectedVoteButton.getMarginLeft(), 0, 0, 0)
+                    }
+                    bindRatingView(newRating)
+                    ratingView.setAlpha(0f)
+
                     // above changes will request layout pass, wait for it to finish before continuing
                     // with animation
-                    rating.post {
-                        rating.setScaleX(0.2f)
-                        rating.setScaleY(0.2f)
-                        rating.animate().alpha(1f).setDuration(200)
-                        rating.animate().scaleX(1f).scaleY(1f).setDuration(200)
-                            .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
-                            .withEndActionCompat {
-                                voteUpButton.animate().alpha(1f).setDuration(200)
-                                voteUpButton.animate().translationY(0f).setDuration(200)
-                                    .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
-                            }
-                    }
+                    ratingView.post(showNewRatingAndVoteButton)
                 }
-        }
-
-        private fun animateVoteDownFinish(success: Boolean) {
-
         }
 
         // sets drawables and resets any results of previous animation on these views,
         fun bindVoteViews(userVote: Int) {
             // FIXME track if request is not in progress and only then reset animation properties
             // otherwise set them up correctly for animation to finish
+            clearAnimationEffects()
+
+            voteUpButton.setVisible(userVote >= 0)
+            voteUpButton.setImageDrawable(if(userVote > 0) voteUpVotedDrawable else voteUpDrawable)
+
+            voteDownButton.setVisible(userVote <= 0)
+            voteDownButton.setImageDrawable(if(userVote < 0) voteDownVotedDrawable else voteDownDrawable)
+
+            // this needs to correspond with rating_actions.xml
+            val leftMargin = voteUpButton.getResources().getDimensionPixelSize(R.dimen.post_action_view_height)
+            voteDownButton.setMargins(if(userVote >= 0) leftMargin else 0, 0, 0, 0)
+        }
+
+        fun bindRatingView(rating: String) {
+            ratingView.setText(rating)
+            ratingView.setVisible(rating.isNotEmpty())
+            if(rating.isNotEmpty()) {
+                val color = if (rating.charAt(0) != '-') R.color.rating_positive else R.color.rating_negative
+                ratingView.setTextColor(ratingView.getResources().getColor(color))
+            }
+        }
+
+        // clears any possible effects left from previously running animation
+        private fun clearAnimationEffects() {
             voteProgress.setVisible(false)
             voteUpButton.setAlpha(1f)
             voteUpButton.setScaleX(1f)
@@ -231,11 +293,7 @@ public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable
             voteDownButton.setTranslationX(0f)
             voteDownButton.setTranslationY(0f)
 
-            voteUpButton.setVisible(userVote >= 0)
-            voteUpButton.setImageDrawable(if(userVote > 0) voteUpVotedDrawable else voteUpDrawable)
-
-            voteDownButton.setVisible(userVote <= 0)
-            voteDownButton.setImageDrawable(if(userVote < 0) voteDownVotedDrawable else voteDownDrawable)
+            ratingView.setAlpha(1f)
         }
 
     }

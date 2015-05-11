@@ -13,6 +13,30 @@ public fun View.adjustPadding(dLeft: Int, dTop: Int, dRight: Int, dBottom: Int) 
             this.getPaddingRight() + dRight, this.getPaddingBottom() + dBottom)
 }
 
+public fun View.adjustMargin(dLeft: Int, dTop: Int, dRight: Int, dBottom: Int) {
+    // not checking for null, expecting layout parameters to be set!
+    val lparams = this.getLayoutParams() as ViewGroup.MarginLayoutParams
+    lparams.leftMargin += dLeft
+    lparams.rightMargin += dRight
+    lparams.topMargin += dTop
+    lparams.bottomMargin += dBottom
+    this.setLayoutParams(lparams)
+}
+
+public fun View.setMargins(left: Int, top: Int, right: Int, bottom: Int) {
+    // not checking for null, expecting layout parameters to be set!
+    val lparams = this.getLayoutParams() as ViewGroup.MarginLayoutParams
+    lparams.setMargins(left, top, right, bottom)
+    this.setLayoutParams(lparams)
+}
+
+public fun View.getMarginLeft() : Int {
+    val lp = this.getLayoutParams()
+    if(lp == null) return 0
+    val lparams = lp as ViewGroup.MarginLayoutParams
+    return lparams.leftMargin
+}
+
 public fun View.setVisible(visible: Boolean) {
     this.setVisibility(if(visible) View.VISIBLE else View.GONE)
 }
