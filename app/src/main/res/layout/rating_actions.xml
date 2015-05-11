@@ -13,27 +13,35 @@
         android:textSize="18sp"
         android:textColor="@color/rating_positive"
         />
-    <ImageView
-        android:id="@+id/vote_up"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_width="@dimen/post_action_view_height"
-        android:layout_height="@dimen/post_action_view_height"
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:paddingTop="2dp"
-        android:scaleType="center"
-        android:src="@drawable/vote_up"
-        />
-    <ImageView
-        android:id="@+id/vote_down"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_width="@dimen/post_action_view_height"
-        android:layout_height="@dimen/post_action_view_height"
-        android:paddingTop="2dp"
-        android:scaleType="center"
-        android:src="@drawable/vote_down"
-        />
-    <ProgressBar
-        android:id="@+id/vote_progress_bar"
-        android:layout_width="@dimen/post_action_view_height"
-        android:layout_height="@dimen/post_action_view_height"
-        />
+        >
+        <!-- these views are wrapped in a frame layout for the sake of animation -->
+        <ImageView
+            android:id="@+id/vote_up"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="@dimen/post_action_view_height"
+            android:layout_height="@dimen/post_action_view_height"
+            android:scaleType="center"
+            android:src="@drawable/vote_up"
+            />
+        <ImageView
+            android:id="@+id/vote_down"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="@dimen/post_action_view_height"
+            android:layout_height="@dimen/post_action_view_height"
+            android:layout_marginLeft="@dimen/post_action_view_height"
+            android:scaleType="center"
+            android:src="@drawable/vote_down"
+            />
+        <ProgressBar
+            android:id="@+id/vote_progress_bar"
+            android:padding="4dp"
+            android:layout_width="@dimen/post_action_view_height"
+            android:layout_height="@dimen/post_action_view_height"
+            android:layout_gravity="center"
+            />
+    </FrameLayout>
 </LinearLayout>

@@ -4,8 +4,12 @@ import advaitaworld.PostFeedAdapter.ViewHolder
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
 import advaitaworld.util.setVisible
+import advaitaworld.util.withEndActionCompat
 import android.content.Intent
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -22,11 +26,24 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 
-public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
+public class PostFeedAdapter(val resources: Resources, val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
     private var data: List<ShortPostInfo> = listOf()
     private val userInfoMap: MutableMap<String, User> = hashMapOf()
     private var userDataSubscription: Subscription? = null
     private var voteAction: ((String, Boolean) -> Unit)? = null
+    private val voteUpDrawable : Drawable
+    private val voteUpVotedDrawable : Drawable
+    private val voteDownDrawable : Drawable
+    private val voteDownVotedDrawable : Drawable
+
+    init {
+        voteUpDrawable = resources.getDrawable(R.drawable.vote_up)
+        voteUpVotedDrawable = DrawableCompat.wrap(resources.getDrawable(R.drawable.vote_up).mutate())
+        DrawableCompat.setTint(voteUpVotedDrawable, resources.getColor(R.color.rating_positive))
+        voteDownDrawable = resources.getDrawable(R.drawable.vote_down)
+        voteDownVotedDrawable = DrawableCompat.wrap(resources.getDrawable(R.drawable.vote_down).mutate())
+        DrawableCompat.setTint(voteDownVotedDrawable, resources.getColor(R.color.rating_negative))
+    }
 
     public fun swapData(data: List<ShortPostInfo>) {
         this.data = data
@@ -93,8 +110,7 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         holder.rating.setVisibility(if(post.content.rating != null) View.VISIBLE else View.GONE)
         holder.comments.setText(post.commentCount ?: "")
         holder.expandButton.setVisible(post.isExpandable)
-        // FIXME track if request is not in progress and only then hide
-        holder.voteProgress.setVisible(false)
+        holder.bindVoteViews(post.content.userVote)
     }
 
     override fun getItemCount(): Int {
@@ -111,8 +127,8 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
         val rating = itemView.findViewById(R.id.rating) as TextView
         val avatar = itemView.findViewById(R.id.avatar) as ImageView
         val expandButton = itemView.findViewById(R.id.expand_post)
-        val voteUpButton = itemView.findViewById(R.id.vote_up)
-        val voteDownButton = itemView.findViewById(R.id.vote_down)
+        val voteUpButton = itemView.findViewById(R.id.vote_up) as ImageView
+        val voteDownButton = itemView.findViewById(R.id.vote_down) as ImageView
         val voteProgress = itemView.findViewById(R.id.vote_progress_bar)
 
         init {
@@ -153,16 +169,73 @@ public class PostFeedAdapter(val lifecycle: Observable<LifecycleEvent>) : Recycl
                 voteProgress.setScaleX(0.2f)
                 voteProgress.setScaleY(0.2f)
                 voteProgress.animate().scaleX(1f).scaleY(1f).alpha(1f)
+                    .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
                     .setDuration(200)
                     .setStartDelay(200)
-                voteUpButton.postDelayed({ animateVote(false) }, 2000)
-            } else {
-                voteUpButton.setTranslationY(0f)
-                voteUpButton.setAlpha(1f)
-                voteDownButton.setTranslationY(0f)
-                voteDownButton.setAlpha(1f)
-                voteProgress.setVisible(false)
+                voteUpButton.postDelayed({ animateVoteUpFinish(true) }, 2000)
             }
+        }
+
+        private fun animateVoteUpFinish(success: Boolean) {
+            val context = voteUpButton.getContext()
+            voteProgress.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndActionCompat {
+                    voteProgress.setVisible(false)
+                    // vote down will no longer be needed, reset its state
+                    voteDownButton.setVisible(false)
+                    voteDownButton.setTranslationY(0f)
+                    voteDownButton.setAlpha(1f)
+                    // vote up needs its drawable tinted before coming back
+                    voteUpButton.setImageDrawable(voteUpVotedDrawable)
+                    rating.setVisible(true)
+                    rating.setText("+283")
+                    rating.setAlpha(0f)
+                    // above changes will request layout pass, wait for it to finish before continuing
+                    // with animation
+                    rating.post {
+                        rating.setScaleX(0.2f)
+                        rating.setScaleY(0.2f)
+                        rating.animate().alpha(1f).setDuration(200)
+                        rating.animate().scaleX(1f).scaleY(1f).setDuration(200)
+                            .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
+                            .withEndActionCompat {
+                                voteUpButton.animate().alpha(1f).setDuration(200)
+                                voteUpButton.animate().translationY(0f).setDuration(200)
+                                    .setInterpolator(AnimationUtils.loadInterpolator(context, android.R.interpolator.overshoot))
+                            }
+                    }
+                }
+        }
+
+        private fun animateVoteDownFinish(success: Boolean) {
+
+        }
+
+        // sets drawables and resets any results of previous animation on these views,
+        fun bindVoteViews(userVote: Int) {
+            // FIXME track if request is not in progress and only then reset animation properties
+            // otherwise set them up correctly for animation to finish
+            voteProgress.setVisible(false)
+            voteUpButton.setAlpha(1f)
+            voteUpButton.setScaleX(1f)
+            voteUpButton.setScaleY(1f)
+            voteUpButton.setTranslationX(0f)
+            voteUpButton.setTranslationY(0f)
+
+
+            voteDownButton.setAlpha(1f)
+            voteDownButton.setScaleX(1f)
+            voteDownButton.setScaleY(1f)
+            voteDownButton.setTranslationX(0f)
+            voteDownButton.setTranslationY(0f)
+
+            voteUpButton.setVisible(userVote >= 0)
+            voteUpButton.setImageDrawable(if(userVote > 0) voteUpVotedDrawable else voteUpDrawable)
+
+            voteDownButton.setVisible(userVote <= 0)
+            voteDownButton.setImageDrawable(if(userVote < 0) voteDownVotedDrawable else voteDownDrawable)
         }
 
     }
