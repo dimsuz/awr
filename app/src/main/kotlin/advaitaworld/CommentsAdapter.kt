@@ -215,7 +215,7 @@ private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, use
     }
     holder.ratingView.setVisible(content.rating != null)
     holder.textView.setText(content.text)
-    if(!itemInfo.isInStaircase && itemInfo.node.deepChildCount != 0 && holder.getPosition() != 0) {
+    if(!itemInfo.isInStaircase && itemInfo.node.deepChildCount != 0 && holder.getAdapterPosition() != 0) {
         val count = itemInfo.node.deepChildCount
         val s = holder.expandText.getResources().getQuantityString(R.plurals.commentses, count, count)
         holder.expandView.setVisible(true)
@@ -227,7 +227,7 @@ private fun bindCommentHolder(holder: CommentViewHolder, itemInfo: ItemInfo, use
 
     // 'staircase' of replies can appear only on top and all views in it must share the same
     // higher elevation - as they go first
-    setContentElevation(holder, isTopContent = itemInfo.isInStaircase || holder.getPosition() == 0)
+    setContentElevation(holder, isTopContent = itemInfo.isInStaircase || holder.getAdapterPosition() == 0)
 }
 
 private fun updateAvatarView(avatarView: ImageView, userName: String, userInfoMap: Map<String, User>) {
