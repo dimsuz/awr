@@ -39,6 +39,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
     }
 
     private var expandCommentAction: ((CommentNode) -> Unit)? = null
+    private var commentClickAction: ((CommentNode) -> Unit)? = null
     private var data: List<ItemInfo> = listOf()
     private var postData: PostData = emptyPostData()
     private var userDataSubscription: Subscription? = null
@@ -87,8 +88,12 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         return data
     }
 
-    public fun setExpandCommentAction(action: (CommentNode) -> Unit) {
+    public fun setCommentExpandAction(action: (CommentNode) -> Unit) {
         expandCommentAction = action
+    }
+
+    public fun setCommentClickAction(action: (CommentNode) -> Unit) {
+        commentClickAction = action
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -98,7 +103,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
                 PostViewHolder(inflater.inflate(R.layout.post_content, parent, false))
             }
             ITEM_TYPE_COMMENT -> {
-                CommentViewHolder(inflater.inflate(R.layout.comment, parent, false), expandCommentAction)
+                CommentViewHolder(inflater.inflate(R.layout.comment, parent, false), expandCommentAction, commentClickAction)
             }
             else -> throw RuntimeException("unknown view type")
         }
@@ -142,7 +147,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         var itemInfo : ItemInfo?
     }
 
-    class CommentViewHolder(itemView: View, expandAction: ((CommentNode) -> Unit)?) :
+    class CommentViewHolder(itemView: View, expandAction: ((CommentNode) -> Unit)?, clickAction: ((CommentNode) -> Unit)?) :
             RecyclerView.ViewHolder(itemView), OnClickListener, ItemInfoHolder {
 
         val avatarView = itemView.findViewById(R.id.avatar) as ImageView
@@ -155,6 +160,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         // (when this is no longer the case, just rename expandText to expandView and remove line below)
         val expandView = expandText.getParent() as View
         val expandAction: ((CommentNode) -> Unit)? = expandAction
+        val clickAction: ((CommentNode) -> Unit)? = clickAction
         val ratingNegColor = itemView.getResources().getColor(R.color.rating_bg_negative)
         val ratingPosColor = itemView.getResources().getColor(R.color.rating_bg_positive)
         override var itemInfo : ItemInfo? = null
@@ -163,11 +169,18 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
             if(expandAction != null) {
                 expandView.setOnClickListener(this)
             }
+            if(clickAction != null) {
+                itemView.setOnClickListener(this)
+            }
         }
 
         override fun onClick(view: View) {
             val n = itemInfo?.node
-            val action = expandAction
+            val action = when(view) {
+                expandView -> expandAction
+                itemView -> clickAction
+                else -> null
+            }
             if(n != null && action != null) {
                 action(n)
             }

@@ -8,6 +8,7 @@ import advaitaworld.util.CommentThreadsDecoration
 import advaitaworld.util.LoadIndicator
 import advaitaworld.util.StaircaseItemDecoration
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -70,12 +71,20 @@ public class CommentsActivity : BaseActivity(BaseActivity.Config(R.layout.activi
         listView.setItemAnimator(null)
         listView.setAdapter(adapter)
 
-        adapter.setExpandCommentAction { node ->
+        // FIXME this is quite some duplication going on between this and PostActivity, fix it!
+        adapter.setCommentExpandAction { node ->
             if(listView.getItemAnimator() == null) {
                 listView.setItemAnimator(itemAnimator)
             }
             navHistory.addLast(currentPath)
             navigateToPath(node.path)
+        }
+        adapter.setCommentClickAction { node ->
+            val dialog = AlertDialog.Builder(this)
+                .setTitle(R.string.actions_menu_title)
+                .setItems(R.array.comment_actions, null)
+                .create()
+            dialog.show()
         }
 
         return listView

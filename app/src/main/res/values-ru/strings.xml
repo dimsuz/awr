@@ -20,4 +20,8 @@
     <string name="hint_login">Логин</string>
     <string name="hint_password">Пароль</string>
     <string name="auth_error_missing_credentials">Необходимо указать логин и пароль</string>
+    <string name="actions_menu_title">Действия</string>
+    <string name="reply">Ответить</string>
+    <string name="vote_comment_up">Поставить +1</string>
+    <string name="vote_comment_down">Поставить -1</string>
 </resources>

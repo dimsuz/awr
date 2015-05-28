@@ -19,4 +19,8 @@
     <string name="hint_login">Login</string>
     <string name="hint_password">Password</string>
     <string name="auth_error_missing_credentials">Login or password are not specified</string>
+    <string name="actions_menu_title">Actions</string>
+    <string name="reply">Reply</string>
+    <string name="vote_comment_up">Vote +1</string>
+    <string name="vote_comment_down">Vote -1</string>
 </resources>

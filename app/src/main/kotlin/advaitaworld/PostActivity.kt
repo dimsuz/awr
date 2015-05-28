@@ -5,6 +5,7 @@ import advaitaworld.util.*
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
@@ -54,11 +55,19 @@ public class PostActivity : BaseActivity(BaseActivity.Config(R.layout.activity_p
         listView.addItemDecoration(CommentThreadsDecoration(getResources()))
         listView.setAdapter(adapter)
 
-        adapter.setExpandCommentAction { node ->
+        // FIXME this is quite some duplication going on between this and CommentsActivity, fix it!
+        adapter.setCommentExpandAction { node ->
             val intent = Intent(this, javaClass<CommentsActivity>())
             intent.putExtra(EXTRA_POST_ID, postId)
             intent.putExtra(EXTRA_COMMENT_PATH, node.path)
             startActivity(intent)
+        }
+        adapter.setCommentClickAction { node ->
+            val dialog = AlertDialog.Builder(this)
+                .setTitle(R.string.actions_menu_title)
+                .setItems(R.array.comment_actions, null)
+                .create()
+            dialog.show()
         }
 
         return listView
