@@ -23,6 +23,8 @@ public enum class Section(val nameResId: Int) {
 public class Server(context: Context, cache: Cache) {
     private val client = OkHttpClient()
     private val cache = cache
+    private val parseAssistant = AwParseAssistant()
+    val urls = parseAssistant.urlProvider()
 
     init {
         if(client.getCookieHandler() == null) {
@@ -33,14 +35,14 @@ public class Server(context: Context, cache: Cache) {
 
     public fun getPosts(section: Section, mediaResolver: MediaResolver) : Observable<List<ShortPostInfo>> {
         Timber.d("getting posts for $section")
-        return runMockableRequest(client, sectionUrl(section))
-                .map({ parsePostFeed(it.string(), mediaResolver) })
+        return runMockableRequest(client, urls.sectionUrl(section))
+                .map({ parseAssistant.parsePostFeed(it.string(), mediaResolver) })
     }
 
     public fun getFullPost(postId: String, mediaResolver: MediaResolver) : Observable<PostData> {
-        Timber.d("getting full post: ${postUrl(postId)}")
-        val requestObservable = runMockableRequest(client, postUrl(postId))
-            .map { parseFullPost(it.byteStream(), baseUri = BASE_URL, mediaResolver = mediaResolver) }
+        Timber.d("getting full post: ${urls.postUrl(postId)}")
+        val requestObservable = runMockableRequest(client, urls.postUrl(postId))
+            .map { parseFullPost(it.byteStream(), baseUri = urls.baseUrl, mediaResolver = mediaResolver) }
             .doOnNext { postData -> Timber.d("saving $postId to cache") }
             .doOnNext { postData -> cache.saveFullPost(postId, postData) }
 
@@ -50,9 +52,9 @@ public class Server(context: Context, cache: Cache) {
     }
 
     public fun getUserInfo(name: String) : Observable<User> {
-        Timber.d("getting user info at: ${profileUrl(name)}")
-        return runRequest(client, profileUrl(name))
-                .map({ parseUserProfile(name, it.string()) })
+        Timber.d("getting user info at: ${urls.profileUrl(name)}")
+        return runRequest(client, urls.profileUrl(name))
+                .map({ parseAssistant.parseUserProfile(name, it.string()) })
     }
 
     /**
@@ -87,8 +89,8 @@ public class Server(context: Context, cache: Cache) {
         //   - retrieve a main page to ensure that cookies and securityLsKey are retrieved
         //   - execute a login request itself
         //   - retrieve a main page again and extract a logged in user name from it
-        return runRequest(client, sectionUrl(Section.Popular))
-            .map { extractSecurityKey(it.charStream()) }
+        return runRequest(client, urls.sectionUrl(Section.Popular))
+            .map { parseAssistant.extractSecurityKey(it.charStream()) }
             .flatMap { securityKey ->
                 runRequest(client, loginRequest(userLogin, userPassword, securityKey))
                     .map { responseBody -> Pair(responseBody, securityKey) }
@@ -103,12 +105,12 @@ public class Server(context: Context, cache: Cache) {
             }
             // request a page again, this time user will be logged in, his name should appear
             .flatMap { bodyKeyPair ->
-                runRequest(client, sectionUrl(Section.Popular))
+                runRequest(client, urls.sectionUrl(Section.Popular))
                     .map { responseBody -> Pair(responseBody, bodyKeyPair.second) }
             }
             // start assembling finalized ProfileInfo: get user name. login, securityKey are known
             .map { bodyKeyPair ->
-                val userName = extractUserName(bodyKeyPair.first.charStream())
+                val userName = parseAssistant.extractLoggedUserName(bodyKeyPair.first.charStream())
                 ProfileInfo(userName, userLogin, "", bodyKeyPair.second)
             }
             // finally a last piece: avatar url
@@ -123,35 +125,7 @@ public class Server(context: Context, cache: Cache) {
      * Logs out currently signed in user
      */
     public fun logoutUser(profileInfo: ProfileInfo) : Observable<Unit> {
-        return runRequest(client, logoutUrl(profileInfo.securityKey)).map {}
-    }
-
-    private val BASE_URL = "http://advaitaworld.com"
-    // some other implementation of Server could use different urls
-    fun sectionUrl(section: Section) : String {
-        return when(section) {
-            Section.Popular -> BASE_URL
-            Section.Community -> "$BASE_URL/blog"
-            Section.Personal -> "$BASE_URL/personal_blog"
-            else -> throw RuntimeException("unknown section")
-        }
-    }
-
-    // some other implementation of Server could use different urls
-    fun profileUrl(name: String) : String {
-        return "$BASE_URL/profile/$name"
-    }
-
-    fun postUrl(postId: String) : String {
-        return "$BASE_URL/blog/$postId.html"
-    }
-
-    fun logoutUrl(securityKey: String) : String {
-        return "$BASE_URL/login/exit/?security_ls_key=$securityKey"
-    }
-
-    fun loginUrl() : String {
-        return "$BASE_URL/login/ajax-login/"
+        return runRequest(client, urls.logoutUrl(profileInfo.securityKey)).map {}
     }
 
     private fun loginRequest(userLogin: String, password: String, securityKey: String): Request {
@@ -165,58 +139,9 @@ public class Server(context: Context, cache: Cache) {
             .add("remember", "on")
             .build()
         return Request.Builder()
-            .url(loginUrl())
+            .url(urls.loginUrl())
             .post(postBody)
             .build()
-    }
-}
-
-private fun parseUserProfile(name: String, html: String): User {
-    Timber.d("parsing profile for $name")
-    val document = Jsoup.parse(html)
-    val imgElem = document.select("div.profile-top > .avatar > img")
-    val imgUrl = imgElem.get(0).attr("src")
-    return User(name, imgUrl)
-}
-
-/**
- * Extracts a security key by parsing a html of main page
- */
-private fun extractSecurityKey(content: Reader) : String {
-    Timber.e("searching for security key")
-    val pattern = Pattern.compile("LIVESTREET_SECURITY_KEY.*'(.+)'.*")
-    return extractLine(content, pattern)
-}
-
-/**
- * Extracts a username of currently logged in user by parsing a html of main page.
- * Should be used on content fetched after a successful login
- */
-private fun extractUserName(content: Reader) : String {
-    Timber.e("searching for user name")
-    val pattern = Pattern.compile("footer-list-header.+img.+avatar.+>(.+):.*</li>")
-    return extractLine(content, pattern)
-}
-
-// Searches content line-by-line until pattern matches, returns result of group(1) on match
-private fun extractLine(content: Reader, pattern: Pattern) : String {
-    val reader = BufferedReader(content)
-    try {
-        // FIXME these two lines are here instead of just reader.lines().filter(...)
-        // because of some weird type inference bug of kotlin compiler
-        // see https://devnet.jetbrains.com/message/5540845, and remove them after it's fixed
-        // upd: even worse, it crashes at runtime with LinkageError, rewriting in imperative style...
-        var line = reader.readLine()
-        while(line != null) {
-            val matcher = pattern.matcher(line)
-            if(matcher.find()) {
-                return matcher.group(1)
-            }
-            line = reader.readLine()
-        }
-        throw RuntimeException("failed to find line matching pattern $pattern")
-    } finally {
-        reader.close()
     }
 }
 
@@ -250,7 +175,7 @@ public fun initMockData(context: Context, server: Server) {
         val stream = context.getAssets().open(fileName)
         return java.util.Scanner(stream).useDelimiter("\\A").next()
     }
-    MOCK_URL_DATA.put(server.sectionUrl(Section.Popular),
+    MOCK_URL_DATA.put(server.urls.sectionUrl(Section.Popular),
             assetToString("main_test.html"))
-    MOCK_URL_DATA.put(server.postUrl(TEST_POST_ID), assetToString("full_post_test_shorter.html"))
+    MOCK_URL_DATA.put(server.urls.postUrl(TEST_POST_ID), assetToString("full_post_test_shorter.html"))
 }

@@ -2,34 +2,12 @@ package advaitaworld.parsing
 
 import android.text.Spanned
 import android.text.style.ClickableSpan
-import org.jsoup.Jsoup
 
-fun parsePostFeed(content: String, mediaResolver: MediaResolver): List<ShortPostInfo> {
-    val document = Jsoup.parse(content)
-    val posts = document.select("article.topic")
-    val parsedPosts = posts.map({ postElem ->
-        val text = postElem.selectFirst(".topic-content").html()
-        val author = postElem.selectFirst("a.user").text()
-        val dateString = postElem.selectFirst(".topic-info-date > time").text()
-        val commentElem = postElem.select(".topic-info-comments > a > span")
-        val commentCount = if(!commentElem.isEmpty()) commentElem.get(0).text() else null
-        val voteCountStr = postElem.selectFirst(".vote-count > span").text()
-        val voteCount = parsePostVoteCount(voteCountStr)
-        val postTitleElem = postElem.selectFirst("h2.topic-title > a")
-        val postTitle = postTitleElem.text()
-        val postLink = postTitleElem.attr("href")
-        val postId = parsePostLink(postLink)!!
-        val parsedPost = parseHtmlContent(text, mediaResolver)
-        val shortenedPost = shortenForDisplay(parsedPost)
-        val contentInfo = ContentInfo(author, shortenedPost, dateString, voteCount)
-        ShortPostInfo(postId, postTitle, contentInfo,
-            isExpandable = parsedPost.length() != shortenedPost.length(),
-            commentCount = commentCount)
-    })
-    return parsedPosts
-}
+//
+// Contains parsing utility functions common for LiveStreet based websites, across themes
+//
 
-private fun shortenForDisplay(text: CharSequence) : CharSequence {
+public fun shortenForDisplay(text: CharSequence) : CharSequence {
     val maxLength = getMaxLength(text)
     if(text.length() <= maxLength) {
         return text
@@ -86,4 +64,3 @@ private fun findCutPoint(s: String) : Int {
     // if cutIdx == -1 here: who in their right mind would submit a text without any delimeters? oh, well...
     return if(cutIdx != -1) Math.min(cutIdx+1, s.length()) else s.length()
 }
-
