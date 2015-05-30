@@ -122,7 +122,7 @@ public class StockLsParseAssistant : ParseAssistant {
     override fun parseUserProfile(name: String, html: String): User {
         Timber.d("parsing profile for $name")
         val document = Jsoup.parse(html)
-        val imgElem = document.select("div.profile-top > .avatar > img")
+        val imgElem = document.select("div.profile-info-about > .avatar > img")
         val imgUrl = imgElem.get(0).attr("src")
         return User(name, imgUrl)
     }
@@ -167,7 +167,7 @@ public class StockLsParseAssistant : ParseAssistant {
      */
     override fun extractLoggedUserName(content: Reader) : String {
         Timber.d("searching for logged in user name...")
-        val pattern = Pattern.compile("footer-list-header.+img.+avatar.+>(.+):.*</li>")
+        val pattern = Pattern.compile("footer-list-header.+>(.+?)</li>")
         return matchLinewise(content, pattern) ?: throw RuntimeException("failed extract user logged name")
     }
 
