@@ -147,13 +147,15 @@ public class PostFeedAdapter(resources: Resources,
                 val errorAction : (Throwable) -> Unit
                 when(isVoteUp) {
                     true -> {
-                        observable = voteRequestSender.sendVoteUpRequest(postId)
+                        observable = voteRequestSender.sendVoteRequest(postId, true)
                         successAction = { newRating: String -> animateVoteUpFinish(true, newRating) }
+                        // FIXME show error to user somehow
                         errorAction = { Timber.e(it, "failed to update rating"); animateVoteUpFinish(false, newRating = "") }
                     }
                     else -> {
-                        observable = voteRequestSender.sendVoteDownRequest(postId)
+                        observable = voteRequestSender.sendVoteRequest(postId, false)
                         successAction = { newRating: String -> animateVoteDownFinish(true, newRating) }
+                        // FIXME show error to user somehow
                         errorAction = { Timber.e(it, "failed to update rating"); animateVoteUpFinish(false, newRating = "") }
                     }
                 }
@@ -314,11 +316,7 @@ public class PostFeedAdapter(resources: Resources,
 
 public interface VoteRequestSender {
     /**
-     * Sends a rating vote up request and returns a new rating as string
+     * Sends a rating vote request and returns a new rating as string
      */
-    fun sendVoteUpRequest(postId: String) : Observable<String>
-    /**
-     * Sends a rating vote up request and returns a new rating as string
-     */
-    fun sendVoteDownRequest(postId: String) : Observable<String>
+    fun sendVoteRequest(postId: String, isVoteUp: Boolean) : Observable<String>
 }

@@ -40,6 +40,24 @@ public class Server(context: Context, cache: Cache) {
                 .map({ parseAssistant.parsePostFeed(it.string(), mediaResolver) })
     }
 
+    /**
+     * Sends a vote request and returns a string with the new rating ("+33" or "-33")
+     */
+    public fun voteForPost(profileInfo: ProfileInfo, postId: String, isVoteUp: Boolean) : Observable<String> {
+        return runRequest(client, createVotePostRequest(postId, isVoteUp, profileInfo.securityKey))
+            .map { responseBody ->
+                val body = responseBody.string()
+                Timber.d("body is: $body")
+                val error = extractAjaxErrorMaybe(body)
+                if(error != null) {
+                    Timber.e("vote for post $postId failed: $error")
+                    throw RuntimeException(error)
+                }
+                val rating = extractVoteResultRating(body)
+                if(rating.charAt(0) != '-' && rating.charAt(0) != '+') "+$rating" else rating
+            }
+    }
+
     public fun getFullPost(postId: String, mediaResolver: MediaResolver) : Observable<PostData> {
         Timber.d("getting full post: ${urls.postUrl(postId)}")
         val requestObservable = runMockableRequest(client, urls.postUrl(postId))
@@ -93,11 +111,11 @@ public class Server(context: Context, cache: Cache) {
         return runRequest(client, urls.sectionUrl(Section.Popular))
             .map { parseAssistant.extractSecurityKey(it.charStream()) }
             .flatMap { securityKey ->
-                runRequest(client, loginRequest(userLogin, userPassword, securityKey))
+                runRequest(client, createLoginRequest(userLogin, userPassword, securityKey))
                     .map { responseBody -> Pair(responseBody, securityKey) }
             }
             .map { bodyKeyPair ->
-                val error = extractLoginErrorMaybe(bodyKeyPair.first.string())
+                val error = extractAjaxErrorMaybe(bodyKeyPair.first.string())
                 if(error != null) {
                     Timber.e("login failed: $error")
                     throw RuntimeException(error)
@@ -134,7 +152,7 @@ public class Server(context: Context, cache: Cache) {
         return runRequest(client, urls.logoutUrl(profileInfo.securityKey)).map {}
     }
 
-    private fun loginRequest(userLogin: String, password: String, securityKey: String): Request {
+    private fun createLoginRequest(userLogin: String, password: String, securityKey: String): Request {
         if(advaitaworld.BuildConfig.DEBUG) {
             Timber.d("creating login request:\nuser=$userLogin,\nsecurityKey=$securityKey")
         }
@@ -149,18 +167,38 @@ public class Server(context: Context, cache: Cache) {
             .post(postBody)
             .build()
     }
+
+    private fun createVotePostRequest(postId: String, isVoteUp: Boolean, securityKey: String): Request {
+        if(advaitaworld.BuildConfig.DEBUG) {
+            Timber.d("creating vote post request:\npostId=$postId,\nisVoteUp=$isVoteUp\nsecurityKey=$securityKey")
+        }
+        val postBody = FormEncodingBuilder()
+            .add("value", if(isVoteUp) "1" else "-1")
+            .add("idTopic", postId)
+            .add("security_ls_key", securityKey)
+            .build()
+        return Request.Builder()
+            .url(urls.voteForPostUrl())
+            .post(postBody)
+            .build()
+    }
 }
 
 /**
- * Finds if login response had an error, returns a localized string description
+ * Finds if LS ajax response had an error, returns a localized string description
  */
-private fun extractLoginErrorMaybe(content: String) : String? {
+private fun extractAjaxErrorMaybe(content: String) : String? {
     val jsonObj = JSONObject(content)
     if(jsonObj.getBoolean("bStateError")) {
         return jsonObj.getString("sMsg")
     } else {
         return null
     }
+}
+
+private fun extractVoteResultRating(content: String) : String {
+    val jsonObj = JSONObject(content)
+    return jsonObj.getString("iRating")
 }
 
 // FIXME remove when mocking is not needed, use directly

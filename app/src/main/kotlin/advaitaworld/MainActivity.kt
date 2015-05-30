@@ -21,7 +21,6 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 import java.util.EnumMap
-import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
 public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_main)) {
@@ -130,14 +129,17 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
 
     public fun createVoteRequestSender() : VoteRequestSender {
         return object : VoteRequestSender {
-            override fun sendVoteUpRequest(postId: String): Observable<String> {
-                return Observable.just("+33").delay(2000, TimeUnit.MILLISECONDS)
+            override fun sendVoteRequest(postId: String, isVoteUp: Boolean): Observable<String> {
+                val context = this@MainActivity
+                val profileManager = AnApplication.get(context).profileManager
+                val profile = profileManager.getCurrentUserProfile(context)
+                if(profile != null) {
+                    val server = AnApplication.get(context).server
+                    return server.voteForPost(profile, postId, isVoteUp)
+                } else {
+                    throw RuntimeException("tried to vote without login!")
+                }
             }
-
-            override fun sendVoteDownRequest(postId: String): Observable<String> {
-                return Observable.just("-33").delay(2000, TimeUnit.MILLISECONDS)
-            }
-
         }
     }
 }

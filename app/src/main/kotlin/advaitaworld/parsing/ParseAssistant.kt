@@ -21,6 +21,7 @@ interface UrlProvider {
     fun postUrl(postId: String) : String
     fun logoutUrl(securityKey: String) : String
     fun loginUrl() : String
+    fun voteForPostUrl() : String
 }
 
 public class LiveStreetUrlProvider(baseUrl : String) : UrlProvider {
@@ -50,6 +51,10 @@ public class LiveStreetUrlProvider(baseUrl : String) : UrlProvider {
 
     override fun loginUrl() : String {
         return "$baseUrl/login/ajax-login/"
+    }
+
+    override fun voteForPostUrl() : String {
+        return "$baseUrl/ajax/vote/topic/"
     }
 }
 
