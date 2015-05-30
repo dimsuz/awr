@@ -94,7 +94,7 @@ public class AwParseAssistant : ParseAssistant {
      * Extracts a security key by parsing a html of main page
      */
     override fun extractSecurityKey(content: Reader) : String {
-        Timber.e("searching for security key")
+        Timber.d("searching for security key")
         val pattern = Pattern.compile("LIVESTREET_SECURITY_KEY.*'(.+)'.*")
         return matchLinewise(content, pattern) ?: throw RuntimeException("failed extract security ls key")
     }
@@ -104,7 +104,7 @@ public class AwParseAssistant : ParseAssistant {
      * Should be used on content fetched after a successful login
      */
     override fun extractLoggedUserName(content: Reader) : String {
-        Timber.e("searching for user name")
+        Timber.d("searching for logged in user name...")
         val pattern = Pattern.compile("footer-list-header.+img.+avatar.+>(.+):.*</li>")
         return matchLinewise(content, pattern) ?: throw RuntimeException("failed extract user logged name")
     }
@@ -156,7 +156,7 @@ public class StockLsParseAssistant : ParseAssistant {
      * Extracts a security key by parsing a html of main page
      */
     override fun extractSecurityKey(content: Reader) : String {
-        Timber.e("searching for security key")
+        Timber.d("searching for security key")
         val pattern = Pattern.compile("LIVESTREET_SECURITY_KEY.*'(.+)'.*")
         return matchLinewise(content, pattern) ?: throw RuntimeException("failed extract security ls key")
     }
@@ -166,7 +166,7 @@ public class StockLsParseAssistant : ParseAssistant {
      * Should be used on content fetched after a successful login
      */
     override fun extractLoggedUserName(content: Reader) : String {
-        Timber.e("searching for user name")
+        Timber.d("searching for logged in user name...")
         val pattern = Pattern.compile("footer-list-header.+img.+avatar.+>(.+):.*</li>")
         return matchLinewise(content, pattern) ?: throw RuntimeException("failed extract user logged name")
     }
