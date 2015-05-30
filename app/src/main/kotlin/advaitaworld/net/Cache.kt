@@ -5,7 +5,7 @@ import android.util.SparseArray
 import rx.Observable
 import timber.log.Timber
 
-public trait Cache {
+public interface Cache {
     /**
      * Returns an observable which will either emit a post data retrieved from cache or will call
      * <em>onError</em> if no data for this post is cached

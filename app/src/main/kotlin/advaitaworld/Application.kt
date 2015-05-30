@@ -21,7 +21,7 @@ public class AnApplication : Application() {
         private set
 
     companion object {
-        [platformStatic]
+        @platformStatic
         fun get(context: Context) : AnApplication {
             return context.getApplicationContext() as AnApplication
         }

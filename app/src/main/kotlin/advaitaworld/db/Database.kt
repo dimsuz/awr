@@ -18,7 +18,7 @@ public class Database(context: Context) {
      * Saves user info to the database.
      * Will throw an exception if saving fails.
      */
-    [synchronized]
+    @synchronized
     public fun saveUser(user: User) {
         val db = helper.getWritableDatabase()
         val values = ContentValues()
@@ -32,10 +32,10 @@ public class Database(context: Context) {
      * Returns a list of users with matching names.
      * Pass an empty list to get all users.
      */
-    [synchronized]
+    @synchronized
     public fun getUsersByName(names: List<String>) : List<User> {
         val db = helper.getWritableDatabase()
-        val cursor = db.query(USERS_TABLE, array(USERS_COLUMN_NAME, USERS_COLUMN_AVATAR_URL),
+        val cursor = db.query(USERS_TABLE, arrayOf(USERS_COLUMN_NAME, USERS_COLUMN_AVATAR_URL),
                 "$USERS_COLUMN_NAME IN (${names.join("','", "'", "'")})", null, null, null, null)
         val result : MutableList<User> = arrayListOf()
         val nameIdx = cursor.getColumnIndexOrThrow(USERS_COLUMN_NAME)

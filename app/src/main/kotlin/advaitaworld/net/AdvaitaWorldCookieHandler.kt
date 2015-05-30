@@ -40,8 +40,7 @@ public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHan
 
     // maps cookie names to whether to store them permanently across sessions or not
     private data class CookieConfig(val name: String, val storeAcrossSessions: Boolean)
-    private val cookieConfigs = array(
-        CookieConfig(SESSION_ID_COOKIE_NAME, false),
+    private val cookieConfigs = arrayOf(CookieConfig(SESSION_ID_COOKIE_NAME, false),
         CookieConfig(KEY_COOKIE_NAME, true))
 
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {

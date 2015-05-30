@@ -28,7 +28,7 @@ public class CommentsActivity : BaseActivity(BaseActivity.Config(R.layout.activi
     private val itemAnimator = DefaultItemAnimator()
     private val navHistory = ArrayDeque<LongArray>()
     private var layoutManager: LinearLayoutManager? = null
-    private var currentPath: LongArray = longArray()
+    private var currentPath: LongArray = longArrayOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -142,7 +142,7 @@ fun prepareAdapterData(postData: PostData, startPath: LongArray?) : Pair<PostDat
  * Returns a copy of PostData which has only comments starting with the one pointed by path
  */
 private fun PostData.limitToNode(path: LongArray): PostData {
-    val targetComment = this.comments.sequence()
+    val targetComment = this.comments.asSequence()
             .map { it.findByPath(path) }
             .filter { it != null }
             .take(1)

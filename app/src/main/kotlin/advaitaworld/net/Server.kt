@@ -15,9 +15,9 @@ import java.util.Scanner
 import java.util.regex.Pattern
 
 public enum class Section(val nameResId: Int) {
-    Popular : Section(advaitaworld.R.string.section_main)
-    Community : Section(advaitaworld.R.string.section_blogs)
-    Personal : Section(advaitaworld.R.string.section_personal_blogs)
+    Popular(advaitaworld.R.string.section_main),
+    Community(advaitaworld.R.string.section_blogs),
+    Personal(advaitaworld.R.string.section_personal_blogs)
 }
 
 public class Server(context: Context, cache: Cache) {

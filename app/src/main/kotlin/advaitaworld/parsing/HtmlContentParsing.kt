@@ -9,7 +9,7 @@ import android.text.Html
 import com.squareup.picasso.Picasso
 import timber.log.Timber
 
-public trait MediaResolver {
+public interface MediaResolver {
     fun resolveImage(href: String) : Drawable
 }
 

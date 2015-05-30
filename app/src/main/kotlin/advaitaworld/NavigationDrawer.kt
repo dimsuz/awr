@@ -100,11 +100,10 @@ private fun createDrawerItems(activity: Activity, isLoggedIn: Boolean) : Array<I
         .withTag(javaClass<AuthActivity>())
         .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
         .withName(R.string.login)
-    val items = array<IDrawerItem>(
-        PrimaryDrawerItem()
-            .withTag(javaClass<MainActivity>())
-            .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
-            .withName(R.string.home),
+    val items = arrayOf<IDrawerItem>(PrimaryDrawerItem()
+        .withTag(javaClass<MainActivity>())
+        .withIcon(activity, R.drawable.ic_account_box_grey600_24dp)
+        .withName(R.string.home),
         PrimaryDrawerItem()
             .withIcon(activity, R.drawable.ic_settings_grey600_24dp)
             .withName(R.string.settings),
@@ -123,7 +122,7 @@ private fun createDrawerItems(activity: Activity, isLoggedIn: Boolean) : Array<I
     if(!isLoggedIn) {
         val result = arrayListOf<IDrawerItem>(loginItem)
         result.addAll(items)
-        return result.copyToArray()
+        return result.toTypedArray()
     } else {
         return items
     }

@@ -5,8 +5,8 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.subjects.PublishSubject
 
 public enum class Events(private val subject : PublishSubject<Any>) {
-    UserLogin : Events(PublishSubject.create())
-    UserLogout : Events(PublishSubject.create())
+    UserLogin(PublishSubject.create()),
+    UserLogout(PublishSubject.create());
 
     public fun fire() {
         subject.onNext(true)

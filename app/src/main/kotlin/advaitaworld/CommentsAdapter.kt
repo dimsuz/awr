@@ -143,7 +143,7 @@ class CommentsAdapter(val lifecycle: Observable<LifecycleEvent>, val showPost: B
         return data.get(pos)
     }
 
-    trait ItemInfoHolder {
+    interface ItemInfoHolder {
         var itemInfo : ItemInfo?
     }
 

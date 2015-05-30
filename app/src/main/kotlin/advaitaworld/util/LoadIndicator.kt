@@ -19,7 +19,7 @@ import rx.android.schedulers.AndroidSchedulers
  * A transformer which can be composed onto some Observable to provide an convenient
  * way to show a loading indicator (progress bar) until it completes
  */
-public class LoadIndicator<T> private (private val container: ViewGroup,
+public class LoadIndicator<T> private constructor(private val container: ViewGroup,
                                        private val config: LoadIndicator.Config,
                                        private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>?)
 : Observable.Transformer<T,T> {
@@ -31,7 +31,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
          * @param observable is used purely to aid in type inference, to avoid the need for
          * the caller to explicitly specify type
          */
-        [suppress("UNUSED_PARAMETER")]
+        @suppress("UNUSED_PARAMETER")
         fun <T> createFor(observable: Observable<T>) : Builder<T> {
             return Builder()
         }
@@ -44,7 +44,7 @@ public class LoadIndicator<T> private (private val container: ViewGroup,
         val background: Drawable?
     )
 
-    public class Builder<T> internal  () {
+    public class Builder<T> internal constructor() {
         var errorMessageResId = 0
         var retryActionResId = 0
         var retryAction: (() -> Unit)? = null

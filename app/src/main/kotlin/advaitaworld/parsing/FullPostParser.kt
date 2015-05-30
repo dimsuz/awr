@@ -72,7 +72,7 @@ private class Visitor(mediaResolver: MediaResolver, avgCommentPerThreadCount: In
     val mediaResolver = mediaResolver
     val workTree : LongSparseArray<WorkNode> = LongSparseArray(avgCommentPerThreadCount)
     // reusable temporary var to avoid GC
-    val pair = longArray(-1, -1)
+    val pair = longArrayOf(-1, -1)
     var rootNode : CommentNode? = null
 
     override fun head(domNode: Node, depth: Int) {
@@ -114,11 +114,11 @@ private class Visitor(mediaResolver: MediaResolver, avgCommentPerThreadCount: In
         if(parentNode != null) {
             val sz = parentNode.path.size()
             path = parentNode.path.copyOf(sz + 1)
-            path!!.set(sz, id)
+            path.set(sz, id)
         } else {
-            path = longArray(id)
+            path = longArrayOf(id)
         }
-        return path!!
+        return path
     }
 }
 

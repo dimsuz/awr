@@ -312,7 +312,7 @@ public class PostFeedAdapter(resources: Resources,
 
 }
 
-public trait VoteRequestSender {
+public interface VoteRequestSender {
     /**
      * Sends a rating vote up request and returns a new rating as string
      */

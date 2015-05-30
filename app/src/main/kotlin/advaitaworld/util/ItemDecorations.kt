@@ -19,7 +19,7 @@ public class SpaceItemDecoration(val space: Int) : RecyclerView.ItemDecoration()
         outRect.left = space
         outRect.right = space
         outRect.bottom = space
-        outRect.top = if(parent.getChildPosition(view) == 0) space else 0
+        outRect.top = if(parent.getChildAdapterPosition(view) == 0) space else 0
     }
 }
 
@@ -29,7 +29,7 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
         public val VERTICAL_LIST: Int = LinearLayoutManager.VERTICAL
     }
 
-    private val ATTRS = intArray(android.R.attr.listDivider)
+    private val ATTRS = intArrayOf(android.R.attr.listDivider)
     private var mOrientation: Int = HORIZONTAL_LIST
     private var startItem: Int = 0
     private val mDivider: Drawable
@@ -70,7 +70,7 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
         val childCount = parent.getChildCount()
         for (i in 0..childCount - 1) {
             val child = parent.getChildAt(i)
-            if(parent.getChildPosition(child) < startItem) {
+            if(parent.getChildAdapterPosition(child) < startItem) {
                 continue
             }
             val params = child.getLayoutParams() as RecyclerView.LayoutParams
@@ -87,7 +87,7 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
         val childCount = parent.getChildCount()
         for (i in 0..childCount - 1) {
             val child = parent.getChildAt(i)
-            if(parent.getChildPosition(child) < startItem) {
+            if(parent.getChildAdapterPosition(child) < startItem) {
                 continue
             }
             val params = child.getLayoutParams() as RecyclerView.LayoutParams
@@ -99,7 +99,7 @@ public class DividerItemDecoration(context: Context, orientation: Int) : Recycle
     }
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-        if(parent.getChildPosition(view) < startItem) {
+        if(parent.getChildAdapterPosition(view) < startItem) {
             return super.getItemOffsets(outRect, view, parent, state)
         }
         if (mOrientation == VERTICAL_LIST) {
@@ -118,12 +118,11 @@ public class CommentItemDecoration : RecyclerView.ItemDecoration() {
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         if(margin == 0) { margin = view.getResources().getDimensionPixelSize(R.dimen.margin) }
-        val info = getItemInfo(view, parent)
-        if(info == null) { return }
+        val info = getItemInfo(view, parent) ?: return
         val holder = parent.getChildViewHolder(view)
         val hoffset = info.indentLevel * margin * 2
-        val voffsetTop = if(!info.isInStaircase && holder.getPosition() != 0) margin else 0
-        val voffsetBottom = if(holder.getPosition() == state.getItemCount() - 1) margin else 0
+        val voffsetTop = if(!info.isInStaircase && holder.getAdapterPosition() != 0) margin else 0
+        val voffsetBottom = if(holder.getAdapterPosition() == state.getItemCount() - 1) margin else 0
         outRect.set(hoffset, voffsetTop, 0, voffsetBottom)
     }
 }
@@ -206,7 +205,7 @@ public class CommentThreadsDecoration(resources: Resources) : RecyclerView.ItemD
             val itemInfo = getItemInfo(child, parent)
             val needsDecor= itemInfo != null && !itemInfo.isInStaircase && itemInfo.indentLevel > 0
             if (needsDecor) {
-                val lastItem = parent.getChildPosition(child) == state.getItemCount() - 1
+                val lastItem = parent.getChildAdapterPosition(child) == state.getItemCount() - 1
                 val left = child.getLeft().toFloat()
                 val ytip = child.getTop() + child.getHeight() / 2f
                 val ybot = if(!lastItem) child.getBottom().toFloat() else ytip
