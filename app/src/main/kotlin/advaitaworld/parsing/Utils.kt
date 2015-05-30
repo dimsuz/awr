@@ -31,7 +31,7 @@ private fun parsePostVoteCount(s: String): String? {
  * Example:
  * http://advaitaworld.com/blog/48581.html => "48581"
  */
-private val postLinkPattern = Pattern.compile("^http://advaitaworld\\.com.+/(\\d+)\\.html")
+private val postLinkPattern = Pattern.compile("^http://.+/(\\d+)\\.html")
 private fun parsePostLink(link: String) : String? {
     val m = postLinkPattern.matcher(link)
     if(m.matches()) {

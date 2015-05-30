@@ -40,7 +40,7 @@ public class Server(context: Context, cache: Cache) {
     public fun getFullPost(postId: String, mediaResolver: MediaResolver) : Observable<PostData> {
         Timber.d("getting full post: ${postUrl(postId)}")
         val requestObservable = runMockableRequest(client, postUrl(postId))
-            .map { parseFullPost(it.byteStream(), baseUri = "http://advaitaworld.com/", mediaResolver = mediaResolver) }
+            .map { parseFullPost(it.byteStream(), baseUri = BASE_URL, mediaResolver = mediaResolver) }
             .doOnNext { postData -> Timber.d("saving $postId to cache") }
             .doOnNext { postData -> cache.saveFullPost(postId, postData) }
 
@@ -123,27 +123,35 @@ public class Server(context: Context, cache: Cache) {
      * Logs out currently signed in user
      */
     public fun logoutUser(profileInfo: ProfileInfo) : Observable<Unit> {
-        val url = "http://advaitaworld.com/login/exit/?security_ls_key=${profileInfo.securityKey}"
-        return runRequest(client, url).map {}
+        return runRequest(client, logoutUrl(profileInfo.securityKey)).map {}
     }
 
+    private val BASE_URL = "http://advaitaworld.com"
     // some other implementation of Server could use different urls
     fun sectionUrl(section: Section) : String {
         return when(section) {
-            Section.Popular -> "http://advaitaworld.com"
-            Section.Community -> "http://advaitaworld.com/blog/"
-            Section.Personal -> "http://advaitaworld.com/personal_blog/"
+            Section.Popular -> BASE_URL
+            Section.Community -> "$BASE_URL/blog"
+            Section.Personal -> "$BASE_URL/personal_blog"
             else -> throw RuntimeException("unknown section")
         }
     }
 
     // some other implementation of Server could use different urls
     fun profileUrl(name: String) : String {
-        return "http://advaitaworld.com/profile/$name"
+        return "$BASE_URL/profile/$name"
     }
 
     fun postUrl(postId: String) : String {
-        return "http://advaitaworld.com/blog/$postId.html"
+        return "$BASE_URL/blog/$postId.html"
+    }
+
+    fun logoutUrl(securityKey: String) : String {
+        return "$BASE_URL/login/exit/?security_ls_key=$securityKey"
+    }
+
+    fun loginUrl() : String {
+        return "$BASE_URL/login/ajax-login/"
     }
 
     private fun loginRequest(userLogin: String, password: String, securityKey: String): Request {
@@ -157,7 +165,7 @@ public class Server(context: Context, cache: Cache) {
             .add("remember", "on")
             .build()
         return Request.Builder()
-            .url("http://advaitaworld.com/login/ajax-login/")
+            .url(loginUrl())
             .post(postBody)
             .build()
     }
