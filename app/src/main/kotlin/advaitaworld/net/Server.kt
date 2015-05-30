@@ -23,7 +23,8 @@ public enum class Section(val nameResId: Int) {
 public class Server(context: Context, cache: Cache) {
     private val client = OkHttpClient()
     private val cache = cache
-    private val parseAssistant = AwParseAssistant()
+    //private val parseAssistant = AwParseAssistant()
+    private val parseAssistant = StockLsParseAssistant()
     val urls = parseAssistant.urlProvider()
 
     init {
