@@ -8,7 +8,7 @@ import java.net.URI
 import java.util.HashMap
 import java.util.regex.Pattern
 
-public class AdvaitaWorldCookieHandler(private val context: Context) : CookieHandler() {
+public class LiveStreetCookieHandler(private val context: Context) : CookieHandler() {
     public companion object {
         public val SESSION_ID_COOKIE_NAME : String = "PHPSESSID"
         public val KEY_COOKIE_NAME  : String = "key"

@@ -29,7 +29,7 @@ public class Server(context: Context, cache: Cache) {
     init {
         if(client.getCookieHandler() == null) {
             Timber.d("installing a cookie handler")
-            client.setCookieHandler(AdvaitaWorldCookieHandler(context))
+            client.setCookieHandler(LiveStreetCookieHandler(context))
         }
     }
 
