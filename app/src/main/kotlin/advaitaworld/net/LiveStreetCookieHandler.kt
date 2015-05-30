@@ -40,8 +40,19 @@ public class LiveStreetCookieHandler(private val context: Context) : CookieHandl
 
     // maps cookie names to whether to store them permanently across sessions or not
     private data class CookieConfig(val name: String, val storeAcrossSessions: Boolean)
-    private val cookieConfigs = arrayOf(CookieConfig(SESSION_ID_COOKIE_NAME, false),
+    private val cookieConfigs = arrayOf(
+        CookieConfig(SESSION_ID_COOKIE_NAME, false),
         CookieConfig(KEY_COOKIE_NAME, true))
+
+    /**
+     * Clears all authorization related cookies, so all requests will return a not-logged-in versions
+     * of pages
+     */
+    public fun clearAuthCookies() {
+        // for now storing only auth cookies, so just clear all existing
+        sessionCookieStore.clear()
+        getStorePrefs().edit().clear().apply()
+    }
 
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
         // Interested are two cookies:

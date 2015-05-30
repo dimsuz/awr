@@ -119,6 +119,11 @@ public class Server(context: Context, cache: Cache) {
                     .map { ProfileInfo(profileInfo.name, profileInfo.email, it.avatarUrl, profileInfo.securityKey) }
             }
             .doOnNext { cache.clear() }
+            .doOnError {
+                Timber.e("user login is failing, clearing auth cookies in case they were already saved...")
+                val cookieHandler = client.getCookieHandler() as LiveStreetCookieHandler
+                cookieHandler.clearAuthCookies()
+            }
     }
 
     /**

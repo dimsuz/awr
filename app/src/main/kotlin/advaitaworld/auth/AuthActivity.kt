@@ -58,6 +58,7 @@ public class AuthActivity : BaseActivity(BaseActivity.Config(R.layout.activity_a
                     loginButton.postDelayed({ finish() }, 800)
                 },
                 { ex ->
+                    Timber.e(ex, "user login failed")
                     // FIXME display this not in toast, but permanently somewhere in layout
                     Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show()
                     // show error for some time, then reset to default state (for retry)
