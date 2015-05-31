@@ -50,7 +50,7 @@ private fun parsePostLink(link: String) : String? {
 /**
  * Searches content line-by-line until pattern matches, returns result of group(1) on match
  */
-private fun matchLinewise(content: Reader, pattern: Pattern) : String? {
+public fun matchLinewise(content: Reader, pattern: Pattern) : String? {
     val reader = BufferedReader(content)
     try {
         // FIXME these two lines are here instead of just reader.lines().filter(...)

@@ -2,6 +2,8 @@ package advaitaworld.net
 
 import android.content.Context
 import android.content.SharedPreferences
+import rx.Observable
+import rx.subjects.PublishSubject
 import timber.log.Timber
 import java.net.CookieHandler
 import java.net.URI
@@ -9,6 +11,8 @@ import java.util.HashMap
 import java.util.regex.Pattern
 
 public class LiveStreetCookieHandler(private val context: Context) : CookieHandler() {
+    private val changesSubject = PublishSubject.create<CookieInfo>()
+
     public companion object {
         public val SESSION_ID_COOKIE_NAME : String = "PHPSESSID"
         public val KEY_COOKIE_NAME  : String = "key"
@@ -54,24 +58,36 @@ public class LiveStreetCookieHandler(private val context: Context) : CookieHandl
         getStorePrefs().edit().clear().apply()
     }
 
+    /**
+     * Returns an observable which will report a cookie changes.
+     * It will emit notifications only on **changes** to cookies, i.e when a new cookie is added,
+     * or existing one is updated to new value
+     */
+    public fun cookieChanges() : Observable<CookieInfo> {
+        return changesSubject
+    }
+
     override fun put(uri: URI, responseHeaders: Map<String, List<String>>) {
         // Interested are two cookies:
         // PHPSESSID - session id. expires after session ended
         // key - which gets sent for 'remembering' user across sessions. expires after some interval,
         // returned by server.
         // first is saved to the in-memory store, second - in persistent store
-        val cookies = responseHeaders.get("Set-Cookie")
-        if(cookies == null) { return }
+        val cookies = responseHeaders.get("Set-Cookie") ?: return
 
         Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
         for(knownCookie in cookieConfigs) {
             val cookieValue = extractCookie(cookies, knownCookie.name)
             if(cookieValue != null) {
                 Timber.d("  saving '${knownCookie.name}' to a ${if(knownCookie.storeAcrossSessions) "permanent" else "temporary"} cookie store")
+                val prevValue = getCookieValue(knownCookie.name)
                 if(knownCookie.storeAcrossSessions) {
                     getStorePrefs().edit().putString(knownCookie.name, cookieValue).apply()
                 } else {
                     sessionCookieStore.put(knownCookie.name, cookieValue)
+                }
+                if(prevValue != cookieValue) {
+                    changesSubject.onNext(CookieInfo(knownCookie.name, cookieValue))
                 }
             }
         }
@@ -115,3 +131,5 @@ public class LiveStreetCookieHandler(private val context: Context) : CookieHandl
         return null
     }
 }
+
+data class CookieInfo(val name: String, val value: String)
