@@ -4,6 +4,7 @@ public data class ContentInfo(val author: String,
                               val text: CharSequence,
                               val dateString: String,
                               val rating: String? = null,
+                              // shows how user voted - up or down (while rating might be + or -, it is independent)
                               val userVote: Int = 0) {
     fun toShortString(maxTextLength: Int) : String {
         return "[$author]: ${text.subSequence(0, Math.min(maxTextLength, text.length()))}"

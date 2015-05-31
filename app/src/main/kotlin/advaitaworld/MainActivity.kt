@@ -85,7 +85,8 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
                 .showIn(pageListView, adapter))
             .subscribe(
                 { postData ->
-                    adapter.swapData(postData)
+                    val profileManager = AnApplication.get(this).profileManager
+                    adapter.swapData(postData, profileManager.getCurrentUserProfile(this))
                     // after saving main data in adapter, start fetching full user info
                     //fetchUserInfo(postData.map({ it.content.author }))
                 },

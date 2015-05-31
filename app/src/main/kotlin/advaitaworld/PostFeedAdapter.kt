@@ -1,6 +1,7 @@
 package advaitaworld
 
 import advaitaworld.PostFeedAdapter.ViewHolder
+import advaitaworld.parsing.ProfileInfo
 import advaitaworld.parsing.ShortPostInfo
 import advaitaworld.parsing.User
 import advaitaworld.util.*
@@ -29,6 +30,7 @@ public class PostFeedAdapter(resources: Resources,
                              private val voteRequestSender: VoteRequestSender,
                              private val lifecycle: Observable<LifecycleEvent>) : RecyclerView.Adapter<ViewHolder>() {
     private var data: List<ShortPostInfo> = listOf()
+    private var currentUser: ProfileInfo? = null
     private val userInfoMap: MutableMap<String, User> = hashMapOf()
     private var userDataSubscription: Subscription? = null
     private val voteUpDrawable : Drawable
@@ -45,8 +47,9 @@ public class PostFeedAdapter(resources: Resources,
         DrawableCompat.setTint(voteDownVotedDrawable, resources.getColor(R.color.rating_negative))
     }
 
-    public fun swapData(data: List<ShortPostInfo>) {
+    public fun swapData(data: List<ShortPostInfo>, currentUser: ProfileInfo?) {
         this.data = data
+        this.currentUser = currentUser
         notifyDataSetChanged()
         startFetchingUserInfo()
     }
@@ -104,7 +107,7 @@ public class PostFeedAdapter(resources: Resources,
         holder.timestamp.setText(post.content.dateString)
         holder.comments.setText(post.commentCount ?: "")
         holder.expandButton.setVisible(post.isExpandable)
-        holder.bindVoteViews(post.content.userVote)
+        holder.bindVoteViews(currentUser?.name, post.content.author, post.content.userVote)
         holder.bindRatingView(post.content.rating ?: "")
     }
 
@@ -266,15 +269,18 @@ public class PostFeedAdapter(resources: Resources,
         }
 
         // sets drawables and resets any results of previous animation on these views,
-        fun bindVoteViews(userVote: Int) {
+        fun bindVoteViews(currentUserName: String?, postAuthorName: String, userVote: Int) {
             // FIXME track if request is not in progress and only then reset animation properties
             // otherwise set them up correctly for animation to finish
             clearAnimationEffects()
 
-            voteUpButton.setVisible(userVote >= 0)
+            // can vote only when logged in and post is not by logged in user
+            val canVote = currentUserName != null && currentUserName != postAuthorName
+
+            voteUpButton.setVisible(canVote && userVote >= 0)
             voteUpButton.setImageDrawable(if(userVote > 0) voteUpVotedDrawable else voteUpDrawable)
 
-            voteDownButton.setVisible(userVote <= 0)
+            voteDownButton.setVisible(canVote && userVote <= 0)
             voteDownButton.setImageDrawable(if(userVote < 0) voteDownVotedDrawable else voteDownDrawable)
 
             // this needs to correspond with rating_actions.xml
