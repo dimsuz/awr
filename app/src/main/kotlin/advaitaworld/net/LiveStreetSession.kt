@@ -10,7 +10,7 @@ import java.util.Collections
 
 public class LiveStreetSession(private val parseAssitant: ParseAssistant, private val cookieChanges: Observable<CookieInfo>) {
     // NOTE: using a concurrent hash map because session changes are inserted on the main thread,
-    // while getSecurityKey() can be called on any other thread, need to synchronize reads
+    // while getSecurityInfo() can be called on any other thread, need to synchronize reads
     private val sessionIdKeyMap : MutableMap<String, String> = Collections.synchronizedMap(hashMapOf())
 
     init {
@@ -18,7 +18,7 @@ public class LiveStreetSession(private val parseAssitant: ParseAssistant, privat
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 val prevId = if(sessionIdKeyMap.isNotEmpty()) sessionIdKeyMap.keySet().first() else "null"
-                Timber.d("detected a php session id change: ${prevId}} => ${it.value}")
+                Timber.d("detected a php session id change: ${prevId} => ${it.value}, marking securityKey as obsolete")
                 sessionIdKeyMap.clear()
                 sessionIdKeyMap.put(it.value, "")
             })
@@ -29,6 +29,7 @@ public class LiveStreetSession(private val parseAssitant: ParseAssistant, privat
      * This info can be used to send a correct requests to server without it suspecting a CSRF attack
      */
     public fun getSessionInfo(client: OkHttpClient) : Observable<SessionInfo> {
+        Timber.d("retrieving a php session info...")
         val sessionInfo = tryGetCurrentFullInfo(sessionIdKeyMap)
         if(sessionInfo != null) {
             Timber.d("returning a current valid session info: $sessionInfo")
@@ -51,6 +52,7 @@ public class LiveStreetSession(private val parseAssitant: ParseAssistant, privat
             }
         }
 
+        Timber.d("fetching fresh session info from server")
         val sessionId = sessionIdKeyMap.keySet().first()
         return requestObservable
             .map { body ->

@@ -35,7 +35,6 @@ public class ProfileManager(private val server: advaitaworld.net.Server) {
             .putString(PREF_KEY_LAST_LOGIN_NAME, profileInfo.name)
             .putString(PREF_KEY_LAST_LOGIN_EMAIL, profileInfo.email)
             .putString(PREF_KEY_LAST_LOGIN_IMAGE_URL, profileInfo.pictureUrl)
-            .putString(PREF_KEY_LAST_LOGIN_SECURITY_KEY, profileInfo.securityKey)
             .apply()
     }
 
@@ -48,7 +47,6 @@ public class ProfileManager(private val server: advaitaworld.net.Server) {
             .remove(PREF_KEY_LAST_LOGIN_NAME)
             .remove(PREF_KEY_LAST_LOGIN_EMAIL)
             .remove(PREF_KEY_LAST_LOGIN_IMAGE_URL)
-            .remove(PREF_KEY_LAST_LOGIN_SECURITY_KEY)
             .apply()
     }
 
@@ -60,9 +58,8 @@ public class ProfileManager(private val server: advaitaworld.net.Server) {
         val name = prefs.getString(PREF_KEY_LAST_LOGIN_NAME, null)
         val email = prefs.getString(PREF_KEY_LAST_LOGIN_EMAIL, null)
         val pictureUrl = prefs.getString(PREF_KEY_LAST_LOGIN_IMAGE_URL, null)
-        val securityKey = prefs.getString(PREF_KEY_LAST_LOGIN_SECURITY_KEY, null)
-        if(name != null && email != null && pictureUrl != null && securityKey != null) {
-            return ProfileInfo(name, email, pictureUrl, securityKey)
+        if(name != null && email != null && pictureUrl != null) {
+            return ProfileInfo(name, email, pictureUrl)
         } else {
             return null
         }

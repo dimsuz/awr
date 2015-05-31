@@ -26,12 +26,15 @@ public class Server(context: Context, cache: Cache) {
     //private val parseAssistant = AwParseAssistant()
     private val parseAssistant = StockLsParseAssistant()
     val urls = parseAssistant.urlProvider()
+    private val sessionManager : LiveStreetSession
 
     init {
         if(client.getCookieHandler() == null) {
             Timber.d("installing a cookie handler")
             client.setCookieHandler(LiveStreetCookieHandler(context))
         }
+        sessionManager = LiveStreetSession(parseAssistant,
+            (client.getCookieHandler() as LiveStreetCookieHandler).cookieChanges())
     }
 
     public fun getPosts(section: Section, mediaResolver: MediaResolver) : Observable<List<ShortPostInfo>> {
@@ -44,10 +47,15 @@ public class Server(context: Context, cache: Cache) {
      * Sends a vote request and returns a string with the new rating ("+33" or "-33")
      */
     public fun voteForPost(profileInfo: ProfileInfo, postId: String, isVoteUp: Boolean) : Observable<String> {
-        return runRequest(client, createVotePostRequest(postId, isVoteUp, profileInfo.securityKey))
+        // profileInfo is not strictly needed here, but it's a good indication that calling code is
+        // actually ensured that user is logged in and retrieved its profile
+        Timber.d("voting ${if(isVoteUp) "up" else "down"} for post $postId as user ${profileInfo.name}")
+        return sessionManager.getSessionInfo(client)
+            .flatMap { sessionInfo ->
+                runRequest(client, createVotePostRequest(postId, isVoteUp, sessionInfo.securityKey))
+            }
             .map { responseBody ->
                 val body = responseBody.string()
-                Timber.d("body is: $body")
                 val error = extractAjaxErrorMaybe(body)
                 if(error != null) {
                     Timber.e("vote for post $postId failed: $error")
@@ -92,7 +100,7 @@ public class Server(context: Context, cache: Cache) {
         // Login request needs:
         //   - login, password
         //   - remember: "on"/"off"
-        //   - securityLsKey (extracted from html) [required?]
+        //   - securityLsKey (extracted from html), checked by server to ensure CSRF protection
         //   - [PHPSESSID cookie?]
         //
         // Login response contains:
@@ -105,37 +113,34 @@ public class Server(context: Context, cache: Cache) {
         //     proper recognition of user as being logged in
 
         // Login procedure is as follows:
-        //   - retrieve a main page to ensure that cookies and securityLsKey are retrieved
+        //   - retrieve a securityLsKey
         //   - execute a login request itself
         //   - retrieve a main page again and extract a logged in user name from it
-        return runRequest(client, urls.sectionUrl(Section.Popular))
-            .map { parseAssistant.extractSecurityKey(it.charStream()) }
-            .flatMap { securityKey ->
-                runRequest(client, createLoginRequest(userLogin, userPassword, securityKey))
-                    .map { responseBody -> Pair(responseBody, securityKey) }
+        return sessionManager.getSessionInfo(client)
+            .flatMap { sessionInfo ->
+                runRequest(client, createLoginRequest(userLogin, userPassword, sessionInfo.securityKey))
             }
-            .map { bodyKeyPair ->
-                val error = extractAjaxErrorMaybe(bodyKeyPair.first.string())
+            .map { body ->
+                val error = extractAjaxErrorMaybe(body.string())
                 if(error != null) {
                     Timber.e("login failed: $error")
                     throw RuntimeException(error)
                 }
-                bodyKeyPair
+                body
             }
             // request a page again, this time user will be logged in, his name should appear
-            .flatMap { bodyKeyPair ->
+            .flatMap { body ->
                 runRequest(client, urls.sectionUrl(Section.Popular))
-                    .map { responseBody -> Pair(responseBody, bodyKeyPair.second) }
             }
-            // start assembling finalized ProfileInfo: get user name. login, securityKey are known
-            .map { bodyKeyPair ->
-                val userName = parseAssistant.extractLoggedUserName(bodyKeyPair.first.charStream())
-                ProfileInfo(userName, userLogin, "", bodyKeyPair.second)
+            // start assembling finalized ProfileInfo: get user name. login are known
+            .map { body ->
+                val userName = parseAssistant.extractLoggedUserName(body.charStream())
+                ProfileInfo(userName, userLogin, pictureUrl = "")
             }
             // finally a last piece: avatar url
             .flatMap { profileInfo ->
                 getUserInfo(profileInfo.name)
-                    .map { ProfileInfo(profileInfo.name, profileInfo.email, it.avatarUrl, profileInfo.securityKey) }
+                    .map { ProfileInfo(profileInfo.name, profileInfo.email, it.avatarUrl) }
             }
             .doOnNext { cache.clear() }
             .doOnError {
@@ -149,7 +154,13 @@ public class Server(context: Context, cache: Cache) {
      * Logs out currently signed in user
      */
     public fun logoutUser(profileInfo: ProfileInfo) : Observable<Unit> {
-        return runRequest(client, urls.logoutUrl(profileInfo.securityKey)).map {}
+        // profileInfo is not strictly needed here, but it's a good indication that calling code is
+        // actually ensured that user is logged in and retrieved its profile
+        Timber.d("logging out user ${profileInfo.name}")
+        return sessionManager.getSessionInfo(client)
+            .flatMap { sessionInfo ->
+                runRequest(client, urls.logoutUrl(sessionInfo.securityKey)).map {}
+            }
     }
 
     private fun createLoginRequest(userLogin: String, password: String, securityKey: String): Request {

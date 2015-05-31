@@ -76,6 +76,7 @@ public class LiveStreetCookieHandler(private val context: Context) : CookieHandl
         val cookies = responseHeaders.get("Set-Cookie") ?: return
 
         Timber.d("received cookies from $uri:\n  ${cookies.join("\n  ")}")
+        var changedCookies : MutableList<CookieInfo>? = null
         for(knownCookie in cookieConfigs) {
             val cookieValue = extractCookie(cookies, knownCookie.name)
             if(cookieValue != null) {
@@ -87,9 +88,14 @@ public class LiveStreetCookieHandler(private val context: Context) : CookieHandl
                     sessionCookieStore.put(knownCookie.name, cookieValue)
                 }
                 if(prevValue != cookieValue) {
-                    changesSubject.onNext(CookieInfo(knownCookie.name, cookieValue))
+                    val cookie = CookieInfo(knownCookie.name, cookieValue)
+                    if(changedCookies == null) changedCookies = arrayListOf(cookie) else changedCookies.add(cookie)
                 }
             }
+        }
+        // emit changed after saving is done
+        if(changedCookies != null) {
+            for (c in changedCookies) changesSubject.onNext(c)
         }
     }
 
