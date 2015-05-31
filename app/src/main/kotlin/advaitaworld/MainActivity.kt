@@ -74,21 +74,22 @@ public class MainActivity : BaseActivity(BaseActivity.Config(R.layout.activity_m
         val server = AnApplication.get(this).server
         val postsData = server.getPosts(section, DefaultMediaResolver(this))
         val adapter = PostFeedAdapter(getResources(), createVoteRequestSender(), lifecycle())
-        val subscription = LifecycleObservable.bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .compose(LoadIndicator
-                        .createFor(postsData)
-                        .withErrorText(R.string.error_msg_data_fetch_failed)
-                        .withRetryAction(R.string.action_retry, { fetchPosts(pageListView, section) })
-                        .showIn(pageListView, adapter))
-                .subscribe(
-                        { postData ->
-                            adapter.swapData(postData)
-                            // after saving main data in adapter, start fetching full user info
-                            //fetchUserInfo(postData.map({ it.content.author }))
-                        },
-                        { Timber.e(it, "parsing failed with exception") })
+        val subscription = LifecycleObservable
+            .bindUntilLifecycleEvent(lifecycle(), postsData, LifecycleEvent.DESTROY)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .compose(LoadIndicator
+                .createFor(postsData)
+                .withErrorText(R.string.error_msg_data_fetch_failed)
+                .withRetryAction(R.string.action_retry, { fetchPosts(pageListView, section) })
+                .showIn(pageListView, adapter))
+            .subscribe(
+                { postData ->
+                    adapter.swapData(postData)
+                    // after saving main data in adapter, start fetching full user info
+                    //fetchUserInfo(postData.map({ it.content.author }))
+                },
+                { Timber.e(it, "parsing failed with exception") })
         fetchSubscriptions.put(section, subscription)
     }
 
