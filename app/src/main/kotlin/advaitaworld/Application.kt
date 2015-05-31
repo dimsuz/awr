@@ -40,7 +40,7 @@ public class AnApplication : Application() {
 
     private fun createGlobalObjects() {
         server = Server(this, MemoryCache())
-        initMockData(this, server) // FIXME remove!
+        //initMockData(this, server) // FIXME remove!
         database = Database(this)
         profileManager = ProfileManager(server)
     }
